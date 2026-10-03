@@ -1,0 +1,297 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TipeCabang {
+  HQ // alamat/kantor pusat perusahaan itu sendiri, bukan cabang sesungguhnya
+  CABANG
+  DEPOT
+}
+
+enum TipePic {
+  INTERNAL // karyawan/HSE di perusahaan klien (mis. kasus Bapak Faisal - HSE Incasi Group)
+  DINAS // pihak dinas pemerintah (mis. kasus Bapak Louis)
+  MITRA // staf PJK3 mitra (mis. kasus Bapak Ivan & Fadli - tim PJK3 LPS)
+}
+
+enum TipePelaksanaan {
+  ONLINE
+  OFFLINE
+  BLENDED
+}
+
+enum JenisSertifikasi {
+  KEMNAKER
+  BNSP
+  INTERNAL // contoh: food handler, dll - "Hanya Materi", di luar sertifikat resmi
+}
+
+// Daftar penyelenggara yang sudah teridentifikasi dari data KEMNAKER.
+// Field ini sekaligus menggantikan "mitra_pjk3" yang sempat diusulkan -
+// nilainya tumpang-tindih (DELTA/LPS = penyelenggara juga), jadi cukup 1 field.
+// Catatan: enum butuh migration kalau ada penyelenggara baru. Kalau daftar
+// penyelenggara diprediksi sering bertambah, pertimbangkan jadi tabel
+// referensi terpisah (Penyelenggara model) alih-alih enum.
+enum Penyelenggara {
+  WINA_KARYA_MULIA // Rojo Safety sendiri
+  DELTA_INDONESIA
+  LIMA_PRIMA_SOLUSINDO // PJK3 LPS
+  ARTA_KARYA_AREFAA
+}
+
+// Status administratif permohonan ke TemanK3, level PELAKSANAAN (bukan per peserta)
+enum StatusTemanK3 {
+  BELUM_UPLOAD
+  SUDAH_UPLOAD
+  FU_LPS
+  CANCEL
+}
+
+// Status HASIL, level PESERTA per pelaksanaan (bukan status administratif permohonan)
+enum StatusPeserta {
+  LULUS
+  GAGAL
+  REMEDIAL
+  IKUT_BATCH_SELANJUTNYA
+  TAKEOUT
+  CANCEL
+}
+
+// ---------------------------------------------------------
+// MASTER TRAINING
+// ---------------------------------------------------------
+
+model Training {
+  id        String      @id @default(cuid())
+  nama      String
+  tingkatan Tingkatan[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("training")
+}
+
+model Tingkatan {
+  id         String   @id @default(cuid())
+  trainingId String   @map("training_id")
+  training   Training @relation(fields: [trainingId], references: [id])
+
+  // string bebas, contoh: "Kelas 1", "Damkar C", "Genset Kelas I"
+  kelas String
+
+  pelaksanaan Pelaksanaan[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("tingkatan")
+}
+
+// ---------------------------------------------------------
+// PERUSAHAAN & CABANG
+// ---------------------------------------------------------
+
+model Perusahaan {
+  id          String  @id @default(cuid())
+  nama        String
+  alamatLegal String? @map("alamat_legal")
+
+  cabang      Cabang[]
+  perusahaanPic PerusahaanPic[]
+  pendaftaran PendaftaranPerusahaan[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("perusahaan")
+}
+
+// Setiap perusahaan WAJIB punya minimal 1 baris Cabang bertipe HQ
+// yang merepresentasikan alamat pusatnya sendiri - supaya Peserta
+// cukup 1 FK saja (perusahaanCabangId), tidak perlu dual FK ke
+// Perusahaan dan Cabang sekaligus.
+model Cabang {
+  id           String     @id @default(cuid())
+  perusahaanId String     @map("perusahaan_id")
+  perusahaan   Perusahaan @relation(fields: [perusahaanId], references: [id])
+
+  nama   String
+  tipe   TipeCabang
+  alamat String?
+
+  peserta Peserta[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("cabang")
+}
+
+model Peserta {
+  id                 String @id @default(cuid())
+  nama               String
+  perusahaanCabangId String @map("perusahaan_cabang_id")
+  cabang             Cabang @relation(fields: [perusahaanCabangId], references: [id])
+
+  pesertaPelaksanaan PesertaPelaksanaan[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("peserta")
+}
+
+// ---------------------------------------------------------
+// PIC
+// ---------------------------------------------------------
+
+model Pic {
+  id     String  @id @default(cuid())
+  nama   String
+  noTelp String? @map("no_telp")
+  tipe   TipePic
+
+  perusahaanPic PerusahaanPic[]
+  pendaftaran   PendaftaranPerusahaan[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("pic")
+}
+
+// Relasi many-to-many: 1 perusahaan bisa punya banyak PIC,
+// dan 1 PIC (mis. Pak Faisal - HSE level grup) bisa terhubung ke banyak perusahaan.
+model PerusahaanPic {
+  id           String     @id @default(cuid())
+  perusahaanId String     @map("perusahaan_id")
+  perusahaan   Perusahaan @relation(fields: [perusahaanId], references: [id])
+  picId        String     @map("pic_id")
+  pic          Pic        @relation(fields: [picId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([perusahaanId, picId])
+  @@map("perusahaan_pic")
+}
+
+// ---------------------------------------------------------
+// PELAKSANAAN (EVENT / JADWAL KEGIATAN)
+// ---------------------------------------------------------
+
+model Pelaksanaan {
+  id           String  @id @default(cuid())
+  noPermohonan String? @map("no_permohonan") // nullable - kasus DELTA/LPS: Rojo tidak pegang nomornya
+
+  tingkatanId String    @map("tingkatan_id")
+  tingkatan   Tingkatan @relation(fields: [tingkatanId], references: [id])
+  // training_id SENGAJA tidak disimpan di sini - selalu diturunkan lewat
+  // tingkatan.trainingId (JENIS_ALAT di data lama tidak pernah kosong,
+  // jadi training selalu bisa ditelusuri lewat tingkatan).
+
+  tipePelaksanaan  TipePelaksanaan  @map("tipe_pelaksanaan")
+  lokasi           String?
+  penyelenggara    Penyelenggara
+  jenisSertifikasi JenisSertifikasi @map("jenis_sertifikasi")
+
+  status     StatusTemanK3 @default(BELUM_UPLOAD)
+  uploadedAt DateTime?     @map("uploaded_at")
+
+  // Catatan bebas level event. Jangan dipakai sebagai tempat status
+  // terstruktur (lihat kasus TAKEOUT/CANCEL yang dulu nyasar ke kolom lain).
+  catatan String?
+
+  sesi               SesiPelaksanaan[]
+  pendaftaran        PendaftaranPerusahaan[]
+  pesertaPelaksanaan PesertaPelaksanaan[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("pelaksanaan")
+}
+
+// Menampung tanggal pelaksanaan yang terpisah/loncat (mis. "28-30 APR, 2 & 3 MEI")
+// - 1 baris per hari aktual, bukan teks range.
+model SesiPelaksanaan {
+  id            String      @id @default(cuid())
+  pelaksanaanId String      @map("pelaksanaan_id")
+  pelaksanaan   Pelaksanaan @relation(fields: [pelaksanaanId], references: [id])
+  tanggal       DateTime    @db.Date
+
+  @@map("sesi_pelaksanaan")
+}
+
+// ---------------------------------------------------------
+// PENDAFTARAN PERUSAHAAN (batch per perusahaan per pelaksanaan)
+// ---------------------------------------------------------
+
+// Menjawab masalah "PIC mana yang bertanggung jawab untuk batch peserta
+// perusahaan X di pelaksanaan Y" - karena 1 perusahaan bisa pakai PIC
+// berbeda untuk pelaksanaan berbeda. Juga jadi titik gantung alami untuk
+// Invoice & Pengiriman nanti (sesuai jawaban user: keduanya "patokan
+// perusahaan").
+model PendaftaranPerusahaan {
+  id            String      @id @default(cuid())
+  perusahaanId  String      @map("perusahaan_id")
+  perusahaan    Perusahaan  @relation(fields: [perusahaanId], references: [id])
+  pelaksanaanId String      @map("pelaksanaan_id")
+  pelaksanaan   Pelaksanaan @relation(fields: [pelaksanaanId], references: [id])
+  picId         String      @map("pic_id")
+  pic           Pic         @relation(fields: [picId], references: [id])
+
+  pesertaPelaksanaan PesertaPelaksanaan[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([perusahaanId, pelaksanaanId])
+  @@map("pendaftaran_perusahaan")
+}
+
+// ---------------------------------------------------------
+// PESERTA_PELAKSANAAN (gabungan Pendaftar + Sertifikasi)
+// ---------------------------------------------------------
+
+model PesertaPelaksanaan {
+  id            String      @id @default(cuid())
+  pesertaId     String      @map("peserta_id")
+  peserta       Peserta     @relation(fields: [pesertaId], references: [id])
+  pelaksanaanId String      @map("pelaksanaan_id")
+  pelaksanaan   Pelaksanaan @relation(fields: [pelaksanaanId], references: [id])
+
+  // nullable = peserta mandiri (tidak lewat perusahaan).
+  // terisi    = peserta didaftarkan perusahaan, ikut PIC & batch tsb.
+  // (menggantikan kolom boolean "didaftarkan_perusahaan" - cukup
+  // diturunkan dari null/tidaknya field ini)
+  pendaftaranPerusahaanId String?                @map("pendaftaran_perusahaan_id")
+  pendaftaranPerusahaan   PendaftaranPerusahaan? @relation(fields: [pendaftaranPerusahaanId], references: [id])
+
+  status                  StatusPeserta?
+  noRegistrasi            String?        @map("no_registrasi")
+  noSertifikat            String?        @map("no_sertifikat")
+  masaBerlaku             DateTime?      @map("masa_berlaku") @db.Date
+  noSkp                   String?        @map("no_skp") // hanya relevan untuk jenisSertifikasi = KEMNAKER
+  tanggalTerimaSertifikat DateTime?      @map("tanggal_terima_sertifikat") @db.Date
+
+  // Catatan bebas level peserta - untuk pengecualian yang tidak masuk
+  // kategori manapun. Bukan pengganti field status di atas.
+  catatan String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([pesertaId, pelaksanaanId])
+  @@map("peserta_pelaksanaan")
+}
