@@ -47,6 +47,7 @@ next-env.d.ts
 # AI / Agents / Claude
 AGENTS.md
 CLAUDE.md
+GEMINI.md
 skills-lock.json
 .claude/
 .claude*
@@ -55,3 +56,6 @@ claude.json
 *.agent.md
 .cursor/
 .gemini/
+
+# Data Master
+*.xlsx

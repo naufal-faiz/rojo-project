@@ -28,9 +28,21 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  // IMPORTANT: DO NOT REMOVE auth.getUser()
-  // This refreshes auth tokens and ensures Server Components have active sessions
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const isAuthPage = request.nextUrl.pathname.startsWith("/auth/signin");
+
+  if (!user && !isAuthPage) {
+    // Redirect to login if unauthenticated and not on the login page
+    return NextResponse.redirect(new URL("/auth/signin", request.url));
+  }
+
+  if (user && isAuthPage) {
+    // Redirect to dashboard if authenticated and on the login page
+    return NextResponse.redirect(new URL("/", request.url));
+  }
 
   return supabaseResponse;
 }

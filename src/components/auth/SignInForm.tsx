@@ -3,20 +3,28 @@ import Checkbox from "@/components/form/input/Checkbox";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
-import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
+import { EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
-import { useState } from "react";
+import { useActionState, useState } from "react";
+import { signInAction } from "@/lib/data/action/authAction";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const [state, action, isPending] = useActionState(
+    async (prevState: any, formData: FormData) => {
+      return await signInAction(formData);
+    },
+    null
+  );
+
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full">
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div>
           <div className="mb-2">
             <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-              Sign In
+              Masuk
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Silahkan masukkan email dan password untuk masuk ke dashboard
@@ -25,13 +33,18 @@ export default function SignInForm() {
           </div>
           <div>
             <div className="relative py-3 sm:py-5"></div>
-            <form>
+            <form action={action}>
               <div className="space-y-6">
+                {state && state.success === false && (
+                  <div className="p-3 text-sm text-red-500 bg-red-50 rounded-lg">
+                    {state.error}
+                  </div>
+                )}
                 <div>
                   <Label>
                     Email <span className="text-error-500">*</span>{" "}
                   </Label>
-                  <Input placeholder="info@gmail.com" type="email" />
+                  <Input name="email" placeholder="info@gmail.com" type="email" required />
                 </div>
                 <div>
                   <Label>
@@ -39,8 +52,10 @@ export default function SignInForm() {
                   </Label>
                   <div className="relative">
                     <Input
+                      name="password"
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
+                      required
                     />
                     <span
                       onClick={() => setShowPassword(!showPassword)}
@@ -69,8 +84,8 @@ export default function SignInForm() {
                   </Link>
                 </div>
                 <div>
-                  <Button className="w-full" size="sm">
-                    Sign in
+                  <Button className="w-full" size="sm" type="submit" disabled={isPending}>
+                    {isPending ? "Sedang Masuk..." : "Masuk"}
                   </Button>
                 </div>
               </div>

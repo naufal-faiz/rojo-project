@@ -47,11 +47,12 @@ enum Penyelenggara {
   DELTA_INDONESIA
   LIMA_PRIMA_SOLUSINDO // PJK3 LPS
   ARTA_KARYA_AREFAA
+  LIK
+  ITC
 }
 
 // Status administratif permohonan ke TemanK3 (level pelaksanaan)
 enum StatusTemanK3 {
-  BELUM_UPLOAD
   SUDAH_UPLOAD
   FU_LPS
   CANCEL
@@ -214,7 +215,7 @@ model Pelaksanaan {
   penyelenggara    Penyelenggara
   jenisSertifikasi JenisSertifikasi @map("jenis_sertifikasi")
 
-  status     StatusTemanK3 @default(BELUM_UPLOAD)
+  status     StatusTemanK3?
   uploadedAt DateTime?     @map("uploaded_at")
 
   catatan String?
@@ -252,8 +253,8 @@ model PendaftaranPerusahaan {
   perusahaan    Perusahaan  @relation(fields: [perusahaanId], references: [id], onDelete: Restrict)
   pelaksanaanId String      @map("pelaksanaan_id") @db.Uuid
   pelaksanaan   Pelaksanaan @relation(fields: [pelaksanaanId], references: [id], onDelete: Restrict)
-  picId         String      @map("pic_id") @db.Uuid
-  pic           Pic         @relation(fields: [picId], references: [id], onDelete: Restrict)
+  picId         String?      @map("pic_id") @db.Uuid
+  pic           Pic?         @relation(fields: [picId], references: [id], onDelete: Restrict)
 
   pesertaPelaksanaan PesertaPelaksanaan[]
 
