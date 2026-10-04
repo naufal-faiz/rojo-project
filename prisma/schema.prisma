@@ -12,10 +12,6 @@ datasource db {
   provider = "postgresql"
 }
 
-// ---------------------------------------------------------
-// ENUMS
-// ---------------------------------------------------------
-
 enum TipeCabang {
   HQ // alamat/kantor pusat perusahaan itu sendiri
   CABANG
@@ -32,6 +28,11 @@ enum TipePelaksanaan {
   ONLINE
   OFFLINE
   BLENDED
+}
+
+enum JenisKegiatan {
+  PUBLIK // peserta dari banyak perusahaan dan/atau mandiri
+  INHOUSE // diselenggarakan khusus untuk satu perusahaan klien
 }
 
 enum JenisSertifikasi {
@@ -96,6 +97,7 @@ model Tingkatan {
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
+  @@index([trainingId])
   @@map("tingkatan")
 }
 
@@ -135,14 +137,16 @@ model Cabang {
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
+  @@index([perusahaanId])
   @@map("cabang")
 }
 
 model Peserta {
   id                 String @id @default(uuid()) @db.Uuid
   nama               String
-  perusahaanCabangId String @map("perusahaan_cabang_id") @db.Uuid
-  cabang             Cabang @relation(fields: [perusahaanCabangId], references: [id], onDelete: Restrict)
+  // Nullable: peserta yang belum bekerja / tidak terdaftar di perusahaan (UI tampil "-").
+  perusahaanCabangId String? @map("perusahaan_cabang_id") @db.Uuid
+  cabang             Cabang? @relation(fields: [perusahaanCabangId], references: [id], onDelete: Restrict)
 
   pesertaPelaksanaan PesertaPelaksanaan[]
 
@@ -150,6 +154,7 @@ model Peserta {
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
+  @@index([perusahaanCabangId])
   @@map("peserta")
 }
 
@@ -185,6 +190,7 @@ model PerusahaanPic {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@unique([perusahaanId, picId])
+  @@index([picId])
   @@map("perusahaan_pic")
 }
 
@@ -202,6 +208,7 @@ model Pelaksanaan {
   tingkatanId String    @map("tingkatan_id") @db.Uuid
   tingkatan   Tingkatan @relation(fields: [tingkatanId], references: [id], onDelete: Restrict)
 
+  jenisKegiatan    JenisKegiatan    @map("jenis_kegiatan")
   tipePelaksanaan  TipePelaksanaan  @map("tipe_pelaksanaan")
   lokasi           String?
   penyelenggara    Penyelenggara
@@ -220,6 +227,7 @@ model Pelaksanaan {
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
+  @@index([tingkatanId])
   @@map("pelaksanaan")
 }
 
@@ -230,6 +238,7 @@ model SesiPelaksanaan {
   pelaksanaan   Pelaksanaan @relation(fields: [pelaksanaanId], references: [id], onDelete: Restrict)
   tanggal       DateTime    @db.Date
 
+  @@index([pelaksanaanId])
   @@map("sesi_pelaksanaan")
 }
 
@@ -255,6 +264,10 @@ model PendaftaranPerusahaan {
   // Setelah soft delete, baris lama tetap memegang constraint ini:
   // pendaftaran ulang = RESTORE baris lama, bukan membuat baris baru.
   @@unique([perusahaanId, pelaksanaanId])
+  // Target FK komposit dari PesertaPelaksanaan (menjaga konsistensi pelaksanaanId).
+  @@unique([id, pelaksanaanId])
+  @@index([pelaksanaanId])
+  @@index([picId])
   @@map("pendaftaran_perusahaan")
 }
 
@@ -270,10 +283,12 @@ model PesertaPelaksanaan {
   pelaksanaan   Pelaksanaan @relation(fields: [pelaksanaanId], references: [id], onDelete: Restrict)
 
   // null = peserta mandiri; terisi = didaftarkan perusahaan.
-  // onDelete: Restrict eksplisit, karena default untuk relasi opsional adalah
-  // SetNull yang diam-diam mengubah peserta perusahaan menjadi "mandiri".
+  // FK komposit (pendaftaranPerusahaanId, pelaksanaanId): jika pendaftaranPerusahaanId
+  // terisi, DB memastikan pelaksanaanId sama dengan milik pendaftaran tsb. Jika null
+  // (mandiri), Postgres melewati pengecekan (MATCH SIMPLE).
+  // onDelete: Restrict eksplisit agar tidak berubah diam-diam jadi "mandiri" (SetNull).
   pendaftaranPerusahaanId String?                @map("pendaftaran_perusahaan_id") @db.Uuid
-  pendaftaranPerusahaan   PendaftaranPerusahaan? @relation(fields: [pendaftaranPerusahaanId], references: [id], onDelete: Restrict)
+  pendaftaranPerusahaan   PendaftaranPerusahaan? @relation(fields: [pendaftaranPerusahaanId, pelaksanaanId], references: [id, pelaksanaanId], onDelete: Restrict)
 
   status                  StatusPeserta?
   noRegistrasi            String?        @map("no_registrasi")
@@ -288,6 +303,10 @@ model PesertaPelaksanaan {
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
+  // Mencegah peserta yang sama terdaftar dua kali di satu pelaksanaan,
+  // baik lewat perusahaan maupun mandiri (karena itu pelaksanaanId tetap disimpan langsung).
   @@unique([pesertaId, pelaksanaanId])
+  @@index([pelaksanaanId])
+  @@index([pendaftaranPerusahaanId])
   @@map("peserta_pelaksanaan")
 }
