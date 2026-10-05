@@ -14,7 +14,7 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 | Sinkron DB | Selesai (`sync_status_temank3_nullable`) | sudah di-commit |
 | F5 Pendaftaran | Selesai | F5 selesai: pendaftaran perusahaan, peserta mandiri, tempel nama |
 | F6 Sertifikat | Selesai | F6 selesai: daftar sertifikat, form hasil, ubah status massal |
-| F7 Dashboard, Riwayat Kegiatan, Invoice | Belum | - |
+| F7 Dashboard, Riwayat Kegiatan, Invoice | Selesai | F7 selesai: dashboard data nyata, riwayat kegiatan, placeholder invoice |
 | Jalur M Migrasi Excel | Belum | - |
 | Penutup | Belum | - |
 
@@ -36,6 +36,12 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 - **A-14** Peringatan No. Sertifikat ganda ditampilkan sebagai bagian pesan sukses (tidak memblokir), sesuai PRD "peringatan (bukan blokir)".
 - **A-15** Untuk `jenisSertifikasi = INTERNAL`, field resmi (`noRegistrasi`, `noSertifikat`, `noSkp`, `masaBerlaku`) tidak ditampilkan dan dipaksa `null` di server.
 - **A-16** `formatTanggal` dan `formatDaftarSesi` dipindah ke `main/common/formatTanggal.ts` karena dipakai F5 dan F6 (helper umum dipakai 2 tempat atau lebih).
+- **A-17** Dashboard memakai `export const dynamic = "force-dynamic"` agar angka dan daftar kegiatan selalu segar (tanpa ini Next.js mem-prerender `/` menjadi statis).
+- **A-18** "Kegiatan tahun ini" = pelaksanaan aktif yang punya minimal satu sesi di tahun berjalan (WIB).
+- **A-19** "5 kegiatan terdekat/terakhir" diambil dari baris sesi (bukan pelaksanaan), unik per kegiatan, diurut tanggal terdekat/terbaru.
+- **A-20** Ringkasan hasil pada Riwayat Kegiatan: Lulus = status `LULUS`, Gagal = `GAGAL`, Lainnya = sisanya (termasuk status kosong dan enum lain).
+- **A-21** Filter tahun Riwayat Kegiatan diambil dari tahun-tahun yang punya sesi pada pelaksanaan aktif.
+- **A-22** `keTanggalInput` di `main/common/formatTanggal.ts` mengubah Date `@db.Date` ke `YYYY-MM-DD` memakai getter UTC agar tanggal tidak bergeser.
 
 ## Deviasi dari PRD
 
@@ -93,3 +99,8 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 4. Isi No. Sertifikat yang sama pada dua peserta dengan jenis sertifikasi sama → tersimpan dengan pesan peringatan.
 5. Centang beberapa baris → bar muncul. Pilih status lalu **Terapkan Status**; semua baris terpilih berubah.
 6. Status kosong tetap "Belum ada hasil"; sistem tidak pernah mengisi GAGAL otomatis.
+
+### F7 Dashboard, Riwayat Kegiatan, Invoice
+1. Buka `/`. Empat kartu angka tampil (kegiatan tahun ini, KEMNAKER belum upload, peserta terdaftar, hasil belum diisi), lalu daftar "5 Kegiatan Terdekat" dan "5 Kegiatan Terakhir". Klik salah satu item menuju detail permohonan. Tidak ada lagi tautan ke `/admin/training/jadwal`.
+2. Buka `/master/riwayat-kegiatan`. Hanya permohonan yang seluruh sesinya sudah lewat yang tampil. Filter tahun, penyelenggara, jenis sertifikasi, jenis kegiatan, dan pencarian bekerja. Klik baris menuju detail permohonan.
+3. Buka `/invoice`. Halaman placeholder "Segera Hadir" tampil tanpa error.
