@@ -14,13 +14,11 @@ interface PicOption {
 interface PicSelectionModalProps {
   perusahaanId: string;
   onClose: () => void;
-  isLoading?: boolean;
 }
 
 const PicSelectionModal: React.FC<PicSelectionModalProps> = ({
   perusahaanId,
   onClose,
-  isLoading = false,
 }) => {
   const [picList, setPicList] = useState<PicOption[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());

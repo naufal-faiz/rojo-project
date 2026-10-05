@@ -7,7 +7,6 @@ import {
   createPicAndLink,
   unlinkPic,
   deletePic,
-  linkPic,
 } from "@/lib/data/action/perusahaanAction";
 import ConfirmDialog from "@/components/main/common/ConfirmDialog";
 import AlertModal from "@/components/main/Modal/AlertModal";
@@ -38,8 +37,6 @@ const PicManager: React.FC<PicManagerProps> = ({ perusahaanId, picList }) => {
   const [actionType, setActionType] = useState<"unlink" | "delete" | null>(null);
   const [actionId, setActionId] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
-
-  const [linkLoading, setLinkLoading] = useState(false);
 
   const [alertType, setAlertType] = useState<"success" | "error">("success");
   const [alertTitle, setAlertTitle] = useState("");
@@ -89,16 +86,6 @@ const PicManager: React.FC<PicManagerProps> = ({ perusahaanId, picList }) => {
       }
     } finally {
       setAddLoading(false);
-    }
-  };
-
-  const handleLinkMultiple = async (picIds: string[]) => {
-    setLinkLoading(true);
-    try {
-      // Logic sudah di PicSelectionModal, tinggal close
-      closeSelection();
-    } finally {
-      setLinkLoading(false);
     }
   };
 
@@ -273,7 +260,6 @@ const PicManager: React.FC<PicManagerProps> = ({ perusahaanId, picList }) => {
         <PicSelectionModal
           perusahaanId={perusahaanId}
           onClose={closeSelection}
-          isLoading={linkLoading}
         />
       </Modal>
 
