@@ -59,3 +59,4 @@ claude.json
 
 # Data Master
 *.xlsx
+/data/
