@@ -174,10 +174,32 @@ export async function restorePelaksanaan(id: string) {
 
 export async function updateStatusPelaksanaan(id: string, status: StatusTemanK3 | null) {
     try {
+        const pelaksanaan = await prisma.pelaksanaan.findUnique({
+            where: { id, deletedAt: null }
+        })
+
+        if (!pelaksanaan) {
+            return { success: false, error: "Permohonan tidak ditemukan atau sudah dihapus." }
+        }
+
+        if (status !== null && pelaksanaan.jenisSertifikasi !== JenisSertifikasi.KEMNAKER) {
+            return { success: false, error: "Status TemanK3 hanya berlaku untuk kegiatan KEMNAKER." }
+        }
+
+        // Semantik uploadedAt: SUDAH_UPLOAD mencatat waktu sekarang,
+        // FU_LPS/CANCEL membiarkan tanggal sebelumnya, null mengosongkan.
+        let uploadedAt: Date | null | undefined
+        if (status === StatusTemanK3.SUDAH_UPLOAD) {
+            uploadedAt = new Date()
+        } else if (status === null) {
+            uploadedAt = null
+        }
+
         const result = await prisma.pelaksanaan.update({
             where: { id, deletedAt: null },
             data: {
-                status: status ?? null
+                status,
+                uploadedAt
             }
         })
 

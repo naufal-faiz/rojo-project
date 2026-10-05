@@ -14,7 +14,7 @@ import {
   JenisSertifikasi,
   StatusTemanK3,
 } from "@/lib/generated/prisma/enums";
-import { statusTemanK3Labels } from "./statusTemanK3";
+import { statusTemanK3Labels } from "@/components/main/common/StatusBadge";
 
 interface Tingkatan {
   id: string;

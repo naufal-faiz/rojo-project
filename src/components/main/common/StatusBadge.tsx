@@ -1,23 +1,42 @@
 import React from 'react';
 import Badge from '@/components/ui/badge/Badge';
+import { StatusPeserta, StatusTemanK3 } from '@/lib/generated/prisma/enums';
 
-export type StatusValue = 
-  | 'BELUM_UPLOAD'
-  | 'SUDAH_UPLOAD'
-  | 'FU_LPS'
-  | 'LULUS'
-  | 'GAGAL'
-  | 'REMEDIAL'
-  | 'IKUT_BATCH_SELANJUTNYA'
-  | 'TAKEOUT'
-  | 'CANCEL';
+export type BadgeColorName =
+  | 'primary'
+  | 'success'
+  | 'error'
+  | 'warning'
+  | 'info'
+  | 'light'
+  | 'dark';
 
-interface StatusBadgeProps {
-  status: StatusValue;
-}
+/** Semua nilai status yang punya label dan warna di UI (sumber tunggal dari enum Prisma). */
+export type StatusValue = StatusTemanK3 | StatusPeserta;
 
-const statusColorMap: Record<StatusValue, "primary" | "success" | "error" | "warning" | "info" | "light" | "dark"> = {
-  BELUM_UPLOAD: 'warning',
+/** Label status TemanK3 (permohonan). `null` ditangani pemanggil. */
+export const statusTemanK3Labels: Record<StatusTemanK3, string> = {
+  [StatusTemanK3.SUDAH_UPLOAD]: 'Sudah Upload',
+  [StatusTemanK3.FU_LPS]: 'FU LPS',
+  [StatusTemanK3.CANCEL]: 'Cancel',
+};
+
+/** Label status hasil peserta. */
+export const statusPesertaLabels: Record<StatusPeserta, string> = {
+  [StatusPeserta.LULUS]: 'Lulus',
+  [StatusPeserta.GAGAL]: 'Gagal',
+  [StatusPeserta.REMEDIAL]: 'Remedial',
+  [StatusPeserta.IKUT_BATCH_SELANJUTNYA]: 'Ikut Batch Selanjutnya',
+  [StatusPeserta.TAKEOUT]: 'Takeout',
+  [StatusPeserta.CANCEL]: 'Cancel',
+};
+
+const statusLabelMap: Record<StatusValue, string> = {
+  ...statusTemanK3Labels,
+  ...statusPesertaLabels,
+};
+
+const statusColorMap: Record<StatusValue, BadgeColorName> = {
   SUDAH_UPLOAD: 'success',
   FU_LPS: 'info',
   LULUS: 'success',
@@ -28,24 +47,19 @@ const statusColorMap: Record<StatusValue, "primary" | "success" | "error" | "war
   CANCEL: 'error',
 };
 
-const statusLabelMap: Record<StatusValue, string> = {
-  BELUM_UPLOAD: 'Belum Upload',
-  SUDAH_UPLOAD: 'Sudah Upload',
-  FU_LPS: 'FU LPS',
-  LULUS: 'Lulus',
-  GAGAL: 'Gagal',
-  REMEDIAL: 'Remedial',
-  IKUT_BATCH_SELANJUTNYA: 'Ikut Batch Selanjutnya',
-  TAKEOUT: 'Takeout',
-  CANCEL: 'Cancel',
-};
+interface StatusBadgeProps {
+  /** Nilai status dari enum Prisma */
+  status: StatusValue;
+  /** Ukuran badge, bawaan md */
+  size?: 'sm' | 'md';
+}
 
-const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
-  const color = statusColorMap[status] || 'light';
-  const label = statusLabelMap[status] || status;
-  
+const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'md' }) => {
+  const color = statusColorMap[status] ?? 'light';
+  const label = statusLabelMap[status] ?? status;
+
   return (
-    <Badge color={color}>
+    <Badge color={color} size={size}>
       {label}
     </Badge>
   );

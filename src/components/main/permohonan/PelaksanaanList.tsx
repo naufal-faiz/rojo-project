@@ -8,7 +8,7 @@ import DataTable from "@/components/main/common/DataTable";
 import ConfirmDialog from "@/components/main/common/ConfirmDialog";
 import AlertModal from "@/components/main/Modal/AlertModal";
 import PelaksanaanFormModal, { PelaksanaanFormData } from "./PelaksanaanFormModal";
-import StatusTemanK3Cell from "./StatusTemanK3Cell";
+import StatusTemanK3Badge from "./StatusTemanK3Badge";
 import { deletePelaksanaan, restorePelaksanaan } from "@/lib/data/action/pelaksanaanAction";
 import { JenisKegiatan, Penyelenggara, StatusTemanK3, TipePelaksanaan, JenisSertifikasi } from "@/lib/generated/prisma/enums";
 
@@ -215,12 +215,12 @@ const PelaksanaanList: React.FC<PelaksanaanListProps> = ({
     },
     {
       header: "Status TemanK3",
-      cell: (row: PelaksanaanData) =>
-        row.jenisSertifikasi === JenisSertifikasi.KEMNAKER ? (
-          <StatusTemanK3Cell id={row.id} status={row.status ?? null} />
-        ) : (
-          <span className="text-gray-400 italic">-</span>
-        ),
+      cell: (row: PelaksanaanData) => (
+        <StatusTemanK3Badge
+          status={row.status ?? null}
+          jenisSertifikasi={row.jenisSertifikasi}
+        />
+      ),
     },
     {
       header: "Aksi",

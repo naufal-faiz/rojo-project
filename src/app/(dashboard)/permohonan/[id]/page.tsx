@@ -1,9 +1,10 @@
 import { getPelaksanaanById } from "@/lib/data/get/getPelaksanaan";
 import { notFound } from "next/navigation";
 import PageHeader from "@/components/main/common/PageHeader";
+import ComponentCard from "@/components/main/common/ComponentCard";
 import SesiManager from "@/components/main/permohonan/SesiManager";
+import StatusTemanK3Panel from "@/components/main/permohonan/StatusTemanK3Panel";
 import { Penyelenggara } from "@/lib/generated/prisma/enums";
-import { statusTemanK3Labels } from "@/components/main/permohonan/statusTemanK3";
 
 const penyelenggaraLabels: Record<Penyelenggara, string> = {
   [Penyelenggara.WINA_KARYA_MULIA]: "Wina Karya Mulia",
@@ -52,12 +53,6 @@ export default async function PermohonanDetailPage({
             <dd className="font-medium text-gray-800 dark:text-gray-200">{pelaksanaan.jenisSertifikasi}</dd>
           </div>
           <div>
-            <dt className="text-gray-500">Status TemanK3</dt>
-            <dd className="font-medium text-gray-800 dark:text-gray-200">
-              {pelaksanaan.status ? statusTemanK3Labels[pelaksanaan.status] : "-"}
-            </dd>
-          </div>
-          <div>
             <dt className="text-gray-500">Lokasi</dt>
             <dd className="font-medium text-gray-800 dark:text-gray-200">{pelaksanaan.lokasi ?? "-"}</dd>
           </div>
@@ -69,6 +64,19 @@ export default async function PermohonanDetailPage({
           )}
         </dl>
       </div>
+
+      {/* Status TemanK3 & Unggah Berkas */}
+      <ComponentCard
+        title="Status TemanK3 & Unggah Berkas"
+        desc="Catat status permohonan ke TemanK3 beserta tanggal unggah berkas."
+      >
+        <StatusTemanK3Panel
+          pelaksanaanId={pelaksanaan.id}
+          status={pelaksanaan.status}
+          uploadedAt={pelaksanaan.uploadedAt}
+          jenisSertifikasi={pelaksanaan.jenisSertifikasi}
+        />
+      </ComponentCard>
 
       {/* Sesi Pelaksanaan */}
       <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-white/[0.05] dark:bg-white/[0.03]">
