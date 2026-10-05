@@ -26,12 +26,15 @@ interface PesertaFormModalProps {
   } | null;
   cabangOptions: Cabang[];
   onClose: () => void;
+  /** Dipanggil setelah peserta baru dibuat (dipakai alur pendaftaran). */
+  onCreated?: (peserta: { id: string; nama: string }) => void;
 }
 
 const PesertaFormModal: React.FC<PesertaFormModalProps> = ({
   editData,
   cabangOptions,
   onClose,
+  onCreated,
 }) => {
   const [nama, setNama] = useState(editData?.nama ?? "");
   const [cabangId, setCabangId] = useState(
@@ -78,6 +81,9 @@ const PesertaFormModal: React.FC<PesertaFormModalProps> = ({
         setAlertTitle("Gagal");
         setAlertMessage(result.error ?? "Terjadi kesalahan.");
         openAlert();
+      } else if (!isEdit && onCreated && result.data) {
+        // Dipakai alur pendaftaran: serahkan peserta baru ke pemanggil.
+        onCreated({ id: result.data.id, nama: result.data.nama });
       } else {
         setAlertType("success");
         setAlertTitle("Berhasil");

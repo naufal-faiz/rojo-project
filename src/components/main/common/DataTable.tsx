@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import Pagination from "@/components/main/tables/Pagination";
 
-interface Column<T> {
+export interface Column<T> {
   /** Label kolom */
   header: string;
   /** Key dari data atau fungsi render kustom */
@@ -42,6 +42,8 @@ interface DataTableProps<T> {
   emptyText?: string;
   /** Loading state */
   isLoading?: boolean;
+  /** Callback saat baris diklik (opsional) */
+  onRowClick?: (row: T) => void;
 }
 
 function DataTable<T extends { id: string }>({
@@ -56,6 +58,7 @@ function DataTable<T extends { id: string }>({
   searchPlaceholder = "Cari...",
   emptyText = "Tidak ada data.",
   isLoading = false,
+  onRowClick,
 }: DataTableProps<T>) {
   const [localSearch, setLocalSearch] = useState(searchValue);
   const [, startTransition] = useTransition();
@@ -123,7 +126,10 @@ function DataTable<T extends { id: string }>({
               data.map((row) => (
                 <TableRow
                   key={row.id}
-                  className="border-b border-gray-100 last:border-0 hover:bg-gray-50/60 dark:border-white/[0.05] dark:hover:bg-white/[0.03] transition-colors"
+                  onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  className={`border-b border-gray-100 last:border-0 hover:bg-gray-50/60 dark:border-white/[0.05] dark:hover:bg-white/[0.03] transition-colors ${
+                    onRowClick ? "cursor-pointer" : ""
+                  }`}
                 >
                   {columns.map((col, i) => (
                     <TableCell

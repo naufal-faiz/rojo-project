@@ -4,16 +4,12 @@ import PageHeader from "@/components/main/common/PageHeader";
 import ComponentCard from "@/components/main/common/ComponentCard";
 import SesiManager from "@/components/main/permohonan/SesiManager";
 import StatusTemanK3Panel from "@/components/main/permohonan/StatusTemanK3Panel";
-import { Penyelenggara } from "@/lib/generated/prisma/enums";
-
-const penyelenggaraLabels: Record<Penyelenggara, string> = {
-  [Penyelenggara.WINA_KARYA_MULIA]: "Wina Karya Mulia",
-  [Penyelenggara.DELTA_INDONESIA]: "Delta Indonesia",
-  [Penyelenggara.LIMA_PRIMA_SOLUSINDO]: "Lima Prima (LPS)",
-  [Penyelenggara.ARTA_KARYA_AREFAA]: "Arta Karya Arefaa",
-  [Penyelenggara.LIK]: "LIK",
-  [Penyelenggara.ITC]: "ITC",
-};
+import {
+  jenisKegiatanLabels,
+  jenisSertifikasiLabels,
+  penyelenggaraLabels,
+  tipePelaksanaanLabels,
+} from "@/components/main/common/enumLabels";
 
 export default async function PermohonanDetailPage({
   params,
@@ -30,6 +26,10 @@ export default async function PermohonanDetailPage({
       <PageHeader
         title={`Permohonan: ${pelaksanaan.noPermohonan ?? "Tanpa Nomor"}`}
         description={`${pelaksanaan.tingkatan.training.nama} - ${pelaksanaan.tingkatan.kelas}`}
+        primaryAction={{
+          label: "Kelola Pendaftaran",
+          href: `/pendaftaran/${pelaksanaan.id}`,
+        }}
       />
 
       {/* Info Utama */}
@@ -38,11 +38,11 @@ export default async function PermohonanDetailPage({
         <dl className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
           <div>
             <dt className="text-gray-500">Jenis Kegiatan</dt>
-            <dd className="font-medium text-gray-800 dark:text-gray-200">{pelaksanaan.jenisKegiatan}</dd>
+            <dd className="font-medium text-gray-800 dark:text-gray-200">{jenisKegiatanLabels[pelaksanaan.jenisKegiatan]}</dd>
           </div>
           <div>
             <dt className="text-gray-500">Tipe</dt>
-            <dd className="font-medium text-gray-800 dark:text-gray-200">{pelaksanaan.tipePelaksanaan}</dd>
+            <dd className="font-medium text-gray-800 dark:text-gray-200">{tipePelaksanaanLabels[pelaksanaan.tipePelaksanaan]}</dd>
           </div>
           <div>
             <dt className="text-gray-500">Penyelenggara</dt>
@@ -50,7 +50,7 @@ export default async function PermohonanDetailPage({
           </div>
           <div>
             <dt className="text-gray-500">Jenis Sertifikasi</dt>
-            <dd className="font-medium text-gray-800 dark:text-gray-200">{pelaksanaan.jenisSertifikasi}</dd>
+            <dd className="font-medium text-gray-800 dark:text-gray-200">{jenisSertifikasiLabels[pelaksanaan.jenisSertifikasi]}</dd>
           </div>
           <div>
             <dt className="text-gray-500">Lokasi</dt>
