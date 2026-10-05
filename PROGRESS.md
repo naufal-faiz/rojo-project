@@ -13,7 +13,7 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 | F4 Permohonan | Selesai (revisi status TemanK3) | sudah di-commit (revisi perbaikan ui pelaksanaan) |
 | Sinkron DB | Selesai (`sync_status_temank3_nullable`) | sudah di-commit |
 | F5 Pendaftaran | Selesai | F5 selesai: pendaftaran perusahaan, peserta mandiri, tempel nama |
-| F6 Sertifikat | Belum | - |
+| F6 Sertifikat | Selesai | F6 selesai: daftar sertifikat, form hasil, ubah status massal |
 | F7 Dashboard, Riwayat Kegiatan, Invoice | Belum | - |
 | Jalur M Migrasi Excel | Belum | - |
 | Penutup | Belum | - |
@@ -31,6 +31,11 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 - **A-09** Peringatan perusahaan peserta berbeda dengan perusahaan pendaftaran ditampilkan sebagai bagian pesan sukses, bukan dialog terpisah. Alasan: PRD hanya mewajibkan peringatan, bukan blokir.
 - **A-10** `DataTable` dan `ui/table` ditambah prop opsional `onRowClick`/`onClick` (backward-compatible) untuk kebutuhan "klik baris menuju halaman kerja".
 - **A-11** Peta label enum umum (`jenisKegiatan`, `tipePelaksanaan`, `jenisSertifikasi`, `penyelenggara`) disatukan di `main/common/enumLabels.ts` (utang teknis PRD #3).
+- **A-12** Halaman `/sertifikat` tidak punya tab Terhapus. Penghapusan dan restore peserta sudah tersedia di F5 `/pendaftaran/[pelaksanaanId]`, dan PRD 9.5 tidak meminta tab terhapus. Dampak jika salah: admin harus menghapus dari halaman Pendaftaran.
+- **A-13** Filter kegiatan di `/sertifikat` memuat maksimal 200 permohonan aktif terbaru agar halaman tetap ringan. Dampak jika salah: permohonan lama tidak muncul di filter kegiatan (masih bisa lewat pencarian).
+- **A-14** Peringatan No. Sertifikat ganda ditampilkan sebagai bagian pesan sukses (tidak memblokir), sesuai PRD "peringatan (bukan blokir)".
+- **A-15** Untuk `jenisSertifikasi = INTERNAL`, field resmi (`noRegistrasi`, `noSertifikat`, `noSkp`, `masaBerlaku`) tidak ditampilkan dan dipaksa `null` di server.
+- **A-16** `formatTanggal` dan `formatDaftarSesi` dipindah ke `main/common/formatTanggal.ts` karena dipakai F5 dan F6 (helper umum dipakai 2 tempat atau lebih).
 
 ## Deviasi dari PRD
 
@@ -43,7 +48,7 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 
 ## Sengaja tidak dikerjakan
 
-- F6 Sertifikat, F7 Dashboard/Riwayat/Invoice, Jalur M, dan fase Penutup.
+- F7 Dashboard/Riwayat/Invoice, Jalur M, dan fase Penutup.
 - Kuota peserta: PRD 9.4 menyatakan tidak ada konsep kuota.
 
 ## Ikon yang dibutuhkan tapi tidak tersedia
@@ -78,3 +83,13 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 7. Tab **Peserta Mandiri**: "Tambah Peserta Mandiri" memakai modal yang sama; peserta muncul tanpa perusahaan.
 8. Tab **Terhapus**: pendaftaran/peserta yang dihapus bisa direstore. Restore ditolak bila parent sudah dihapus.
 9. Duplikat: tambahkan peserta yang sama dua kali → ditolak dengan menyebut tempat pendaftarannya.
+
+### F6 Sertifikat
+1. Buka `/sertifikat`. Daftar peserta terdaftar tampil dengan kolom peserta, perusahaan pendaftar, kegiatan, PIC, status hasil, no. sertifikat, dan tanggal terima.
+2. Filter kegiatan, jenis sertifikasi, dan status hasil (termasuk "Belum ada hasil"). Pencarian nama peserta / perusahaan / no. sertifikat bekerja.
+3. Klik **Ubah** pada satu baris. Isi status, no. registrasi, no. sertifikat, masa berlaku, tanggal terima, catatan. Simpan.
+   - Kegiatan INTERNAL: field resmi tidak tampil.
+   - Kegiatan KEMNAKER: field No. SKP tampil.
+4. Isi No. Sertifikat yang sama pada dua peserta dengan jenis sertifikasi sama → tersimpan dengan pesan peringatan.
+5. Centang beberapa baris → bar muncul. Pilih status lalu **Terapkan Status**; semua baris terpilih berubah.
+6. Status kosong tetap "Belum ada hasil"; sistem tidak pernah mengisi GAGAL otomatis.

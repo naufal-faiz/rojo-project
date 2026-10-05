@@ -2,7 +2,7 @@ import React from "react";
 import StatusTemanK3Badge from "@/components/main/permohonan/StatusTemanK3Badge";
 import { Column } from "@/components/main/common/DataTable";
 import { JenisKegiatan, JenisSertifikasi, StatusTemanK3 } from "@/lib/generated/prisma/enums";
-import { formatDaftarSesi } from "./pendaftaranFormat";
+import { formatDaftarSesi } from "@/components/main/common/formatTanggal";
 
 export interface PendaftaranRow {
   id: string;
