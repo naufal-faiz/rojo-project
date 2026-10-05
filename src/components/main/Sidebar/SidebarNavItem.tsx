@@ -1,11 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useCallback } from "react";
 import Link from "next/link";
 import { ChevronDownIcon } from "@/icons/index";
 import { useSidebar } from "@/lib/context/SidebarContext";
 import { NavigationData } from "./navigationData";
 
+// eslint-disable-next-line react-hooks/immutability, react-compiler/react-compiler
 interface SidebarNavigationDataProps {
   nav: NavigationData;
   index: number;
@@ -30,6 +31,12 @@ const SidebarNavigationData: React.FC<SidebarNavigationDataProps> = ({
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
   const isFullView = isExpanded || isHovered || isMobileOpen;
   const subMenuKey = `${menuType}-${index}`;
+
+  const setSubMenuRef = useCallback((el: HTMLDivElement | null) => {
+    if (subMenuRefs.current && el) {
+      subMenuRefs.current[subMenuKey] = el;
+    }
+  }, [subMenuKey, subMenuRefs]);
 
   return (
     <li>
@@ -70,9 +77,7 @@ const SidebarNavigationData: React.FC<SidebarNavigationDataProps> = ({
 
       {nav.subItems && isFullView && (
         <div
-          ref={(el) => {
-            if (subMenuRefs.current) subMenuRefs.current[subMenuKey] = el;
-          }}
+          ref={setSubMenuRef}
           className="overflow-hidden transition-all duration-300"
           style={{ height: isSubmenuOpen ? `${subMenuHeight}px` : "0px" }}
         >

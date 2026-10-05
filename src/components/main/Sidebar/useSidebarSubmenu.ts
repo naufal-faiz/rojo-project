@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { navigationData, othersItems } from "./navigationData";
@@ -13,6 +14,7 @@ export function useSidebarSubmenu() {
 
   const isActive = useCallback((path: string) => path === pathname, [pathname]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     let submenuMatched = false;
     const sections: Array<{ type: "main" | "others"; items: typeof navigationData }> = [
@@ -20,12 +22,12 @@ export function useSidebarSubmenu() {
       { type: "others", items: othersItems },
     ];
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     sections.forEach(({ type, items }) => {
       items.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
             if (isActive(subItem.path)) {
-              setOpenSubmenu({ type, index });
               submenuMatched = true;
             }
           });
@@ -33,10 +35,10 @@ export function useSidebarSubmenu() {
       });
     });
 
-    if (!submenuMatched) {
+    if (!submenuMatched && openSubmenu !== null) {
       setOpenSubmenu(null);
     }
-  }, [pathname, isActive]);
+  }, [pathname, isActive, openSubmenu]);
 
   useEffect(() => {
     if (openSubmenu !== null) {

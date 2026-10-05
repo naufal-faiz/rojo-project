@@ -1,7 +1,6 @@
 "use client";
 import React, { useState } from "react";
 import Button from "@/components/ui/button/Button";
-import Label from "@/components/form/Label";
 import Input from "@/components/form/input/InputField";
 import {
   createTingkatan,
@@ -9,6 +8,7 @@ import {
   deleteTingkatan,
 } from "@/lib/data/action/trainingAction";
 import ConfirmDialog from "@/components/main/common/ConfirmDialog";
+import AlertDialog from "@/components/main/common/AlertDialog";
 import { useModal } from "@/hooks/useModal";
 
 interface Tingkatan {
@@ -40,6 +40,7 @@ const TingkatanManager: React.FC<TingkatanManagerProps> = ({
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const { isOpen: isConfirmOpen, openModal: openConfirm, closeModal: closeConfirm } = useModal();
+  const { isOpen: isAlertOpen, openModal: openAlert, closeModal: closeAlert } = useModal();
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,8 +93,12 @@ const TingkatanManager: React.FC<TingkatanManagerProps> = ({
     try {
       const result = await deleteTingkatan(deleteId);
       if (!result.success) {
+        // Error: tutup confirm, tampilkan alert
+        closeConfirm();
         setDeleteError(result.error ?? "Gagal menghapus tingkatan.");
+        openAlert();
       } else {
+        // Sukses: tutup confirm
         closeConfirm();
         setDeleteId(null);
       }
@@ -169,10 +174,20 @@ const TingkatanManager: React.FC<TingkatanManagerProps> = ({
         onClose={closeConfirm}
         onConfirm={handleDelete}
         title="Hapus Tingkatan"
-        message={deleteError ?? "Yakin ingin menghapus tingkatan ini? Tidak bisa dibatalkan jika masih digunakan permohonan aktif."}
+        message="Yakin ingin menghapus tingkatan ini? Tidak bisa dihapus jika masih digunakan permohonan aktif."
         confirmLabel="Ya, Hapus"
         variant="danger"
         isLoading={deleteLoading}
+      />
+
+      {/* Alert dialog untuk error */}
+      <AlertDialog
+        isOpen={isAlertOpen}
+        onClose={closeAlert}
+        title="Tidak Dapat Menghapus"
+        message={deleteError ?? "Gagal menghapus tingkatan."}
+        okLabel="OK"
+        variant="error"
       />
     </div>
   );

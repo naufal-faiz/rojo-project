@@ -57,8 +57,8 @@ export async function deleteTraining(id: string) {
         })
         revalidatePath("/master/training")
         return { success: true }
-    } catch (err: any) {
-        const message = err?.message ?? "Gagal menghapus data training."
+    } catch (err) {
+        const message = err instanceof Error ? err.message : "Gagal menghapus data training."
         return { success: false, error: message }
     }
 }
@@ -138,8 +138,8 @@ export async function deleteTingkatan(id: string) {
         })
         revalidatePath("/master/training")
         return { success: true }
-    } catch (err: any) {
-        const message = err?.message ?? "Gagal menghapus data tingkatan."
+    } catch (err) {
+        const message = err instanceof Error ? err.message : "Gagal menghapus data tingkatan."
         return { success: false, error: message }
     }
 }

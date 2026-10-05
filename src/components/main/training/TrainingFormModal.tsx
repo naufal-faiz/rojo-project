@@ -1,7 +1,5 @@
 "use client";
 import React, { useState } from "react";
-import { useModal } from "@/hooks/useModal";
-import { Modal } from "@/components/ui/modal";
 import Button from "@/components/ui/button/Button";
 import Label from "@/components/form/Label";
 import Input from "@/components/form/input/InputField";

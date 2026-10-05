@@ -1,4 +1,4 @@
-import { getAllTrainings } from "@/lib/data/get/getTraining";
+import { getAllTrainings, getDeletedTrainings } from "@/lib/data/get/getTraining";
 import TrainingList from "@/components/main/training/TrainingList";
 
 export const metadata = {
@@ -7,11 +7,17 @@ export const metadata = {
 };
 
 export default async function TrainingPage() {
-  const { data } = await getAllTrainings({ limit: 100 });
+  const [activeResult, deletedResult] = await Promise.all([
+    getAllTrainings({ limit: 100 }),
+    getDeletedTrainings({ limit: 100 })
+  ]);
 
   return (
     <div className="p-4 sm:p-6">
-      <TrainingList initialData={data} />
+      <TrainingList 
+        initialData={activeResult.data} 
+        deletedData={deletedResult.data}
+      />
     </div>
   );
 }

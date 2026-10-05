@@ -12,7 +12,7 @@ export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [state, action, isPending] = useActionState(
-    async (prevState: any, formData: FormData) => {
+    async (prevState: { success?: boolean; error?: string } | null, formData: FormData) => {
       return await signInAction(formData);
     },
     null

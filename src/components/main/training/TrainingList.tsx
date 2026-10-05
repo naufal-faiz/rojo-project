@@ -5,8 +5,10 @@ import { useModal } from "@/hooks/useModal";
 import Button from "@/components/ui/button/Button";
 import PageHeader from "@/components/main/common/PageHeader";
 import ConfirmDialog from "@/components/main/common/ConfirmDialog";
+import AlertDialog from "@/components/main/common/AlertDialog";
 import TrainingFormModal from "./TrainingFormModal";
 import TingkatanManager from "./TingkatanManager";
+import DeletedTrainingList from "./DeletedTrainingList";
 import { deleteTraining } from "@/lib/data/action/trainingAction";
 
 interface Tingkatan {
@@ -22,9 +24,11 @@ interface TrainingData {
 
 interface TrainingListProps {
   initialData: TrainingData[];
+  deletedData: TrainingData[];
 }
 
-const TrainingList: React.FC<TrainingListProps> = ({ initialData }) => {
+const TrainingList: React.FC<TrainingListProps> = ({ initialData, deletedData }) => {
+  const [activeTab, setActiveTab] = useState<"active" | "deleted">("active");
   const [editData, setEditData] = useState<{ id: string; nama: string } | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -40,6 +44,11 @@ const TrainingList: React.FC<TrainingListProps> = ({ initialData }) => {
     isOpen: isConfirmOpen,
     openModal: openConfirm,
     closeModal: closeConfirm,
+  } = useModal();
+  const {
+    isOpen: isAlertOpen,
+    openModal: openAlert,
+    closeModal: closeAlert,
   } = useModal();
 
   const handleOpenAdd = () => {
@@ -64,8 +73,12 @@ const TrainingList: React.FC<TrainingListProps> = ({ initialData }) => {
     try {
       const result = await deleteTraining(deleteId);
       if (!result.success) {
+        // Error: tutup confirm, tampilkan alert
+        closeConfirm();
         setDeleteError(result.error ?? "Gagal menghapus training.");
+        openAlert();
       } else {
+        // Sukses: tutup confirm
         closeConfirm();
         setDeleteId(null);
       }
@@ -89,8 +102,33 @@ const TrainingList: React.FC<TrainingListProps> = ({ initialData }) => {
         }}
       />
 
-      {/* Daftar training */}
-      <div className="space-y-3">
+      {/* Tab switch */}
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setActiveTab("active")}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            activeTab === "active"
+              ? "bg-brand-500 text-white dark:bg-brand-600"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+          }`}
+        >
+          Aktif ({initialData.length})
+        </button>
+        <button
+          onClick={() => setActiveTab("deleted")}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            activeTab === "deleted"
+              ? "bg-brand-500 text-white dark:bg-brand-600"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+          }`}
+        >
+          Terhapus ({deletedData.length})
+        </button>
+      </div>
+
+      {/* Daftar training aktif */}
+      {activeTab === "active" && (
+        <div className="space-y-3">
         {initialData.length === 0 ? (
           <div className="rounded-xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500 dark:border-white/[0.05] dark:bg-white/[0.03] dark:text-gray-400">
             Belum ada data training. Klik &quot;Tambah Training&quot; untuk mulai.
@@ -133,7 +171,6 @@ const TrainingList: React.FC<TrainingListProps> = ({ initialData }) => {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="!text-error-500 !ring-error-200 hover:!bg-error-50 dark:!ring-error-700 dark:hover:!bg-error-900/20"
                     onClick={() => handleOpenDelete(training.id)}
                   >
                     Hapus
@@ -156,7 +193,13 @@ const TrainingList: React.FC<TrainingListProps> = ({ initialData }) => {
             </div>
           ))
         )}
-      </div>
+        </div>
+      )}
+
+      {/* Daftar training terhapus */}
+      {activeTab === "deleted" && (
+        <DeletedTrainingList initialData={deletedData} />
+      )}
 
       {/* Modal form tambah/ubah training */}
       <Modal isOpen={isFormOpen} onClose={closeForm} className="max-w-md">
@@ -169,13 +212,20 @@ const TrainingList: React.FC<TrainingListProps> = ({ initialData }) => {
         onClose={closeConfirm}
         onConfirm={handleDelete}
         title="Hapus Training"
-        message={
-          deleteError ??
-          "Yakin ingin menghapus training ini? Training hanya bisa dihapus jika tidak ada tingkatan aktif."
-        }
+        message="Yakin ingin menghapus training ini? Training hanya bisa dihapus jika tidak ada tingkatan aktif."
         confirmLabel="Ya, Hapus"
         variant="danger"
         isLoading={deleteLoading}
+      />
+
+      {/* Alert dialog untuk error (tidak bisa dihapus) */}
+      <AlertDialog
+        isOpen={isAlertOpen}
+        onClose={closeAlert}
+        title="Tidak Dapat Menghapus"
+        message={deleteError ?? "Gagal menghapus training."}
+        okLabel="OK"
+        variant="error"
       />
     </>
   );
