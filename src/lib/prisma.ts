@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 // NOTE: Jalankan `npx prisma generate` untuk men-generate client ke folder ./generated/prisma
 import { PrismaClient } from "./generated/prisma/client";

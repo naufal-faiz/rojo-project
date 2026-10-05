@@ -30,5 +30,19 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "src/components/form/CheckboxComponents.tsx",
+    "src/components/form/DefaultInputs.tsx",
+    "src/components/form/DropZone.tsx",
+    "src/components/form/FileInputExample.tsx",
+    "src/components/form/InputGroup.tsx",
+    "src/components/form/InputStates.tsx",
+    "src/components/form/RadioButtons.tsx",
+    "src/components/form/SelectInputs.tsx",
+    "src/components/form/TextAreaInput.tsx",
+    "src/components/form/ToggleSwitch.tsx",
+    "src/components/form/date-picker.tsx",
+    "src/components/form/form-elements/**"
+  ]
 }
