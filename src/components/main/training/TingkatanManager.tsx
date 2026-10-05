@@ -8,7 +8,7 @@ import {
   deleteTingkatan,
 } from "@/lib/data/action/trainingAction";
 import ConfirmDialog from "@/components/main/common/ConfirmDialog";
-import AlertDialog from "@/components/main/common/AlertDialog";
+import AlertModal from "@/components/main/Modal/AlertModal";
 import { useModal } from "@/hooks/useModal";
 
 interface Tingkatan {
@@ -38,9 +38,11 @@ const TingkatanManager: React.FC<TingkatanManagerProps> = ({
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
   const { isOpen: isConfirmOpen, openModal: openConfirm, closeModal: closeConfirm } = useModal();
   const { isOpen: isAlertOpen, openModal: openAlert, closeModal: closeAlert } = useModal();
+  const [alertType, setAlertType] = useState<"success" | "error">("success");
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,8 +52,16 @@ const TingkatanManager: React.FC<TingkatanManagerProps> = ({
       const result = await createTingkatan(trainingId, newKelas);
       if (!result.success) {
         setAddError(result.error ?? "Gagal menambah tingkatan.");
+        setAlertType("error");
+        setAlertTitle("Gagal Menambah");
+        setAlertMessage(result.error ?? "Gagal menambah tingkatan.");
+        openAlert();
       } else {
         setNewKelas("");
+        setAlertType("success");
+        setAlertTitle("Berhasil");
+        setAlertMessage("Tingkatan berhasil ditambahkan.");
+        openAlert();
       }
     } finally {
       setAddLoading(false);
@@ -73,8 +83,16 @@ const TingkatanManager: React.FC<TingkatanManagerProps> = ({
       const result = await updateTingkatan(editId, editKelas);
       if (!result.success) {
         setEditError(result.error ?? "Gagal mengubah tingkatan.");
+        setAlertType("error");
+        setAlertTitle("Gagal Mengubah");
+        setAlertMessage(result.error ?? "Gagal mengubah tingkatan.");
+        openAlert();
       } else {
         setEditId(null);
+        setAlertType("success");
+        setAlertTitle("Berhasil");
+        setAlertMessage("Tingkatan berhasil diubah.");
+        openAlert();
       }
     } finally {
       setEditLoading(false);
@@ -83,7 +101,6 @@ const TingkatanManager: React.FC<TingkatanManagerProps> = ({
 
   const confirmDelete = (id: string) => {
     setDeleteId(id);
-    setDeleteError(null);
     openConfirm();
   };
 
@@ -93,14 +110,20 @@ const TingkatanManager: React.FC<TingkatanManagerProps> = ({
     try {
       const result = await deleteTingkatan(deleteId);
       if (!result.success) {
-        // Error: tutup confirm, tampilkan alert
+        // Error: tutup confirm, tampilkan alert error
         closeConfirm();
-        setDeleteError(result.error ?? "Gagal menghapus tingkatan.");
+        setAlertType("error");
+        setAlertTitle("Gagal Menghapus");
+        setAlertMessage(result.error ?? "Gagal menghapus tingkatan.");
         openAlert();
       } else {
-        // Sukses: tutup confirm
+        // Sukses: tutup confirm, tampilkan alert sukses
         closeConfirm();
         setDeleteId(null);
+        setAlertType("success");
+        setAlertTitle("Berhasil");
+        setAlertMessage("Tingkatan berhasil dihapus.");
+        openAlert();
       }
     } finally {
       setDeleteLoading(false);
@@ -180,14 +203,14 @@ const TingkatanManager: React.FC<TingkatanManagerProps> = ({
         isLoading={deleteLoading}
       />
 
-      {/* Alert dialog untuk error */}
-      <AlertDialog
+      {/* Alert untuk keberhasilan/kegagalan aksi */}
+      <AlertModal
         isOpen={isAlertOpen}
         onClose={closeAlert}
-        title="Tidak Dapat Menghapus"
-        message={deleteError ?? "Gagal menghapus tingkatan."}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
         okLabel="OK"
-        variant="error"
       />
     </div>
   );

@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import Button from "@/components/ui/button/Button";
 import ConfirmDialog from "@/components/main/common/ConfirmDialog";
+import AlertModal from "@/components/main/Modal/AlertModal";
 import { restoreTraining, restoreTingkatan } from "@/lib/data/action/trainingAction";
 import { useModal } from "@/hooks/useModal";
 
@@ -27,11 +28,19 @@ const DeletedTrainingList: React.FC<DeletedTrainingListProps> = ({ initialData }
   const [restoreError, setRestoreError] = useState<string | null>(null);
   const [restoreLoading, setRestoreLoading] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [alertType, setAlertType] = useState<"success" | "error">("success");
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
 
   const {
     isOpen: isConfirmOpen,
     openModal: openConfirm,
     closeModal: closeConfirm,
+  } = useModal();
+  const {
+    isOpen: isAlertOpen,
+    openModal: openAlert,
+    closeModal: closeAlert,
   } = useModal();
 
   const handleOpenRestore = (id: string) => {
@@ -46,10 +55,19 @@ const DeletedTrainingList: React.FC<DeletedTrainingListProps> = ({ initialData }
     try {
       const result = await restoreTraining(restoreId);
       if (!result.success) {
+        closeConfirm();
         setRestoreError(result.error ?? "Gagal merestore training.");
+        setAlertType("error");
+        setAlertTitle("Gagal Restore");
+        setAlertMessage(result.error ?? "Gagal merestore training.");
+        openAlert();
       } else {
         closeConfirm();
         setRestoreId(null);
+        setAlertType("success");
+        setAlertTitle("Berhasil");
+        setAlertMessage("Training berhasil direstore.");
+        openAlert();
       }
     } finally {
       setRestoreLoading(false);
@@ -158,6 +176,16 @@ const DeletedTrainingList: React.FC<DeletedTrainingListProps> = ({ initialData }
         confirmLabel="Ya, Restore"
         variant="primary"
         isLoading={restoreLoading}
+      />
+
+      {/* Alert untuk keberhasilan/kegagalan restore */}
+      <AlertModal
+        isOpen={isAlertOpen}
+        onClose={closeAlert}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        okLabel="OK"
       />
     </>
   );

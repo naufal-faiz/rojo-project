@@ -4,6 +4,8 @@ import Button from "@/components/ui/button/Button";
 import Label from "@/components/form/Label";
 import Input from "@/components/form/input/InputField";
 import { createTraining, updateTraining } from "@/lib/data/action/trainingAction";
+import AlertModal from "@/components/main/Modal/AlertModal";
+import { useModal } from "@/hooks/useModal";
 
 interface TrainingFormModalProps {
   /** Jika diisi, mode edit; jika kosong, mode tambah */
@@ -15,8 +17,20 @@ const TrainingFormModal: React.FC<TrainingFormModalProps> = ({ editData, onClose
   const [nama, setNama] = useState(editData?.nama ?? "");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [alertType, setAlertType] = useState<"success" | "error">("success");
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const { isOpen: isAlertOpen, openModal: openAlert, closeModal: closeAlert } = useModal();
 
   const isEdit = Boolean(editData);
+
+  const handleAlertClose = () => {
+    closeAlert();
+    // Jika alert sukses, tutup modal form
+    if (alertType === "success") {
+      onClose();
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,8 +42,15 @@ const TrainingFormModal: React.FC<TrainingFormModalProps> = ({ editData, onClose
         : await createTraining(nama);
       if (!result.success) {
         setError(result.error ?? "Terjadi kesalahan.");
+        setAlertType("error");
+        setAlertTitle("Gagal");
+        setAlertMessage(result.error ?? "Terjadi kesalahan.");
+        openAlert();
       } else {
-        onClose();
+        setAlertType("success");
+        setAlertTitle("Berhasil");
+        setAlertMessage(isEdit ? "Training berhasil diubah." : "Training berhasil ditambahkan.");
+        openAlert();
       }
     } finally {
       setLoading(false);
@@ -68,6 +89,16 @@ const TrainingFormModal: React.FC<TrainingFormModalProps> = ({ editData, onClose
           </Button>
         </div>
       </form>
+
+      {/* Alert untuk keberhasilan/kegagalan */}
+      <AlertModal
+        isOpen={isAlertOpen}
+        onClose={handleAlertClose}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        okLabel="OK"
+      />
     </div>
   );
 };

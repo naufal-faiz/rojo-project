@@ -5,7 +5,7 @@ import { useModal } from "@/hooks/useModal";
 import Button from "@/components/ui/button/Button";
 import PageHeader from "@/components/main/common/PageHeader";
 import ConfirmDialog from "@/components/main/common/ConfirmDialog";
-import AlertDialog from "@/components/main/common/AlertDialog";
+import AlertModal from "@/components/main/Modal/AlertModal";
 import TrainingFormModal from "./TrainingFormModal";
 import TingkatanManager from "./TingkatanManager";
 import DeletedTrainingList from "./DeletedTrainingList";
@@ -31,9 +31,11 @@ const TrainingList: React.FC<TrainingListProps> = ({ initialData, deletedData })
   const [activeTab, setActiveTab] = useState<"active" | "deleted">("active");
   const [editData, setEditData] = useState<{ id: string; nama: string } | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [alertType, setAlertType] = useState<"success" | "error">("success");
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
 
   const {
     isOpen: isFormOpen,
@@ -63,7 +65,6 @@ const TrainingList: React.FC<TrainingListProps> = ({ initialData, deletedData })
 
   const handleOpenDelete = (id: string) => {
     setDeleteId(id);
-    setDeleteError(null);
     openConfirm();
   };
 
@@ -73,14 +74,20 @@ const TrainingList: React.FC<TrainingListProps> = ({ initialData, deletedData })
     try {
       const result = await deleteTraining(deleteId);
       if (!result.success) {
-        // Error: tutup confirm, tampilkan alert
+        // Error: tutup confirm, tampilkan alert error
         closeConfirm();
-        setDeleteError(result.error ?? "Gagal menghapus training.");
+        setAlertType("error");
+        setAlertTitle("Gagal Menghapus");
+        setAlertMessage(result.error ?? "Gagal menghapus training.");
         openAlert();
       } else {
-        // Sukses: tutup confirm
+        // Sukses: tutup confirm, tampilkan alert sukses
         closeConfirm();
         setDeleteId(null);
+        setAlertType("success");
+        setAlertTitle("Berhasil");
+        setAlertMessage("Training berhasil dihapus.");
+        openAlert();
       }
     } finally {
       setDeleteLoading(false);
@@ -218,14 +225,14 @@ const TrainingList: React.FC<TrainingListProps> = ({ initialData, deletedData })
         isLoading={deleteLoading}
       />
 
-      {/* Alert dialog untuk error (tidak bisa dihapus) */}
-      <AlertDialog
+      {/* Alert untuk keberhasilan/kegagalan aksi */}
+      <AlertModal
         isOpen={isAlertOpen}
         onClose={closeAlert}
-        title="Tidak Dapat Menghapus"
-        message={deleteError ?? "Gagal menghapus training."}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
         okLabel="OK"
-        variant="error"
       />
     </>
   );
