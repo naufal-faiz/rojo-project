@@ -15,8 +15,8 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 | F5 Pendaftaran | Selesai | F5 selesai: pendaftaran perusahaan, peserta mandiri, tempel nama |
 | F6 Sertifikat | Selesai | F6 selesai: daftar sertifikat, form hasil, ubah status massal |
 | F7 Dashboard, Riwayat Kegiatan, Invoice | Selesai | F7 selesai: dashboard data nyata, riwayat kegiatan, placeholder invoice |
-| Jalur M Migrasi Excel | Belum | - |
-| Penutup | Belum | - |
+| Jalur M Migrasi Excel | Selesai (dry-run teruji dengan file contoh) | Jalur M selesai: skrip impor Excel dry-run dan commit terkunci |
+| Penutup | Selesai | Penutup selesai: pecah file panjang, peta label tunggal, detail perusahaan, ComponentCard |
 
 ## Asumsi
 
@@ -42,20 +42,33 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 - **A-20** Ringkasan hasil pada Riwayat Kegiatan: Lulus = status `LULUS`, Gagal = `GAGAL`, Lainnya = sisanya (termasuk status kosong dan enum lain).
 - **A-21** Filter tahun Riwayat Kegiatan diambil dari tahun-tahun yang punya sesi pada pelaksanaan aktif.
 - **A-22** `keTanggalInput` di `main/common/formatTanggal.ts` mengubah Date `@db.Date` ke `YYYY-MM-DD` memakai getter UTC agar tanggal tidak bergeser.
+- **A-23** Jalur M: `.gitignore` memakai `/data/` (hanya root) agar folder `src/lib/data/` tidak ikut terabaikan. Catatan: percobaan pertama memakai `data/` dan sempat mengabaikan file baru di `src/lib/data/`.
+- **A-24** Jalur M: `--commit` dikunci `ALLOW_IMPORT=1` dan hanya untuk pemilik; agent tidak pernah menjalankannya. Dry-run selalu menulis laporan ke `data/import-report/` (di-gitignore).
+- **A-25** Jalur M: `pemetaan_perusahaan.csv` dan `pemetaan_alat.csv` dibaca ulang sebagai input bila ada di `data/import-report/`, sehingga pemilik bisa mengoreksi pemetaan lalu menjalankan dry-run lagi.
+- **A-26** Jalur M: kolom Excel dideteksi lewat alias header pada 10 baris pertama (nama kolom asli belum diketahui saat kode ditulis). Header yang tidak cocok dilaporkan lewat baris yang tidak terbaca.
+- **A-27** Penutup: pemecahan file panjang (utang #1) murni ekstraksi kolom/hook tanpa mengubah perilaku; `perusahaanAction.ts` dipecah menjadi `perusahaanAction.ts` + `cabangAction.ts` + `picAction.ts`; `PelaksanaanList`/`PesertaList` memakai file `*Columns.tsx`; `CabangManager`/`PicManager`/`PelaksanaanFormModal` memakai hook `use*`.
 
 ## Deviasi dari PRD
 
-- **D-01** (sudah ada di PRD 9.2) Detail perusahaan berupa baris expand inline, bukan route, dan belum menampilkan peserta. Diselesaikan di fase Penutup (utang teknis #5).
+- **D-01** (sudah ada di PRD 9.2) Detail perusahaan tetap berupa baris expand inline, bukan route. Daftar peserta sudah ditambahkan di baris expand sesuai utang teknis #5, tanpa membuat route baru.
 - **D-02** PRD 9.4 menyebut tiga cara menambah peserta, termasuk "tambah peserta baru cepat memakai `PesertaFormModal`". Karena `PesertaFormModal` tidak mengembalikan id peserta, ditambahkan prop opsional `onCreated` (backward-compatible) agar peserta baru langsung didaftarkan.
+- **D-03** Detail permohonan menampilkan status peserta mandiri dengan `StatusBadge` (sebelumnya teks mentah). Bagian dari utang teknis #3/#4.
 
 ## Utang teknis baru
 
-- Tidak ada. Utang teknis lama tetap mengacu ke `PRD.md` bagian 11. `PelaksanaanList.tsx` masih di atas ±150 baris (utang #1, dikerjakan di fase Penutup).
+- Tidak ada. Seluruh utang teknis di `PRD.md` bagian 11 (nomor 1-7) sudah dikerjakan di fase Penutup.
+
+## Perbaikan bug (di luar utang, dicatat sesuai PRD bagian 0 butir 8)
+
+- Hapus PIC kini diblokir bila PIC dipakai `PendaftaranPerusahaan` aktif (FR-SOFTDELETE).
+- Riwayat kegiatan peserta mandiri di `/master/peserta/[id]` sebelumnya selalu "-" karena hanya membaca relasi `pendaftaranPerusahaan`; kini membaca `pelaksanaan` langsung.
+- `.gitignore` `data/` diubah menjadi `/data/` (lihat A-23).
 
 ## Sengaja tidak dikerjakan
 
-- F7 Dashboard/Riwayat/Invoice, Jalur M, dan fase Penutup.
+- Modul Invoice dan Pengiriman (placeholder saja), log riwayat TemanK3, analisis sheet LAIN-LAIN dan EBILLING, integrasi TemanK3/BNSP, role granular (sesuai PRD bagian 7).
 - Kuota peserta: PRD 9.4 menyatakan tidak ada konsep kuota.
+- Import `--commit` ke database: hanya boleh dijalankan pemilik dengan `ALLOW_IMPORT=1`.
 
 ## Ikon yang dibutuhkan tapi tidak tersedia
 
@@ -104,3 +117,18 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 1. Buka `/`. Empat kartu angka tampil (kegiatan tahun ini, KEMNAKER belum upload, peserta terdaftar, hasil belum diisi), lalu daftar "5 Kegiatan Terdekat" dan "5 Kegiatan Terakhir". Klik salah satu item menuju detail permohonan. Tidak ada lagi tautan ke `/admin/training/jadwal`.
 2. Buka `/master/riwayat-kegiatan`. Hanya permohonan yang seluruh sesinya sudah lewat yang tampil. Filter tahun, penyelenggara, jenis sertifikasi, jenis kegiatan, dan pencarian bekerja. Klik baris menuju detail permohonan.
 3. Buka `/invoice`. Halaman placeholder "Segera Hadir" tampil tanpa error.
+
+### Jalur M — skrip migrasi Excel
+1. Letakkan berkas `MASTER DATA PEMBINAAN 2025.xlsx` di folder `data/` (folder ini di-gitignore).
+2. Jalankan `npm run import:excel`. Skrip membaca sheet KEMNAKER dan BNSP, menulis laporan ke `data/import-report/`, dan **tidak** menulis ke database.
+3. Periksa `ringkasan.md`, `perlu_keputusan.csv`, `pemetaan_perusahaan.csv`, `pemetaan_alat.csv`, dan `ditunda_invoice_pengiriman.csv`.
+4. Bila perlu, sunting `pemetaan_perusahaan.csv` / `pemetaan_alat.csv`, lalu jalankan `npm run import:excel` lagi; pemetaan dibaca ulang.
+5. Tanpa berkas, skrip berhenti dengan pesan yang jelas dan tidak error.
+6. `npm run import:excel -- --commit` ditolak kecuali `ALLOW_IMPORT=1` (khusus pemilik).
+
+### Penutup — regresi
+1. `/master/perusahaan`: expand sebuah perusahaan → bagian Cabang, PIC, dan **Peserta** tampil. Tambah/ubah/hapus cabang dan PIC berfungsi seperti sebelumnya.
+2. Hapus PIC yang masih dipakai pendaftaran aktif → ditolak dengan pesan jelas.
+3. `/master/peserta/[id]` untuk peserta mandiri → riwayat kegiatan menampilkan nama pelatihan dan tanggalnya (bukan "-").
+4. `/permohonan` dan `/master/peserta`: kolom tabel, pencarian, paginasi, tambah/ubah/hapus/restore berfungsi seperti sebelumnya setelah pemecahan file.
+5. Semua halaman menu bisa dibuka: `/`, `/permohonan`, `/pendaftaran`, `/sertifikat`, `/invoice`, `/master/training`, `/master/perusahaan`, `/master/peserta`, `/master/riwayat-kegiatan`.

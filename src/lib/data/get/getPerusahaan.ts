@@ -23,6 +23,13 @@ export const getAllPerusahaan = cache(async (options: GetPerusahaanOptions = {})
                 include: {
                     cabang: {
                         where: { deletedAt: null },
+                        include: {
+                            peserta: {
+                                where: { deletedAt: null },
+                                orderBy: { nama: "asc" },
+                                select: { id: true, nama: true }
+                            }
+                        },
                         orderBy: { createdAt: "asc" }
                     },
                     perusahaanPic: {

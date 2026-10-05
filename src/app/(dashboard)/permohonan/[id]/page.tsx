@@ -2,6 +2,7 @@ import { getPelaksanaanById } from "@/lib/data/get/getPelaksanaan";
 import { notFound } from "next/navigation";
 import PageHeader from "@/components/main/common/PageHeader";
 import ComponentCard from "@/components/main/common/ComponentCard";
+import StatusBadge from "@/components/main/common/StatusBadge";
 import SesiManager from "@/components/main/permohonan/SesiManager";
 import StatusTemanK3Panel from "@/components/main/permohonan/StatusTemanK3Panel";
 import {
@@ -32,9 +33,7 @@ export default async function PermohonanDetailPage({
         }}
       />
 
-      {/* Info Utama */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-white/[0.05] dark:bg-white/[0.03]">
-        <h3 className="text-sm font-semibold text-gray-800 dark:text-white mb-4">Informasi Kegiatan</h3>
+      <ComponentCard title="Informasi Kegiatan">
         <dl className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
           <div>
             <dt className="text-gray-500">Jenis Kegiatan</dt>
@@ -63,9 +62,8 @@ export default async function PermohonanDetailPage({
             </div>
           )}
         </dl>
-      </div>
+      </ComponentCard>
 
-      {/* Status TemanK3 & Unggah Berkas */}
       <ComponentCard
         title="Status TemanK3 & Unggah Berkas"
         desc="Catat status permohonan ke TemanK3 beserta tanggal unggah berkas."
@@ -78,46 +76,54 @@ export default async function PermohonanDetailPage({
         />
       </ComponentCard>
 
-      {/* Sesi Pelaksanaan */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-white/[0.05] dark:bg-white/[0.03]">
+      <ComponentCard
+        title="Jadwal Sesi"
+        desc="Satu baris per hari pelaksanaan. Tanggal libur tidak perlu dicatat terpisah."
+      >
         <SesiManager pelaksanaanId={pelaksanaan.id} sesiList={pelaksanaan.sesi} />
-      </div>
+      </ComponentCard>
 
-      {/* Pendaftaran Perusahaan */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-white/[0.05] dark:bg-white/[0.03]">
-        <h3 className="text-sm font-semibold text-gray-800 dark:text-white mb-4">Pendaftaran Perusahaan</h3>
+      <ComponentCard
+        title="Pendaftaran Perusahaan"
+        desc="Ringkasan read-only. Kelola pendaftaran dari halaman Pendaftaran."
+      >
         {pelaksanaan.pendaftaran.length === 0 ? (
-          <p className="text-sm text-gray-500 italic">Belum ada perusahaan yang mendaftar.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 italic">Belum ada perusahaan yang mendaftar.</p>
         ) : (
           <div className="space-y-3">
             {pelaksanaan.pendaftaran.map((p) => (
-              <div key={p.id} className="p-3 border border-gray-100 rounded-lg flex justify-between items-center dark:border-gray-700">
-                <div>
-                  <p className="font-medium text-sm text-gray-800 dark:text-gray-200">{p.perusahaan.nama}</p>
-                  <p className="text-xs text-gray-500">PIC: {p.pic?.nama ?? "Belum ditentukan"} • {p.pesertaPelaksanaan.length} peserta</p>
-                </div>
+              <div key={p.id} className="p-3 border border-gray-100 rounded-lg dark:border-gray-700">
+                <p className="font-medium text-sm text-gray-800 dark:text-gray-200">{p.perusahaan.nama}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  PIC: {p.pic?.nama ?? "Belum ditentukan"} • {p.pesertaPelaksanaan.length} peserta
+                </p>
               </div>
             ))}
           </div>
         )}
-      </div>
+      </ComponentCard>
 
-      {/* Peserta Mandiri */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-white/[0.05] dark:bg-white/[0.03]">
-        <h3 className="text-sm font-semibold text-gray-800 dark:text-white mb-4">Peserta Mandiri</h3>
+      <ComponentCard title="Peserta Mandiri">
         {pelaksanaan.pesertaPelaksanaan.length === 0 ? (
-          <p className="text-sm text-gray-500 italic">Belum ada peserta mandiri.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 italic">Belum ada peserta mandiri.</p>
         ) : (
           <div className="space-y-2">
             {pelaksanaan.pesertaPelaksanaan.map((p) => (
-              <div key={p.id} className="p-3 border border-gray-100 rounded-lg dark:border-gray-700">
+              <div
+                key={p.id}
+                className="flex flex-wrap items-center justify-between gap-2 p-3 border border-gray-100 rounded-lg dark:border-gray-700"
+              >
                 <p className="font-medium text-sm text-gray-800 dark:text-gray-200">{p.peserta.nama}</p>
-                <p className="text-xs text-gray-500">{p.status ?? "Belum ada hasil"}</p>
+                {p.status ? (
+                  <StatusBadge status={p.status} size="sm" />
+                ) : (
+                  <span className="text-xs text-gray-400 dark:text-gray-500 italic">Belum ada hasil</span>
+                )}
               </div>
             ))}
           </div>
         )}
-      </div>
+      </ComponentCard>
     </div>
   );
 }

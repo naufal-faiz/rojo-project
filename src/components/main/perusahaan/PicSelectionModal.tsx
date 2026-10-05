@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { searchAvailableMasterPic, linkPic } from "@/lib/data/action/perusahaanAction";
+import { searchAvailableMasterPic, linkPic } from "@/lib/data/action/picAction";
 import Button from "@/components/ui/button/Button";
 import { TipePic } from "@/lib/generated/prisma/enums";
 

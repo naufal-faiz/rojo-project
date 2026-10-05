@@ -1,7 +1,9 @@
 import { getPesertaById } from "@/lib/data/get/getPeserta";
 import { notFound } from "next/navigation";
 import PageHeader from "@/components/main/common/PageHeader";
-import Badge from "@/components/ui/badge/Badge";
+import ComponentCard from "@/components/main/common/ComponentCard";
+import StatusBadge from "@/components/main/common/StatusBadge";
+import { formatDaftarSesi } from "@/components/main/common/formatTanggal";
 
 export default async function PesertaDetailPage({
   params,
@@ -20,9 +22,7 @@ export default async function PesertaDetailPage({
         description="Detail data peserta dan riwayat kegiatan."
       />
 
-      {/* Info Utama */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-white/[0.05] dark:bg-white/[0.03]">
-        <h3 className="text-sm font-semibold text-gray-800 dark:text-white mb-4">Informasi Dasar</h3>
+      <ComponentCard title="Informasi Dasar">
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <div>
             <dt className="text-gray-500 dark:text-gray-400">Perusahaan</dt>
@@ -37,35 +37,40 @@ export default async function PesertaDetailPage({
             </dd>
           </div>
         </dl>
-      </div>
+      </ComponentCard>
 
-      {/* Riwayat Kegiatan */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-white/[0.05] dark:bg-white/[0.03]">
-        <h3 className="text-sm font-semibold text-gray-800 dark:text-white mb-4">Riwayat Kegiatan</h3>
+      <ComponentCard
+        title="Riwayat Kegiatan"
+        desc="Kegiatan yang pernah diikuti peserta, termasuk sebagai peserta mandiri."
+      >
         {peserta.pesertaPelaksanaan.length === 0 ? (
           <p className="text-sm text-gray-500 dark:text-gray-400 italic">Belum ada riwayat kegiatan.</p>
         ) : (
           <div className="space-y-3">
             {peserta.pesertaPelaksanaan.map((item) => (
-              <div key={item.id} className="p-3 border border-gray-100 rounded-lg dark:border-gray-700 flex justify-between items-center">
+              <div
+                key={item.id}
+                className="flex flex-wrap items-center justify-between gap-2 p-3 border border-gray-100 rounded-lg dark:border-gray-700"
+              >
                 <div>
                   <p className="font-medium text-sm text-gray-800 dark:text-gray-200">
-                    Kegiatan Pelatihan
+                    {item.pelaksanaan.tingkatan.training.nama} - {item.pelaksanaan.tingkatan.kelas}
                   </p>
-                  <p className="text-xs text-gray-500">
-                    {item.pendaftaranPerusahaan?.pelaksanaan?.sesi?.[0]?.tanggal
-                      ? new Date(item.pendaftaranPerusahaan.pelaksanaan.sesi[0].tanggal).toLocaleDateString("id-ID")
-                      : "-"}
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {formatDaftarSesi(item.pelaksanaan.sesi)} •{" "}
+                    {item.pendaftaranPerusahaan?.perusahaan.nama ?? "Peserta mandiri"}
                   </p>
                 </div>
-                <Badge color={item.status === "LULUS" ? "success" : "light"}>
-                  {item.status ?? "Proses"}
-                </Badge>
+                {item.status ? (
+                  <StatusBadge status={item.status} size="sm" />
+                ) : (
+                  <span className="text-xs text-gray-400 dark:text-gray-500 italic">Belum ada hasil</span>
+                )}
               </div>
             ))}
           </div>
         )}
-      </div>
+      </ComponentCard>
     </div>
   );
 }

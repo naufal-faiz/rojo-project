@@ -8,6 +8,7 @@ import DataTable from "@/components/main/common/DataTable";
 import ConfirmDialog from "@/components/main/common/ConfirmDialog";
 import AlertModal from "@/components/main/Modal/AlertModal";
 import PesertaFormModal from "./PesertaFormModal";
+import { getDeletedPesertaColumns, getPesertaColumns, PesertaData } from "./PesertaColumns";
 import { deletePeserta, restorePeserta } from "@/lib/data/action/pesertaAction";
 
 interface Cabang {
@@ -17,19 +18,6 @@ interface Cabang {
     id: string;
     nama: string;
   };
-}
-
-interface PesertaData {
-  id: string;
-  nama: string;
-  cabang?: {
-    id: string;
-    nama: string;
-    perusahaan: {
-      id: string;
-      nama: string;
-    };
-  } | null;
 }
 
 interface PesertaListProps {
@@ -85,6 +73,10 @@ const PesertaList: React.FC<PesertaListProps> = ({
   const handleOpenAdd = () => {
     setEditData(null);
     openForm();
+  };
+
+  const handleOpenDetail = (peserta: PesertaData) => {
+    router.push(`/master/peserta/${peserta.id}`);
   };
 
   const handleOpenEdit = (peserta: PesertaData) => {
@@ -167,63 +159,13 @@ const PesertaList: React.FC<PesertaListProps> = ({
     router.push(`?${params.toString()}`);
   };
 
-  const activeColumns = [
-    { header: "Nama", accessor: "nama" as keyof PesertaData },
-    {
-      header: "Perusahaan",
-      cell: (row: PesertaData) =>
-        row.cabang?.perusahaan.nama ?? "-",
-    },
-    {
-      header: "Cabang",
-      cell: (row: PesertaData) => row.cabang?.nama ?? "-",
-    },
-    {
-      header: "Aksi",
-      cell: (row: PesertaData) => (
-        <div className="flex gap-2">
-          <button
-            onClick={() => router.push(`/master/peserta/${row.id}`)}
-            className="text-xs text-brand-500 hover:underline"
-          >
-            Detail
-          </button>
-          <button
-            onClick={() => handleOpenEdit(row)}
-            className="text-xs text-brand-500 hover:underline"
-          >
-            Ubah
-          </button>
-          <button
-            onClick={() => handleOpenDelete(row.id)}
-            className="text-xs text-error-500 hover:underline"
-          >
-            Hapus
-          </button>
-        </div>
-      ),
-    },
-  ];
+  const activeColumns = getPesertaColumns({
+    onDetail: handleOpenDetail,
+    onEdit: handleOpenEdit,
+    onDelete: handleOpenDelete,
+  });
 
-  const deletedColumns = [
-    { header: "Nama", accessor: "nama" as keyof PesertaData },
-    {
-      header: "Perusahaan",
-      cell: (row: PesertaData) =>
-        row.cabang?.perusahaan.nama ?? "-",
-    },
-    {
-      header: "Aksi",
-      cell: (row: PesertaData) => (
-        <button
-          onClick={() => handleOpenRestore(row.id)}
-          className="text-xs text-brand-500 hover:underline"
-        >
-          Restore
-        </button>
-      ),
-    },
-  ];
+  const deletedColumns = getDeletedPesertaColumns(handleOpenRestore);
 
   return (
     <>

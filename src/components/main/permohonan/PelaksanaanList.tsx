@@ -8,47 +8,13 @@ import DataTable from "@/components/main/common/DataTable";
 import ConfirmDialog from "@/components/main/common/ConfirmDialog";
 import AlertModal from "@/components/main/Modal/AlertModal";
 import PelaksanaanFormModal, { PelaksanaanFormData } from "./PelaksanaanFormModal";
-import StatusTemanK3Badge from "./StatusTemanK3Badge";
+import {
+  getDeletedPelaksanaanColumns,
+  getPelaksanaanColumns,
+  PelaksanaanData,
+  Tingkatan,
+} from "./PelaksanaanColumns";
 import { deletePelaksanaan, restorePelaksanaan } from "@/lib/data/action/pelaksanaanAction";
-import { JenisKegiatan, Penyelenggara, StatusTemanK3, TipePelaksanaan, JenisSertifikasi } from "@/lib/generated/prisma/enums";
-
-const penyelenggaraLabels: Record<Penyelenggara, string> = {
-  [Penyelenggara.WINA_KARYA_MULIA]: "Wina Karya Mulia",
-  [Penyelenggara.DELTA_INDONESIA]: "Delta Indonesia",
-  [Penyelenggara.LIMA_PRIMA_SOLUSINDO]: "Lima Prima (LPS)",
-  [Penyelenggara.ARTA_KARYA_AREFAA]: "Arta Karya Arefaa",
-  [Penyelenggara.LIK]: "LIK",
-  [Penyelenggara.ITC]: "ITC",
-};
-
-const jenisLabels: Record<JenisKegiatan, string> = {
-  [JenisKegiatan.PUBLIK]: "PUBLIK",
-  [JenisKegiatan.INHOUSE]: "INHOUSE",
-};
-
-interface Tingkatan {
-  id: string;
-  kelas: string;
-  training: {
-    id: string;
-    nama: string;
-  };
-}
-
-interface PelaksanaanData {
-  id: string;
-  noPermohonan?: string | null;
-  tingkatanId: string;
-  tingkatan: Tingkatan;
-  jenisKegiatan: JenisKegiatan;
-  tipePelaksanaan: TipePelaksanaan;
-  lokasi?: string | null;
-  penyelenggara: Penyelenggara;
-  jenisSertifikasi: JenisSertifikasi;
-  status?: StatusTemanK3 | null;
-  catatan?: string | null;
-  sesi: Array<{ id: string; tanggal: Date }>;
-}
 
 interface PelaksanaanListProps {
   initialData: PelaksanaanData[];
@@ -103,6 +69,10 @@ const PelaksanaanList: React.FC<PelaksanaanListProps> = ({
   const handleOpenAdd = () => {
     setEditData(null);
     openForm();
+  };
+
+  const handleOpenDetail = (pelaksanaan: PelaksanaanData) => {
+    router.push(`/permohonan/${pelaksanaan.id}`);
   };
 
   const handleOpenEdit = (pelaksanaan: PelaksanaanData) => {
@@ -196,80 +166,13 @@ const PelaksanaanList: React.FC<PelaksanaanListProps> = ({
     router.push(`?${params.toString()}`);
   };
 
-  const activeColumns = [
-    {
-      header: "No. Permohonan",
-      cell: (row: PelaksanaanData) => row.noPermohonan ?? <span className="text-gray-400 italic">Tanpa Nomor</span>,
-    },
-    {
-      header: "Pelatihan",
-      cell: (row: PelaksanaanData) => `${row.tingkatan.training.nama} - ${row.tingkatan.kelas}`,
-    },
-    {
-      header: "Jenis",
-      cell: (row: PelaksanaanData) => jenisLabels[row.jenisKegiatan],
-    },
-    {
-      header: "Penyelenggara",
-      cell: (row: PelaksanaanData) => penyelenggaraLabels[row.penyelenggara],
-    },
-    {
-      header: "Status TemanK3",
-      cell: (row: PelaksanaanData) => (
-        <StatusTemanK3Badge
-          status={row.status ?? null}
-          jenisSertifikasi={row.jenisSertifikasi}
-        />
-      ),
-    },
-    {
-      header: "Aksi",
-      cell: (row: PelaksanaanData) => (
-        <div className="flex gap-2">
-          <button
-            onClick={() => router.push(`/permohonan/${row.id}`)}
-            className="text-xs text-brand-500 hover:underline"
-          >
-            Detail
-          </button>
-          <button
-            onClick={() => handleOpenEdit(row)}
-            className="text-xs text-brand-500 hover:underline"
-          >
-            Ubah
-          </button>
-          <button
-            onClick={() => handleOpenDelete(row.id)}
-            className="text-xs text-error-500 hover:underline"
-          >
-            Hapus
-          </button>
-        </div>
-      ),
-    },
-  ];
+  const activeColumns = getPelaksanaanColumns({
+    onDetail: handleOpenDetail,
+    onEdit: handleOpenEdit,
+    onDelete: handleOpenDelete,
+  });
 
-  const deletedColumns = [
-    {
-      header: "No. Permohonan",
-      cell: (row: PelaksanaanData) => row.noPermohonan ?? "-",
-    },
-    {
-      header: "Pelatihan",
-      cell: (row: PelaksanaanData) => `${row.tingkatan.training.nama} - ${row.tingkatan.kelas}`,
-    },
-    {
-      header: "Aksi",
-      cell: (row: PelaksanaanData) => (
-        <button
-          onClick={() => handleOpenRestore(row.id)}
-          className="text-xs text-brand-500 hover:underline"
-        >
-          Restore
-        </button>
-      ),
-    },
-  ];
+  const deletedColumns = getDeletedPelaksanaanColumns(handleOpenRestore);
 
   return (
     <>

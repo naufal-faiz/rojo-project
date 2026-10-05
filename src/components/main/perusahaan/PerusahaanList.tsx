@@ -9,6 +9,7 @@ import AlertModal from "@/components/main/Modal/AlertModal";
 import PerusahaanFormModal from "./PerusahaanFormModal";
 import CabangManager from "./CabangManager";
 import PicManager from "./PicManager";
+import PerusahaanPesertaList from "./PerusahaanPesertaList";
 import DeletedPerusahaanList from "./DeletedPerusahaanList";
 import { deletePerusahaan } from "@/lib/data/action/perusahaanAction";
 import { TipeCabang, TipePic } from "@/lib/generated/prisma/enums";
@@ -18,6 +19,7 @@ interface Cabang {
   nama: string;
   tipe: TipeCabang;
   alamat?: string | null;
+  peserta?: Array<{ id: string; nama: string }>;
 }
 
 interface PerusahaanPic {
@@ -154,7 +156,16 @@ const PerusahaanList: React.FC<PerusahaanListProps> = ({ initialData, deletedDat
               Belum ada data perusahaan. Klik &quot;Tambah Perusahaan&quot; untuk mulai.
             </div>
           ) : (
-            initialData.map((perusahaan) => (
+            initialData.map((perusahaan) => {
+              const daftarPeserta = perusahaan.cabang.flatMap((cabang) =>
+                (cabang.peserta ?? []).map((peserta) => ({
+                  id: peserta.id,
+                  nama: peserta.nama,
+                  cabang: cabang.nama,
+                }))
+              );
+
+              return (
               <div
                 key={perusahaan.id}
                 className="rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]"
@@ -224,10 +235,19 @@ const PerusahaanList: React.FC<PerusahaanListProps> = ({ initialData, deletedDat
                         picList={perusahaan.perusahaanPic}
                       />
                     </div>
+
+                    {/* Peserta */}
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
+                        Peserta
+                      </p>
+                      <PerusahaanPesertaList peserta={daftarPeserta} />
+                    </div>
                   </div>
                 )}
               </div>
-            ))
+              );
+            })
           )}
         </div>
       )}

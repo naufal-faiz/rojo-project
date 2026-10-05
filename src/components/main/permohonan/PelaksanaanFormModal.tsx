@@ -1,42 +1,26 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import Button from "@/components/ui/button/Button";
 import Label from "@/components/form/Label";
 import Input from "@/components/form/input/InputField";
 import TextArea from "@/components/form/input/TextArea";
-import { createPelaksanaan, updatePelaksanaan } from "@/lib/data/action/pelaksanaanAction";
 import AlertModal from "@/components/main/Modal/AlertModal";
-import { useModal } from "@/hooks/useModal";
+import { statusTemanK3Labels } from "@/components/main/common/StatusBadge";
+import { penyelenggaraLabels } from "@/components/main/common/enumLabels";
+import {
+  usePelaksanaanForm,
+  PelaksanaanFormData,
+  Tingkatan,
+} from "./usePelaksanaanForm";
 import {
   JenisKegiatan,
-  TipePelaksanaan,
-  Penyelenggara,
   JenisSertifikasi,
+  Penyelenggara,
   StatusTemanK3,
+  TipePelaksanaan,
 } from "@/lib/generated/prisma/enums";
-import { statusTemanK3Labels } from "@/components/main/common/StatusBadge";
 
-interface Tingkatan {
-  id: string;
-  kelas: string;
-  training: {
-    id: string;
-    nama: string;
-  };
-}
-
-export interface PelaksanaanFormData {
-  id?: string;
-  noPermohonan?: string | null;
-  tingkatanId: string;
-  jenisKegiatan: JenisKegiatan;
-  tipePelaksanaan: TipePelaksanaan;
-  lokasi?: string | null;
-  penyelenggara: Penyelenggara;
-  jenisSertifikasi: JenisSertifikasi;
-  status?: StatusTemanK3 | null;
-  catatan?: string | null;
-}
+export type { PelaksanaanFormData };
 
 interface PelaksanaanFormModalProps {
   editData?: PelaksanaanFormData | null;
@@ -44,86 +28,40 @@ interface PelaksanaanFormModalProps {
   onClose: () => void;
 }
 
-const penyelenggaraLabels: Record<Penyelenggara, string> = {
-  [Penyelenggara.WINA_KARYA_MULIA]: "PT Wina Karya Mulia (Rojo Safety)",
-  [Penyelenggara.DELTA_INDONESIA]: "Delta Indonesia",
-  [Penyelenggara.LIMA_PRIMA_SOLUSINDO]: "PT Lima Prima Solusindo (LPS)",
-  [Penyelenggara.ARTA_KARYA_AREFAA]: "Arta Karya Arefaa",
-  [Penyelenggara.LIK]: "LIK",
-  [Penyelenggara.ITC]: "ITC",
-};
+const selectClass =
+  "w-full px-3 py-2 text-sm border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-white";
 
 const PelaksanaanFormModal: React.FC<PelaksanaanFormModalProps> = ({
   editData,
   tingkatanOptions,
   onClose,
 }) => {
-  const [noPermohonan, setNoPermohonan] = useState(editData?.noPermohonan ?? "");
-  const [tingkatanId, setTingkatanId] = useState(editData?.tingkatanId ?? "");
-  const [jenisKegiatan, setJenisKegiatan] = useState<JenisKegiatan>(
-    editData?.jenisKegiatan ?? JenisKegiatan.PUBLIK
-  );
-  const [tipePelaksanaan, setTipePelaksanaan] = useState<TipePelaksanaan>(
-    editData?.tipePelaksanaan ?? TipePelaksanaan.OFFLINE
-  );
-  const [lokasi, setLokasi] = useState(editData?.lokasi ?? "");
-  const [penyelenggara, setPenyelenggara] = useState<Penyelenggara>(
-    editData?.penyelenggara ?? Penyelenggara.WINA_KARYA_MULIA
-  );
-  const [jenisSertifikasi, setJenisSertifikasi] = useState<JenisSertifikasi>(
-    editData?.jenisSertifikasi ?? JenisSertifikasi.KEMNAKER
-  );
-  const [status, setStatus] = useState<StatusTemanK3 | "">(
-    editData?.status ?? ""
-  );
-  const [catatan, setCatatan] = useState(editData?.catatan ?? "");
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { isOpen: isAlertOpen, openModal: openAlert, closeModal: closeAlert } = useModal();
-
-  const isEdit = Boolean(editData);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!tingkatanId) {
-      setError("Pelatihan / Tingkatan wajib dipilih.");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    const payload = {
-      noPermohonan: noPermohonan.trim() || null,
-      tingkatanId,
-      jenisKegiatan,
-      tipePelaksanaan,
-      lokasi: lokasi.trim() || null,
-      penyelenggara,
-      jenisSertifikasi,
-      status:
-        status && jenisSertifikasi === JenisSertifikasi.KEMNAKER
-          ? (status as StatusTemanK3)
-          : null,
-      catatan: catatan.trim() || null,
-    };
-
-    try {
-      const result = isEdit
-        ? await updatePelaksanaan(editData!.id!, payload)
-        : await createPelaksanaan(payload);
-
-      if (!result.success) {
-        setError(result.error ?? "Terjadi kesalahan.");
-        openAlert();
-      } else {
-        onClose();
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    noPermohonan,
+    setNoPermohonan,
+    tingkatanId,
+    setTingkatanId,
+    jenisKegiatan,
+    setJenisKegiatan,
+    tipePelaksanaan,
+    setTipePelaksanaan,
+    lokasi,
+    setLokasi,
+    penyelenggara,
+    setPenyelenggara,
+    jenisSertifikasi,
+    setJenisSertifikasi,
+    status,
+    setStatus,
+    catatan,
+    setCatatan,
+    loading,
+    error,
+    isAlertOpen,
+    closeAlert,
+    isEdit,
+    handleSubmit,
+  } = usePelaksanaanForm(editData, onClose);
 
   return (
     <div className="p-6 max-h-[85vh] overflow-y-auto">
@@ -155,7 +93,7 @@ const PelaksanaanFormModal: React.FC<PelaksanaanFormModalProps> = ({
             id="tingkatan"
             value={tingkatanId}
             onChange={(e) => setTingkatanId(e.target.value)}
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+            className={selectClass}
             required
           >
             <option value="">-- Pilih Pelatihan --</option>
@@ -174,7 +112,7 @@ const PelaksanaanFormModal: React.FC<PelaksanaanFormModalProps> = ({
               id="jenisKegiatan"
               value={jenisKegiatan}
               onChange={(e) => setJenisKegiatan(e.target.value as JenisKegiatan)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+              className={selectClass}
             >
               <option value={JenisKegiatan.PUBLIK}>PUBLIK (Multi Perusahaan)</option>
               <option value={JenisKegiatan.INHOUSE}>INHOUSE (1 Perusahaan)</option>
@@ -187,7 +125,7 @@ const PelaksanaanFormModal: React.FC<PelaksanaanFormModalProps> = ({
               id="tipePelaksanaan"
               value={tipePelaksanaan}
               onChange={(e) => setTipePelaksanaan(e.target.value as TipePelaksanaan)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+              className={selectClass}
             >
               <option value={TipePelaksanaan.OFFLINE}>Offline</option>
               <option value={TipePelaksanaan.ONLINE}>Online</option>
@@ -203,7 +141,7 @@ const PelaksanaanFormModal: React.FC<PelaksanaanFormModalProps> = ({
               id="penyelenggara"
               value={penyelenggara}
               onChange={(e) => setPenyelenggara(e.target.value as Penyelenggara)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+              className={selectClass}
             >
               {Object.values(Penyelenggara).map((p) => (
                 <option key={p} value={p}>
@@ -219,7 +157,7 @@ const PelaksanaanFormModal: React.FC<PelaksanaanFormModalProps> = ({
               id="jenisSertifikasi"
               value={jenisSertifikasi}
               onChange={(e) => setJenisSertifikasi(e.target.value as JenisSertifikasi)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+              className={selectClass}
             >
               <option value={JenisSertifikasi.KEMNAKER}>KEMNAKER</option>
               <option value={JenisSertifikasi.BNSP}>BNSP</option>
@@ -235,7 +173,7 @@ const PelaksanaanFormModal: React.FC<PelaksanaanFormModalProps> = ({
               id="status"
               value={status}
               onChange={(e) => setStatus(e.target.value as StatusTemanK3 | "")}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+              className={selectClass}
             >
               <option value="">-- Belum Diproses --</option>
               {Object.values(StatusTemanK3).map((s) => (

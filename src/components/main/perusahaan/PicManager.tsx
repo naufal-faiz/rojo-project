@@ -1,147 +1,63 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import Button from "@/components/ui/button/Button";
 import Input from "@/components/form/input/InputField";
 import { Modal } from "@/components/ui/modal";
-import {
-  createPicAndLink,
-  unlinkPic,
-  deletePic,
-} from "@/lib/data/action/perusahaanAction";
 import ConfirmDialog from "@/components/main/common/ConfirmDialog";
 import AlertModal from "@/components/main/Modal/AlertModal";
-import { useModal } from "@/hooks/useModal";
-import { TipePic } from "@/lib/generated/prisma/enums";
 import PicSelectionModal from "./PicSelectionModal";
+import { usePicManager, PicItem } from "./usePicManager";
+import { TipePic } from "@/lib/generated/prisma/enums";
 
 interface PicManagerProps {
+  /** Perusahaan pemilik PIC */
   perusahaanId: string;
-  picList: Array<{
-    pic: {
-      id: string;
-      nama: string;
-      noTelp?: string | null;
-      tipe: TipePic;
-    };
-  }>;
+  /** Daftar PIC yang terhubung */
+  picList: PicItem[];
 }
 
+const getTipeLabel = (tipe: TipePic): string => {
+  switch (tipe) {
+    case TipePic.INTERNAL:
+      return "Internal";
+    case TipePic.DINAS:
+      return "Dinas";
+    case TipePic.MITRA:
+      return "Mitra";
+    default:
+      return tipe;
+  }
+};
+
 const PicManager: React.FC<PicManagerProps> = ({ perusahaanId, picList }) => {
-  const [showForm, setShowForm] = useState(false);
-  const [newNama, setNewNama] = useState("");
-  const [newNoTelp, setNewNoTelp] = useState("");
-  const [newTipe, setNewTipe] = useState<TipePic>(TipePic.INTERNAL);
-  const [addError, setAddError] = useState<string | null>(null);
-  const [addLoading, setAddLoading] = useState(false);
-
-  const [actionType, setActionType] = useState<"unlink" | "delete" | null>(null);
-  const [actionId, setActionId] = useState<string | null>(null);
-  const [actionLoading, setActionLoading] = useState(false);
-
-  const [alertType, setAlertType] = useState<"success" | "error">("success");
-  const [alertTitle, setAlertTitle] = useState("");
-  const [alertMessage, setAlertMessage] = useState("");
-
   const {
-    isOpen: isConfirmOpen,
-    openModal: openConfirm,
-    closeModal: closeConfirm,
-  } = useModal();
-  const {
-    isOpen: isAlertOpen,
-    openModal: openAlert,
-    closeModal: closeAlert,
-  } = useModal();
-  const {
-    isOpen: isSelectionOpen,
-    openModal: openSelection,
-    closeModal: closeSelection,
-  } = useModal();
-
-  const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAddError(null);
-    setAddLoading(true);
-    try {
-      const result = await createPicAndLink(perusahaanId, {
-        nama: newNama,
-        noTelp: newNoTelp,
-        tipe: newTipe,
-      });
-      if (!result.success) {
-        setAddError(result.error ?? "Gagal menambah PIC.");
-        setAlertType("error");
-        setAlertTitle("Gagal Menambah");
-        setAlertMessage(result.error ?? "Gagal menambah PIC.");
-        openAlert();
-      } else {
-        setNewNama("");
-        setNewNoTelp("");
-        setNewTipe(TipePic.INTERNAL);
-        setShowForm(false);
-        setAlertType("success");
-        setAlertTitle("Berhasil");
-        setAlertMessage("PIC berhasil ditambahkan.");
-        openAlert();
-      }
-    } finally {
-      setAddLoading(false);
-    }
-  };
-
-  const confirmAction = (picId: string, type: "unlink" | "delete") => {
-    setActionId(picId);
-    setActionType(type);
-    openConfirm();
-  };
-
-  const handleConfirm = async () => {
-    if (!actionId || !actionType) return;
-    setActionLoading(true);
-    try {
-      let result;
-      if (actionType === "unlink") {
-        result = await unlinkPic(perusahaanId, actionId);
-      } else {
-        result = await deletePic(actionId);
-      }
-
-      if (!result.success) {
-        closeConfirm();
-        setAlertType("error");
-        setAlertTitle(actionType === "unlink" ? "Gagal Melepas" : "Gagal Menghapus");
-        setAlertMessage(result.error ?? "Gagal melakukan aksi.");
-        openAlert();
-      } else {
-        closeConfirm();
-        setActionId(null);
-        setActionType(null);
-        setAlertType("success");
-        setAlertTitle("Berhasil");
-        setAlertMessage(
-          actionType === "unlink"
-            ? "PIC berhasil dilepas dari perusahaan."
-            : "PIC berhasil dihapus."
-        );
-        openAlert();
-      }
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const getTipeLabel = (tipe: TipePic) => {
-    switch (tipe) {
-      case TipePic.INTERNAL:
-        return "Internal";
-      case TipePic.DINAS:
-        return "Dinas";
-      case TipePic.MITRA:
-        return "Mitra";
-      default:
-        return tipe;
-    }
-  };
+    showForm,
+    setShowForm,
+    newNama,
+    setNewNama,
+    newNoTelp,
+    setNewNoTelp,
+    newTipe,
+    setNewTipe,
+    addError,
+    setAddError,
+    addLoading,
+    actionType,
+    actionLoading,
+    alertType,
+    alertTitle,
+    alertMessage,
+    isConfirmOpen,
+    closeConfirm,
+    isAlertOpen,
+    closeAlert,
+    isSelectionOpen,
+    openSelection,
+    closeSelection,
+    handleAdd,
+    confirmAction,
+    handleConfirm,
+  } = usePicManager(perusahaanId);
 
   return (
     <div className="space-y-2">
@@ -211,7 +127,10 @@ const PicManager: React.FC<PicManagerProps> = ({ perusahaanId, picList }) => {
 
       {/* Form tambah PIC baru */}
       {showForm && (
-        <form onSubmit={handleAdd} className="space-y-2 p-3 border border-gray-300 rounded-lg dark:border-gray-600 bg-white dark:bg-gray-800">
+        <form
+          onSubmit={handleAdd}
+          className="space-y-2 p-3 border border-gray-300 rounded-lg dark:border-gray-600 bg-white dark:bg-gray-800"
+        >
           <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">Tambah PIC Baru</p>
           <Input
             value={newNama}
@@ -229,7 +148,7 @@ const PicManager: React.FC<PicManagerProps> = ({ perusahaanId, picList }) => {
           <select
             value={newTipe}
             onChange={(e) => setNewTipe(e.target.value as TipePic)}
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600"
+            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-white"
           >
             <option value={TipePic.INTERNAL}>Internal (Karyawan)</option>
             <option value={TipePic.DINAS}>Dinas (Pemerintah)</option>
@@ -257,10 +176,7 @@ const PicManager: React.FC<PicManagerProps> = ({ perusahaanId, picList }) => {
 
       {/* Modal pilih PIC dari master */}
       <Modal isOpen={isSelectionOpen} onClose={closeSelection} className="max-w-2xl">
-        <PicSelectionModal
-          perusahaanId={perusahaanId}
-          onClose={closeSelection}
-        />
+        <PicSelectionModal perusahaanId={perusahaanId} onClose={closeSelection} />
       </Modal>
 
       {/* Confirm dialog */}
@@ -272,7 +188,7 @@ const PicManager: React.FC<PicManagerProps> = ({ perusahaanId, picList }) => {
         message={
           actionType === "unlink"
             ? "Yakin ingin melepas PIC dari perusahaan ini?"
-            : "Yakin ingin menghapus PIC ini? Data ini akan terhapus permanen."
+            : "Yakin ingin menghapus PIC ini? Hubungan dengan perusahaan lain tidak terpengaruh."
         }
         confirmLabel={actionType === "unlink" ? "Ya, Lepas" : "Ya, Hapus"}
         variant={actionType === "unlink" ? "warning" : "danger"}

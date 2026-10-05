@@ -75,14 +75,17 @@ export const getPesertaById = cache(async (id: string) => {
                 pesertaPelaksanaan: {
                     where: { deletedAt: null },
                     include: {
-                        pendaftaranPerusahaan: {
+                        pelaksanaan: {
                             include: {
-                                pelaksanaan: {
-                                    include: { sesi: { orderBy: { tanggal: "asc" } } }
-                                }
+                                tingkatan: { include: { training: true } },
+                                sesi: { orderBy: { tanggal: "asc" } }
                             }
+                        },
+                        pendaftaranPerusahaan: {
+                            include: { perusahaan: true }
                         }
-                    }
+                    },
+                    orderBy: { createdAt: "desc" }
                 }
             }
         })
