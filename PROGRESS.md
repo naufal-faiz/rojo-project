@@ -12,7 +12,7 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 | R3 | Implementasi selesai; lint, tipe, build, uji terisolasi dan pemeriksaan browser baca saja lulus | R3 selesai: detail perusahaan dan pengelolaan inline |
 | R4 | Implementasi selesai; lint, tipe, build lulus | R4 selesai: daftar, panel inline, dan detail peserta |
 | R5 | Implementasi selesai; lint, tipe, build, dan gerbang pola lulus | R5 selesai: halaman buat/ubah permohonan dan detail bergrid (`8cbb0ef`) |
-| R6 | Belum dikerjakan | - |
+| R6 | Implementasi selesai; lint, tipe, build, dan gerbang pola lulus | R6 selesai: pendaftaran tanpa modal |
 | R7 | Belum dikerjakan | - |
 | R8 | Belum dikerjakan | - |
 
@@ -24,23 +24,23 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 | U-02 | Selesai | Peserta dan PIC ditambah inline di detail. |
 | U-03 | Selesai | Header dan grid informasi:cabang 60:40, PIC:peserta 30:70. |
 | U-04 | Selesai | Cabang, PIC, peserta inline; peserta ditautkan ke cabang perusahaan aktif. |
-| U-05 | Sebagian | R2–R5 memakai form dan konfirmasi inline; modul lain menunggu fase terkait. |
-| U-06 | Sebagian | Tombol aksi R2–R5 memakai ikon dari icons/index; modul lain menunggu fase terkait. |
+| U-05 | Sebagian | R2–R6 memakai form dan konfirmasi inline; modul Sertifikat/Riwayat/Dashboard menunggu R7. |
+| U-06 | Sebagian | Tombol aksi R2–R6 memakai ikon dari icons/index; modul lain menunggu R7. |
 | U-07 | Selesai | Pembersihan R0. |
-| U-08 | Sebagian | R2–R5 memakai pencarian, filter dan paginasi server; modul lain menunggu fase terkait. |
-| U-09 | Sebagian | R0, R3–R5 memakai SearchableSelect server (seluruh hasil maksimal 10); modul lain menyusul. |
+| U-08 | Sebagian | R2–R6 memakai pencarian, filter dan paginasi server; modul lain menunggu R7. |
+| U-09 | Sebagian | R0, R3–R6 memakai SearchableSelect server (seluruh hasil maksimal 10); modul lain menyusul. |
 | U-10 | Selesai | Halaman `/permohonan/baru` dengan kartu jadwal sesi; satu form dipakai untuk buat dan ubah. |
 | U-11 | Selesai | Detail bergrid 60:40; kartu status tidak dirender untuk BNSP/INTERNAL. |
-| U-12 | Tidak dikerjakan | Menunggu fase R6. |
-| U-13 | Tidak dikerjakan | Menunggu fase R6. |
+| U-12 | Selesai | Panel inline tambah pendaftaran memakai `SearchableSelect` (input stabil, hasil maksimal 10). |
+| U-13 | Selesai | Subjudul perusahaan hanya tampil pada pemilihan peserta mandiri. |
 | U-14 | Selesai | Peserta tanpa perusahaan dapat dihubungkan; filter cabang tersedia. |
 | U-15 | Selesai | Dropdown status kelulusan per peserta di detail permohonan, tersimpan langsung. |
-| U-16 | Sebagian | R5 menyaring daftar `/permohonan` ke kegiatan aktif; `/pendaftaran` pada R6. |
-| U-17 | Tidak dikerjakan | Menunggu fase R6. |
-| B-01 | Selesai | Backend R1 selesai; penerapan UI pada fase modul. |
-| B-02 | Selesai | Backend R1 selesai; penerapan UI pada fase modul. |
+| U-16 | Selesai | R5 menyaring `/permohonan`; R6 menyaring `/pendaftaran` ke kegiatan aktif. |
+| U-17 | Selesai | Tempel nama dihapus; server action terkait ikut dibersihkan. |
+| B-01 | Selesai | Backend R1 dan UI R6 (peserta baru/peserta master otomatis jadi peserta perusahaan). |
+| B-02 | Selesai | Backend R1 dan UI R6 (scope pencarian per perusahaan; mandiri tidak dibatasi). |
 | B-03 | Sebagian | Backend R1 selesai; R5 memakai ensureTingkatanUmum lewat form dan menyembunyikan kelas "Umum". |
-| X-01 | Sebagian | Modal Training, Perusahaan, Peserta, dan Permohonan diganti pada R2–R5; modul lain menunggu fase terkait. |
+| X-01 | Sebagian | Modal Training, Perusahaan, Peserta, Permohonan, dan Pendaftaran diganti pada R2–R6; modul R7 menyusul. |
 | X-02 | Selesai | Pembersihan R0. |
 | X-03 | Selesai | Backend R1 selesai; penerapan UI pada fase modul. |
 
@@ -96,6 +96,9 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 - **A-40** R5: "Tambah Rentang" dibatasi 366 hari per sekali tambah dan menolak tanggal selesai sebelum tanggal mulai lewat `FlashAlert`. Dampak jika salah: rentang sangat panjang perlu ditambahkan bertahap.
 - **A-41** R5: detail permohonan memakai `FlashAlert` terpisah per panel (status TemanK3, peserta via perusahaan, peserta mandiri) agar pesan tampil dekat aksi sesuai P-03; flash halaman dipakai untuk hasil simpan/hapus.
 - **A-42** R5: pengubahan jadwal sesi dilakukan di halaman ubah penuh lewat tombol "Ubah jadwal"; chip sesi di detail bersifat baca saja. Dampak jika salah: perubahan jadwal cepat harus lewat halaman ubah.
+- **A-43** R6: panel inline "Tambah Pendaftaran" memakai `SearchableSelect` (`searchPerusahaanOptions`) sehingga kotak input tidak berkedip saat mengetik (U-12); PIC dimuat lewat `getPicPerusahaan` dan hanya menampilkan PIC milik perusahaan itu.
+- **A-44** R6: pemilihan peserta memakai satu komponen `TambahPesertaPanel` untuk perusahaan dan mandiri. Mode perusahaan hanya menampilkan peserta perusahaan itu dan tanpa perusahaan, tanpa subjudul perusahaan, dengan badge "Belum punya perusahaan"; mode mandiri menampilkan seluruh peserta dengan subjudul perusahaan/"Tanpa perusahaan". Peserta yang sudah terdaftar ditandai dan tidak dapat dipilih.
+- **A-45** R6: fitur tempel nama dihapus (U-17) beserta aksi server `previewTempelPeserta` dan `addPesertaTempel`; `searchPerusahaanPendaftaran` juga dihapus karena digantikan `searchPerusahaanOptions`. Penghapusan dilakukan lebih awal agar modul Pendaftaran bersih pada akhir fasenya.
 
 ## Deviasi dari PRD
 
@@ -300,3 +303,21 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 - Cabang: kolom Nama, Tipe (badge), Alamat, Aksi; paginasi 5/halaman (sudah ada) dan filter tipe tetap. PIC: kolom Nama, Telepon, Tipe (badge), Aksi; **kini berpagina 5/halaman** dengan pencarian `picSearch` (sebelumnya memuat seluruh PIC). `getPerusahaanDetail` mengembalikan `pic` berhalaman dan `totalPic` untuk badge/ringkasan.
 - Validasi: `npm run lint`, `npx tsc --noEmit --incremental false`, dan `npm run build` lulus; gerbang pola antarmuka modul Perusahaan dan `src/app/(dashboard)` kosong. Uji browser belum dijalankan.
 - Langkah uji: buka detail perusahaan; pada tabel Cabang coba pencarian, filter tipe, paginasi (bila >5), ubah inline, dan hapus (HQ tanpa tombol hapus). Pada tabel PIC coba pencarian, paginasi (buat >5 PIC), ubah inline, lepas, dan hapus dengan konfirmasi inline.
+
+### R6 — Pendaftaran tanpa modal
+- Daftar `/pendaftaran` hanya menampilkan kegiatan aktif (U-16) dengan pencarian dan filter jenis sertifikasi serta jenis kegiatan; baris membuka halaman kerja via ikon Detail atau klik baris.
+- Halaman kerja dua tab (Pendaftaran Perusahaan dan Peserta Mandiri) tanpa tab "Terhapus". Tambah pendaftaran memakai panel inline dengan `SearchableSelect` perusahaan (U-12) dan dropdown PIC opsional. Hapus pendaftaran dan peserta memakai `InlineConfirm` (peringatan tambahan bila `noSertifikat` terisi); notifikasi memakai `FlashAlert` per panel.
+- Tambah peserta memakai satu `TambahPesertaPanel`: mode "Pilih dari master" (pencarian server maks 10, daftar bercentang) dan mode "Peserta baru" (nama, cabang default HQ pada mode perusahaan, tombol Simpan dan Simpan & tambah lagi).
+- Aturan B-01/B-02 di UI: mode perusahaan hanya memuat peserta perusahaan itu + tanpa perusahaan (badge "Belum punya perusahaan"), tanpa subjudul perusahaan (U-13); mode mandiri memuat semua peserta dengan subjudul perusahaan dan tidak mengubah perusahaan peserta. Peserta dengan perusahaan lain ditolak server.
+- **Tempel nama dihapus (U-17)**: `PesertaTempelTab`, `PesertaBulkModal`, `PesertaPilihTab`, `PesertaFormModal`, `PendaftaranFormModal`, `PendaftaranPicModal`, `pesertaBulkTypes`, dan `usePendaftaranAksi` dihapus; aksi server `previewTempelPeserta`, `addPesertaTempel`, dan `searchPerusahaanPendaftaran` ikut dihapus.
+- Validasi: `npm run lint`, `npx tsc --noEmit --incremental false`, dan `npm run build` lulus. Gerbang pola antarmuka folder `src/components/main/pendaftaran` dan `src/app/(dashboard)` kosong untuk `AlertModal|ConfirmDialog|AlertDialog`, `useModal|ui/modal|FormModal`, `<svg`, dan `window.location.reload`; pencarian kata "tempel" kosong. Uji browser belum dijalankan.
+
+### Langkah uji manual R6
+1. Buka `/pendaftaran`. Hanya kegiatan aktif yang tampil; filter jenis sertifikasi dan jenis kegiatan serta pencarian bekerja. Klik baris/ikon Detail menuju halaman kerja.
+2. Tab **Pendaftaran Perusahaan**: klik "Tambah Pendaftaran". Ketik nama perusahaan pada `SearchableSelect` (kotak tidak berkedip), pilih PIC opsional, Simpan. Baris perusahaan muncul. Ulangi untuk perusahaan yang sama → ditolak. Kegiatan INHOUSE dengan satu pendaftaran: pendaftaran kedua ditolak.
+3. Pada baris perusahaan, klik "Tambah Peserta": pilih mode "Pilih dari master". Daftar hanya berisi peserta perusahaan itu dan tanpa perusahaan; yang tanpa perusahaan berbadge "Belum punya perusahaan"; yang sudah terdaftar tidak bisa dicentang. Centang beberapa lalu "Tambah N Peserta". Peserta muncul di daftar baris; peserta tanpa perusahaan kini tercatat di perusahaan itu.
+4. Mode "Peserta baru": isi nama (cabang default HQ), Simpan & tambah lagi → form tetap terbuka dan fokus kembali ke nama.
+5. Klik "Ubah PIC": pilih PIC perusahaan lalu Simpan. Klik "Hapus" pada pendaftaran yang masih berisi peserta → ditolak; setelah peserta dihapus, pendaftaran bisa dihapus dengan konfirmasi inline.
+6. Tab **Peserta Mandiri**: "Tambah Peserta Mandiri" memakai panel yang sama. Mode master menampilkan perusahaan sebagai subjudul; peserta berperusahaan yang didaftarkan mandiri tidak berubah perusahaannya. Peserta baru dibuat tanpa perusahaan.
+7. Hapus peserta yang ber-`noSertifikat` → konfirmasi memuat peringatan nomor sertifikat. Duplikat: daftarkan peserta yang sama dua kali → ditolak dengan menyebut tempat pendaftarannya.
+8. Uji tampilan gelap/terang, layar sempit, dan navigasi keyboard pada panel inline.

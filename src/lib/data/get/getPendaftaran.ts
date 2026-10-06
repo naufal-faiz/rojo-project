@@ -1,14 +1,15 @@
 import { prisma } from "@/lib/prisma"
 import { cache } from "react"
 import { whereKegiatanAktif } from "./whereKegiatanAktif"
-import { JenisSertifikasi } from "@/lib/generated/prisma/enums"
+import { JenisKegiatan, JenisSertifikasi } from "@/lib/generated/prisma/enums"
 
 type GetPendaftaranOptions = {
     aktif?: boolean
     search?: string
     page?: number
     limit?: number
-    jenisSertifikasi?: JenisSertifikasi
+    jenisSertifikasi?: string
+    jenisKegiatan?: string
 }
 
 // Daftar Permohonan dengan ringkasan jumlah perusahaan, peserta mandiri, dan total peserta.
@@ -19,10 +20,16 @@ export const getAllPendaftaran = cache(async (options: GetPendaftaranOptions = {
         const skip = (normalizedPage - 1) * normalizedLimit
         const search = options.search?.trim()
 
+        const enumFilter = <T extends string>(values: readonly T[], raw?: string) =>
+            raw && (values as readonly string[]).includes(raw) ? (raw as T) : undefined
+        const jenisSertifikasi = enumFilter(Object.values(JenisSertifikasi), options.jenisSertifikasi)
+        const jenisKegiatan = enumFilter(Object.values(JenisKegiatan), options.jenisKegiatan)
+
         const where = {
             deletedAt: null,
             ...(options.aktif ? { AND: [whereKegiatanAktif()] } : {}),
-            ...(options.jenisSertifikasi ? { jenisSertifikasi: options.jenisSertifikasi } : {}),
+            ...(jenisSertifikasi ? { jenisSertifikasi } : {}),
+            ...(jenisKegiatan ? { jenisKegiatan } : {}),
             ...(search ? {
                 OR: [
                     { noPermohonan: { contains: search, mode: "insensitive" as const } },

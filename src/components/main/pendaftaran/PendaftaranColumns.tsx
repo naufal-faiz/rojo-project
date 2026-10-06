@@ -1,83 +1,35 @@
 import React from "react";
+import type { Column } from "@/components/main/common/DataTable";
+import RowActions from "@/components/main/common/RowActions";
 import StatusTemanK3Badge from "@/components/main/permohonan/StatusTemanK3Badge";
-import { Column } from "@/components/main/common/DataTable";
-import { JenisKegiatan, JenisSertifikasi, StatusTemanK3 } from "@/lib/generated/prisma/enums";
+import { labelTingkatan } from "@/components/main/common/enumLabels";
 import { formatDaftarSesi } from "@/components/main/common/formatTanggal";
+import type { getAllPendaftaran } from "@/lib/data/get/getPendaftaran";
 
-export interface PendaftaranRow {
-  id: string;
-  noPermohonan: string | null;
-  jenisKegiatan: JenisKegiatan;
-  jenisSertifikasi: JenisSertifikasi;
-  status: StatusTemanK3 | null;
-  tingkatan: {
-    kelas: string;
-    training: { nama: string };
-  };
-  sesi: Array<{ id: string; tanggal: Date }>;
-  pendaftaran: Array<{ id: string }>;
-  pesertaPelaksanaan: Array<{ id: string; pendaftaranPerusahaanId: string | null }>;
-}
+export type PendaftaranRow = Awaited<ReturnType<typeof getAllPendaftaran>>["data"][number];
 
-export const hitungPendaftaran = (row: PendaftaranRow) => {
-  const jumlahPerusahaan = row.pendaftaran.length;
-  const jumlahMandiri = row.pesertaPelaksanaan.filter(
-    (peserta) => peserta.pendaftaranPerusahaanId === null
-  ).length;
+export const hitungPendaftaran = (row: PendaftaranRow) => ({
+  jumlahPerusahaan: row.pendaftaran.length,
+  jumlahMandiri: row.pesertaPelaksanaan.filter((peserta) => peserta.pendaftaranPerusahaanId === null).length,
+  totalPeserta: row.pesertaPelaksanaan.length,
+});
 
-  return {
-    jumlahPerusahaan,
-    jumlahMandiri,
-    totalPeserta: row.pesertaPelaksanaan.length,
-  };
-};
-
-export const getPendaftaranColumns = (
-  onKelola: (row: PendaftaranRow) => void
-): Column<PendaftaranRow>[] => [
+export const getPendaftaranColumns = (): Column<PendaftaranRow>[] => [
   {
     header: "No. Permohonan",
-    cell: (row) =>
-      row.noPermohonan ?? <span className="text-gray-400 italic">Tanpa Nomor</span>,
+    cell: (row) => row.noPermohonan ?? <span className="italic text-gray-400 dark:text-gray-500">Tanpa Nomor</span>,
   },
-  {
-    header: "Pelatihan",
-    cell: (row) => `${row.tingkatan.training.nama} - ${row.tingkatan.kelas}`,
-  },
-  {
-    header: "Tanggal Sesi",
-    cell: (row) => formatDaftarSesi(row.sesi),
-  },
-  {
-    header: "Perusahaan",
-    cell: (row) => hitungPendaftaran(row).jumlahPerusahaan,
-    className: "text-center",
-  },
-  {
-    header: "Mandiri",
-    cell: (row) => hitungPendaftaran(row).jumlahMandiri,
-    className: "text-center",
-  },
-  {
-    header: "Total Peserta",
-    cell: (row) => hitungPendaftaran(row).totalPeserta,
-    className: "text-center",
-  },
+  { header: "Pelatihan", cell: (row) => labelTingkatan(row.tingkatan) },
+  { header: "Tanggal Sesi", cell: (row) => formatDaftarSesi(row.sesi) },
+  { header: "Perusahaan", cell: (row) => hitungPendaftaran(row).jumlahPerusahaan, className: "text-center" },
+  { header: "Mandiri", cell: (row) => hitungPendaftaran(row).jumlahMandiri, className: "text-center" },
+  { header: "Total Peserta", cell: (row) => hitungPendaftaran(row).totalPeserta, className: "text-center" },
   {
     header: "Status TemanK3",
-    cell: (row) => (
-      <StatusTemanK3Badge status={row.status} jenisSertifikasi={row.jenisSertifikasi} />
-    ),
+    cell: (row) => <StatusTemanK3Badge status={row.status} jenisSertifikasi={row.jenisSertifikasi} />,
   },
   {
     header: "Aksi",
-    cell: (row) => (
-      <button
-        onClick={() => onKelola(row)}
-        className="text-xs text-brand-500 hover:underline"
-      >
-        Kelola
-      </button>
-    ),
+    cell: (row) => <RowActions detailHref={`/pendaftaran/${row.id}`} />,
   },
 ];

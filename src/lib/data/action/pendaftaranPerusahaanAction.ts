@@ -175,28 +175,6 @@ export async function restorePendaftaran(id: string) {
     }
 }
 
-// Pencarian perusahaan untuk modal tambah pendaftaran (dipanggil dari client).
-export async function searchPerusahaanPendaftaran(keyword?: string) {
-    try {
-        const search = keyword?.trim()
-
-        const data = await prisma.perusahaan.findMany({
-            where: {
-                deletedAt: null,
-                ...(search ? { nama: { contains: search, mode: "insensitive" as const } } : {})
-            },
-            orderBy: { nama: "asc" },
-            take: 10,
-            select: { id: true, nama: true }
-        })
-
-        return data
-    } catch (err) {
-        console.error("Gagal mencari perusahaan:", err)
-        return []
-    }
-}
-
 // Daftar PIC yang terhubung ke sebuah perusahaan (untuk select PIC pendaftaran).
 export async function getPicPerusahaan(perusahaanId: string) {
     try {

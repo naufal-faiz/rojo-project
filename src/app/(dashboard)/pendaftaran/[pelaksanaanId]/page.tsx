@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getPendaftaranKerja } from "@/lib/data/get/getPendaftaran";
-import { prisma } from "@/lib/prisma";
 import PageHeader from "@/components/main/common/PageHeader";
+import { labelTingkatan } from "@/components/main/common/enumLabels";
 import PendaftaranWork from "@/components/main/pendaftaran/PendaftaranWork";
 
 export const metadata = {
@@ -15,15 +15,7 @@ export default async function PendaftaranKerjaPage({
   params: Promise<{ pelaksanaanId: string }>;
 }) {
   const { pelaksanaanId } = await params;
-
-  const [pelaksanaan, cabangOptions] = await Promise.all([
-    getPendaftaranKerja(pelaksanaanId),
-    prisma.cabang.findMany({
-      where: { deletedAt: null },
-      include: { perusahaan: true },
-      orderBy: { perusahaan: { nama: "asc" } },
-    }),
-  ]);
+  const pelaksanaan = await getPendaftaranKerja(pelaksanaanId);
 
   if (!pelaksanaan) notFound();
 
@@ -31,18 +23,13 @@ export default async function PendaftaranKerjaPage({
     <div className="p-4 sm:p-6">
       <PageHeader
         title={`Pendaftaran: ${pelaksanaan.noPermohonan ?? "Tanpa Nomor"}`}
-        description={`${pelaksanaan.tingkatan.training.nama} - ${pelaksanaan.tingkatan.kelas}`}
-        primaryAction={{
-          label: "Lihat Permohonan",
-          href: `/permohonan/${pelaksanaan.id}`,
-        }}
+        description={labelTingkatan(pelaksanaan.tingkatan)}
+        primaryAction={{ label: "Lihat Permohonan", href: `/permohonan/${pelaksanaan.id}` }}
       />
-
       <PendaftaranWork
         pelaksanaanId={pelaksanaan.id}
         pendaftaranList={pelaksanaan.pendaftaran}
         pesertaMandiri={pelaksanaan.pesertaPelaksanaan}
-        cabangOptions={cabangOptions}
       />
     </div>
   );

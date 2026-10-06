@@ -1,6 +1,5 @@
 import { getAllPendaftaran } from "@/lib/data/get/getPendaftaran";
 import PendaftaranList from "@/components/main/pendaftaran/PendaftaranList";
-import { JenisSertifikasi } from "@/lib/generated/prisma/enums";
 
 export const metadata = {
   title: "Pendaftaran | Rojo Safety Admin",
@@ -10,21 +9,23 @@ export const metadata = {
 export default async function PendaftaranPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; search?: string; jenisSertifikasi?: string }>;
+  searchParams: Promise<{
+    page?: string;
+    search?: string;
+    jenisSertifikasi?: string;
+    jenisKegiatan?: string;
+  }>;
 }) {
-  const resolvedParams = await searchParams;
-  const page = Number(resolvedParams?.page ?? 1);
-  const search = resolvedParams?.search ?? "";
-
-  const filterJenisSertifikasi = Object.values(JenisSertifikasi).find(
-    (jenis) => jenis === resolvedParams?.jenisSertifikasi
-  );
+  const params = await searchParams;
+  const page = Number(params.page);
 
   const result = await getAllPendaftaran({
-    page,
+    aktif: true,
+    page: Number.isSafeInteger(page) && page > 0 ? page : 1,
     limit: 10,
-    search,
-    jenisSertifikasi: filterJenisSertifikasi,
+    search: params.search,
+    jenisSertifikasi: params.jenisSertifikasi,
+    jenisKegiatan: params.jenisKegiatan,
   });
 
   return (
