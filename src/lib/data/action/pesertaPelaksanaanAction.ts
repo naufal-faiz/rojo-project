@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { tambahKePelaksanaan } from "./pendaftaranPesertaTransaction"
 import { normalisasiNama } from "@/lib/normalisasi"
+import { StatusPeserta } from "@/lib/generated/prisma/enums"
 
 function revalidatePesertaPelaksanaan(pelaksanaanId: string) {
     revalidatePath("/pendaftaran")
@@ -231,6 +232,36 @@ export async function addPesertaTempel(data: {
         const pesan = err instanceof Error ? err.message : "Gagal menambah peserta dari tempel nama."
         console.error("Gagal menambah peserta dari tempel nama:", err)
         return { success: false as const, error: pesan }
+    }
+}
+
+// Ubah status kelulusan satu peserta langsung dari halaman detail permohonan.
+export async function updateStatusPesertaPelaksanaan(id: string, status: StatusPeserta | null) {
+    try {
+        if (status !== null && !Object.values(StatusPeserta).includes(status)) {
+            return { success: false as const, error: "Status kelulusan tidak valid." }
+        }
+
+        const peserta = await prisma.pesertaPelaksanaan.findFirst({
+            where: { id, deletedAt: null, pelaksanaan: { deletedAt: null } }
+        })
+
+        if (!peserta) {
+            return { success: false as const, error: "Peserta pendaftaran tidak ditemukan atau sudah dihapus." }
+        }
+
+        await prisma.pesertaPelaksanaan.update({
+            where: { id },
+            data: { status }
+        })
+
+        revalidatePath(`/permohonan/${peserta.pelaksanaanId}`)
+        revalidatePath(`/pendaftaran/${peserta.pelaksanaanId}`)
+        revalidatePath("/sertifikat")
+        return { success: true as const }
+    } catch (err) {
+        console.error("Gagal mengubah status kelulusan:", err)
+        return { success: false as const, error: "Gagal mengubah status kelulusan." }
     }
 }
 

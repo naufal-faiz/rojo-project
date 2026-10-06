@@ -11,7 +11,7 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 | R2 | Implementasi selesai; lint, tipe, build, uji terisolasi lulus; uji browser admin belum diverifikasi | 25e10af + commit penutup R2 |
 | R3 | Implementasi selesai; lint, tipe, build, uji terisolasi dan pemeriksaan browser baca saja lulus | R3 selesai: detail perusahaan dan pengelolaan inline |
 | R4 | Implementasi selesai; lint, tipe, build lulus | R4 selesai: daftar, panel inline, dan detail peserta |
-| R5 | Belum dikerjakan | - |
+| R5 | Implementasi selesai; lint, tipe, build, dan gerbang pola lulus | Belum di-commit (berhenti sebelum commit R5 sesuai permintaan) |
 | R6 | Belum dikerjakan | - |
 | R7 | Belum dikerjakan | - |
 | R8 | Belum dikerjakan | - |
@@ -24,23 +24,23 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 | U-02 | Selesai | Peserta dan PIC ditambah inline di detail. |
 | U-03 | Selesai | Header dan grid informasi:cabang 60:40, PIC:peserta 30:70. |
 | U-04 | Selesai | Cabang, PIC, peserta inline; peserta ditautkan ke cabang perusahaan aktif. |
-| U-05 | Sebagian | R2–R4 memakai form dan konfirmasi inline; modul lain menunggu fase terkait. |
-| U-06 | Sebagian | Tombol aksi R2–R4 memakai ikon dari icons/index; modul lain menunggu fase terkait. |
+| U-05 | Sebagian | R2–R5 memakai form dan konfirmasi inline; modul lain menunggu fase terkait. |
+| U-06 | Sebagian | Tombol aksi R2–R5 memakai ikon dari icons/index; modul lain menunggu fase terkait. |
 | U-07 | Selesai | Pembersihan R0. |
-| U-08 | Sebagian | R2–R4 memakai pencarian, filter dan paginasi server; modul lain menunggu fase terkait. |
-| U-09 | Sebagian | R3–R4 memakai SearchableSelect server (seluruh hasil maksimal 10); modul lain menyusul. |
-| U-10 | Tidak dikerjakan | Menunggu fase terkait. |
-| U-11 | Tidak dikerjakan | Menunggu fase terkait. |
-| U-12 | Tidak dikerjakan | Menunggu fase terkait. |
-| U-13 | Tidak dikerjakan | Menunggu fase terkait. |
+| U-08 | Sebagian | R2–R5 memakai pencarian, filter dan paginasi server; modul lain menunggu fase terkait. |
+| U-09 | Sebagian | R0, R3–R5 memakai SearchableSelect server (seluruh hasil maksimal 10); modul lain menyusul. |
+| U-10 | Selesai | Halaman `/permohonan/baru` dengan kartu jadwal sesi; satu form dipakai untuk buat dan ubah. |
+| U-11 | Selesai | Detail bergrid 60:40; kartu status tidak dirender untuk BNSP/INTERNAL. |
+| U-12 | Tidak dikerjakan | Menunggu fase R6. |
+| U-13 | Tidak dikerjakan | Menunggu fase R6. |
 | U-14 | Selesai | Peserta tanpa perusahaan dapat dihubungkan; filter cabang tersedia. |
-| U-15 | Tidak dikerjakan | Menunggu fase terkait. |
-| U-16 | Tidak dikerjakan | Menunggu fase terkait. |
-| U-17 | Tidak dikerjakan | Menunggu fase terkait. |
+| U-15 | Selesai | Dropdown status kelulusan per peserta di detail permohonan, tersimpan langsung. |
+| U-16 | Sebagian | R5 menyaring daftar `/permohonan` ke kegiatan aktif; `/pendaftaran` pada R6. |
+| U-17 | Tidak dikerjakan | Menunggu fase R6. |
 | B-01 | Selesai | Backend R1 selesai; penerapan UI pada fase modul. |
 | B-02 | Selesai | Backend R1 selesai; penerapan UI pada fase modul. |
-| B-03 | Sebagian | Backend R1 selesai; penerapan UI pada fase modul. |
-| X-01 | Sebagian | Modal Training dan Perusahaan diganti pada R2–R3; modul lain menunggu fase terkait. |
+| B-03 | Sebagian | Backend R1 selesai; R5 memakai ensureTingkatanUmum lewat form dan menyembunyikan kelas "Umum". |
+| X-01 | Sebagian | Modal Training, Perusahaan, Peserta, dan Permohonan diganti pada R2–R5; modul lain menunggu fase terkait. |
 | X-02 | Selesai | Pembersihan R0. |
 | X-03 | Selesai | Backend R1 selesai; penerapan UI pada fase modul. |
 
@@ -92,6 +92,10 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 - **A-36** R4: `PesertaFormModal` dipindah ke `components/main/pendaftaran/` karena satu-satunya pemakai yang tersisa adalah `PesertaBulkModal` (dihapus di R6). Modul Peserta kini sepenuhnya memakai panel inline; tidak ada perubahan perilaku pada alur pendaftaran. Dampak jika salah: R6 perlu memperbarui impor atau menghapus file ini bersama `PesertaBulkModal`.
 - **A-37** R4: pencarian daftar peserta dibatasi ke nama (PRD 5.12). Filter perusahaan memakai `SearchableSelect` dengan pencarian server, dan pilihan "Tanpa perusahaan" saling menimpa dengan filter perusahaan (memilih salah satu mengosongkan yang lain). Dampak jika salah: admin yang terbiasa mencari lewat nama perusahaan harus memakai dropdown filter.
 - **A-38** R4: penghapusan peserta tetap hanya tersedia di daftar; halaman detail hanya memuat kartu informasi (ubah inline) dan riwayat kegiatan sesuai PRD 5.5. Dampak jika salah: admin perlu kembali ke daftar untuk menghapus.
+- **A-39** R5: filter "Belum Upload" memetakan status `null` tanpa membatasi jenis sertifikasi, sehingga kegiatan BNSP/INTERNAL yang statusnya kosong ikut tampil. Dampak jika salah: filter perlu dibatasi ke KEMNAKER.
+- **A-40** R5: "Tambah Rentang" dibatasi 366 hari per sekali tambah dan menolak tanggal selesai sebelum tanggal mulai lewat `FlashAlert`. Dampak jika salah: rentang sangat panjang perlu ditambahkan bertahap.
+- **A-41** R5: detail permohonan memakai `FlashAlert` terpisah per panel (status TemanK3, peserta via perusahaan, peserta mandiri) agar pesan tampil dekat aksi sesuai P-03; flash halaman dipakai untuk hasil simpan/hapus.
+- **A-42** R5: pengubahan jadwal sesi dilakukan di halaman ubah penuh lewat tombol "Ubah jadwal"; chip sesi di detail bersifat baca saja. Dampak jika salah: perubahan jadwal cepat harus lewat halaman ubah.
 
 ## Deviasi dari PRD
 
@@ -102,6 +106,7 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 ## Utang teknis baru
 
 - Tidak ada. Seluruh utang teknis di `PRD.md` bagian 11 (nomor 1-7) sudah dikerjakan di fase Penutup.
+- R5: fungsi server `createSesi` dan `deleteSesi` tidak lagi dipakai setelah `SesiManager` dihapus (pengelolaan sesi lewat `updatePelaksanaan`). Penghapusan kode mati menunggu R8 sesuai PRD 9.6.
 
 ## Perbaikan bug (di luar utang, dicatat sesuai PRD bagian 0 butir 8)
 
@@ -266,3 +271,25 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 6. Klik Hapus: `InlineConfirm` muncul di baris itu; peserta dengan pendaftaran aktif ditolak dengan pesan; peserta tanpa pendaftaran aktif terhapus dan notifikasi hijau.
 7. Buka Detail dari daftar: kartu informasi dan riwayat tampil. Klik Ubah, ganti data, simpan. Riwayat menampilkan pelatihan (tanpa "Umum"), tanggal, dan status.
 8. Uji tampilan gelap/terang, layar sempit, dan navigasi keyboard pada form inline.
+
+### R5 — Permohonan
+- Daftar `/permohonan` hanya menampilkan kegiatan aktif (`whereKegiatanAktif`, U-16), tautan "Lihat riwayat", pencarian no. permohonan/pelatihan/kelas/lokasi, filter jenis sertifikasi, jenis kegiatan, penyelenggara, dan status TemanK3 (termasuk "Belum Upload"); status di kolom hanya badge baca saja.
+- Halaman penuh `/permohonan/baru` dan `/permohonan/[id]/ubah` memakai satu `PermohonanForm`: kartu Informasi Kegiatan (training `SearchableSelect`, tingkatan dengan keterangan "Tanpa tingkatan" bila tidak ada kelas selain "Umum", enum kegiatan, no. permohonan, lokasi, catatan) dan kartu Jadwal Sesi (tambah hari, tambah rentang dengan opsi lewati Sabtu-Minggu, chip dapat dihapus, urut tanpa duplikat).
+- Tombol simpan: "Simpan" menuju detail, "Simpan & Kelola Pendaftaran" menuju `/pendaftaran/[id]`. Status TemanK3 tidak diisi di form.
+- Detail `/permohonan/[id]` bergrid 60:40; kartu Status TemanK3 hanya dirender untuk KEMNAKER (BNSP/INTERNAL kartu informasi melebar penuh). Kartu Peserta via Perusahaan dapat di-expand dan kartu Peserta Mandiri menampilkan kolom perusahaan; setiap baris punya dropdown Status Kelulusan yang tersimpan langsung dengan `FlashAlert`.
+- `PelaksanaanFormModal`, `usePelaksanaanForm`, dan `SesiManager` (termasuk `ConfirmDialog`/`AlertModal` terakhir di modul) dihapus; panel status TemanK3 memakai `FlashAlert`.
+- Validasi: `npm run lint`, `npx tsc --noEmit --incremental false`, dan `npm run build` lulus. Gerbang pola antarmuka folder `src/components/main/permohonan` dan `src/app/(dashboard)` kosong untuk `AlertModal|ConfirmDialog|AlertDialog`, `useModal|ui/modal|FormModal`, `<svg`, dan `window.location.reload`.
+- Batas validasi: uji browser dan uji data nyata belum dijalankan (belum ada sesi login pada sesi kerja); perubahan skema tidak ada.
+- Belum di-commit sesuai permintaan berhenti sebelum commit R5; `PROGRESS.md` dan seluruh berkas R5 masih di working tree.
+
+### Langkah uji manual R5
+1. Buka `/permohonan`. Hanya kegiatan aktif yang tampil; kegiatan lama tidak muncul dan bisa diakses lewat tombol "Lihat riwayat". Coba pencarian dan keempat filter; URL berubah dan paginasi kembali ke halaman 1.
+2. Klik "Buat Permohonan". Isi no. permohonan (coba nomor yang sudah dipakai → ditolak dengan pesan), pilih training lewat pencarian. Training tanpa kelas menampilkan keterangan "Tanpa tingkatan"; training dengan satu kelas memilih otomatis; dengan banyak kelas menampilkan dropdown.
+3. Tambah satu hari sesi, lalu tambah rentang (mis. 3 hari dengan opsi lewati Sabtu-Minggu). Chip tanggal terurut dan duplikat tidak bertambah; hapus satu chip berfungsi.
+4. Klik "Simpan" → pindah ke detail dengan notifikasi "Permohonan disimpan". Ulang dari halaman baru dengan "Simpan & Kelola Pendaftaran" → pindah ke `/pendaftaran/[id]`.
+5. Di detail KEMNAKER: kartu Informasi (60) dan Status TemanK3 (40). Klik "Nyatakan file sudah diupload" → badge berubah, tanggal unggah muncul (WIB); FU LPS/Cancel/Kembalikan bekerja seperti R1.
+6. Detail BNSP/INTERNAL: kartu status tidak tampil dan kartu Informasi melebar penuh.
+7. Expand sebuah perusahaan pada "Peserta via Perusahaan": PIC dan jumlah peserta tampil; ubah Status Kelulusan salah satu peserta → tersimpan langsung dengan notifikasi. Pada "Peserta Mandiri", kolom Perusahaan menampilkan nama perusahaan peserta atau "-"; ubah statusnya juga.
+8. Klik "Ubah" dari detail → halaman ubah terisi lengkap (termasuk sesi). Ubah data dan jadwal, Simpan → kembali ke detail dengan notifikasi "Perubahan permohonan disimpan".
+9. Klik "Hapus" pada detail/daftar: permohonan berisi pendaftaran/peserta aktif ditolak dengan pesan; setelah kosong, penghapusan berhasil dan daftar menampilkan notifikasi hijau.
+10. Uji tampilan gelap/terang, layar sempit, dan navigasi keyboard pada form serta dropdown status.

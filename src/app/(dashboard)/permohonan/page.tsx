@@ -1,5 +1,4 @@
 import { getAllPelaksanaan } from "@/lib/data/get/getPelaksanaan";
-import { prisma } from "@/lib/prisma";
 import PelaksanaanList from "@/components/main/permohonan/PelaksanaanList";
 
 export const metadata = {
@@ -10,27 +9,32 @@ export const metadata = {
 export default async function PermohonanPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; search?: string }>;
+  searchParams: Promise<{
+    page?: string;
+    search?: string;
+    jenisSertifikasi?: string;
+    jenisKegiatan?: string;
+    penyelenggara?: string;
+    status?: string;
+  }>;
 }) {
-  const resolvedParams = await searchParams;
-  const page = Number(resolvedParams?.page ?? 1);
-  const search = resolvedParams?.search ?? "";
+  const params = await searchParams;
+  const page = Number(params.page);
 
-  const [activeResult, tingkatanOptions] = await Promise.all([
-    getAllPelaksanaan({ page, limit: 10, search }),
-    prisma.tingkatan.findMany({
-      where: { deletedAt: null },
-      include: { training: true },
-    }),
-  ]);
+  const result = await getAllPelaksanaan({
+    aktif: true,
+    page: Number.isSafeInteger(page) && page > 0 ? page : 1,
+    limit: 10,
+    search: params.search,
+    jenisSertifikasi: params.jenisSertifikasi,
+    jenisKegiatan: params.jenisKegiatan,
+    penyelenggara: params.penyelenggara,
+    status: params.status,
+  });
 
   return (
     <div className="p-4 sm:p-6">
-      <PelaksanaanList
-        initialData={activeResult.data}
-        tingkatanOptions={tingkatanOptions}
-        pagination={activeResult.pagination}
-      />
+      <PelaksanaanList initialData={result.data} pagination={result.pagination} />
     </div>
   );
 }

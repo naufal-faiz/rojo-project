@@ -1,199 +1,113 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Modal } from "@/components/ui/modal";
-import { useModal } from "@/hooks/useModal";
 import PageHeader from "@/components/main/common/PageHeader";
 import DataTable from "@/components/main/common/DataTable";
-import ConfirmDialog from "@/components/main/common/ConfirmDialog";
-import AlertModal from "@/components/main/Modal/AlertModal";
-import PelaksanaanFormModal, { PelaksanaanFormData } from "./PelaksanaanFormModal";
-import {
-  getPelaksanaanColumns,
-  PelaksanaanData,
-  Tingkatan,
-} from "./PelaksanaanColumns";
+import FilterBar from "@/components/main/common/FilterBar";
+import FlashAlert from "@/components/main/common/FlashAlert";
+import useFlash from "@/components/main/common/useFlash";
+import InlineConfirm from "@/components/main/common/InlineConfirm";
+import Button from "@/components/ui/button/Button";
+import { PlusIcon, TimeIcon } from "@/icons/index";
 import { deletePelaksanaan } from "@/lib/data/action/pelaksanaanAction";
+import {
+  jenisKegiatanLabels,
+  jenisSertifikasiLabels,
+  penyelenggaraLabels,
+} from "@/components/main/common/enumLabels";
+import { statusTemanK3Labels } from "@/components/main/common/StatusBadge";
+import {
+  JenisKegiatan,
+  JenisSertifikasi,
+  Penyelenggara,
+  StatusTemanK3,
+} from "@/lib/generated/prisma/enums";
+import { getPelaksanaanColumns, PelaksanaanRow } from "./PelaksanaanColumns";
 
 interface PelaksanaanListProps {
-  initialData: PelaksanaanData[];
-  tingkatanOptions: Tingkatan[];
-  pagination: {
-    page: number;
-    limit: number;
-    totalItems: number;
-    totalPages: number;
-  };
+  /** Kegiatan aktif sesuai 5.11 dan filter URL. */
+  initialData: PelaksanaanRow[];
+  pagination: { page: number; totalItems: number; totalPages: number };
 }
 
-const PelaksanaanList: React.FC<PelaksanaanListProps> = ({
-  initialData,
-  tingkatanOptions,
-  pagination,
-}) => {
+const filters = [
+  {
+    key: "jenisSertifikasi", label: "Jenis Sertifikasi",
+    options: Object.values(JenisSertifikasi).map((value) => ({ value, label: jenisSertifikasiLabels[value] })),
+  },
+  {
+    key: "jenisKegiatan", label: "Jenis Kegiatan",
+    options: Object.values(JenisKegiatan).map((value) => ({ value, label: jenisKegiatanLabels[value] })),
+  },
+  {
+    key: "penyelenggara", label: "Penyelenggara",
+    options: Object.values(Penyelenggara).map((value) => ({ value, label: penyelenggaraLabels[value] })),
+  },
+  {
+    key: "status", label: "Status TemanK3",
+    options: [
+      { value: "BELUM_UPLOAD", label: "Belum Upload" },
+      ...Object.values(StatusTemanK3).map((value) => ({ value, label: statusTemanK3Labels[value] })),
+    ],
+  },
+];
+
+const PelaksanaanList: React.FC<PelaksanaanListProps> = ({ initialData, pagination }) => {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [editData, setEditData] = useState<PelaksanaanFormData | null>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [alertType, setAlertType] = useState<"success" | "error">("success");
-  const [alertTitle, setAlertTitle] = useState("");
-  const [alertMessage, setAlertMessage] = useState("");
+  const params = useSearchParams();
+  const flash = useFlash(params.get("deleted") === "1" ? { variant: "success", message: "Permohonan dihapus." } : null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  const {
-    isOpen: isFormOpen,
-    openModal: openForm,
-    closeModal: closeForm,
-  } = useModal();
-  const {
-    isOpen: isDeleteConfirmOpen,
-    openModal: openDeleteConfirm,
-    closeModal: closeDeleteConfirm,
-  } = useModal();
-  const {
-    isOpen: isAlertOpen,
-    openModal: openAlert,
-    closeModal: closeAlert,
-  } = useModal();
+  useEffect(() => {
+    if (params.has("deleted")) {
+      const next = new URLSearchParams(params.toString());
+      next.delete("deleted");
+      router.replace(`?${next}`, { scroll: false });
+    }
+  }, [params, router]);
 
-  const handleOpenAdd = () => {
-    setEditData(null);
-    openForm();
+  const change = (key: string, value: string) => {
+    const next = new URLSearchParams(params.toString());
+    next.delete("deleted");
+    if (value) next.set(key, value);
+    else next.delete(key);
+    if (key !== "page") next.set("page", "1");
+    setConfirmId(null);
+    router.push(`?${next}`, { scroll: false });
   };
 
-  const handleOpenDetail = (pelaksanaan: PelaksanaanData) => {
-    router.push(`/permohonan/${pelaksanaan.id}`);
-  };
-
-  const handleOpenEdit = (pelaksanaan: PelaksanaanData) => {
-    setEditData({
-      id: pelaksanaan.id,
-      noPermohonan: pelaksanaan.noPermohonan,
-      tingkatanId: pelaksanaan.tingkatanId,
-      jenisKegiatan: pelaksanaan.jenisKegiatan,
-      tipePelaksanaan: pelaksanaan.tipePelaksanaan,
-      lokasi: pelaksanaan.lokasi,
-      penyelenggara: pelaksanaan.penyelenggara,
-      jenisSertifikasi: pelaksanaan.jenisSertifikasi,
-      status: pelaksanaan.status,
-      catatan: pelaksanaan.catatan,
-    });
-    openForm();
-  };
-
-  const handleOpenDelete = (id: string) => {
-    setDeleteId(id);
-    openDeleteConfirm();
-  };
-
-
-  const handleDelete = async () => {
-    if (!deleteId) return;
-    setActionLoading(true);
+  const remove = async (id: string) => {
+    if (busy) return;
+    setBusy(true);
     try {
-      const result = await deletePelaksanaan(deleteId);
-      if (!result.success) {
-        closeDeleteConfirm();
-        setAlertType("error");
-        setAlertTitle("Gagal Menghapus");
-        setAlertMessage(result.error ?? "Gagal menghapus permohonan.");
-        openAlert();
-      } else {
-        closeDeleteConfirm();
-        setDeleteId(null);
-        setAlertType("success");
-        setAlertTitle("Berhasil");
-        setAlertMessage("Permohonan berhasil dihapus.");
-        openAlert();
-      }
-    } finally {
-      setActionLoading(false);
-    }
+      const result = await deletePelaksanaan(id);
+      if (result.success) { setConfirmId(null); flash.showSuccess("Permohonan dihapus."); }
+      else flash.showError(result.error ?? "Gagal menghapus permohonan.");
+    } catch { flash.showError("Gagal menghapus permohonan."); }
+    finally { setBusy(false); }
   };
-
-
-  const handlePageChange = (page: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("page", page.toString());
-    router.push(`?${params.toString()}`);
-  };
-
-  const handleSearch = (query: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (query) {
-      params.set("search", query);
-    } else {
-      params.delete("search");
-    }
-    params.set("page", "1");
-    router.push(`?${params.toString()}`);
-  };
-
-  const activeColumns = getPelaksanaanColumns({
-    onDetail: handleOpenDetail,
-    onEdit: handleOpenEdit,
-    onDelete: handleOpenDelete,
-  });
-
 
   return (
-    <>
-      <PageHeader
-        title="Permohonan Pelatihan"
-        description="Kelola daftar permohonan dan jadwal kegiatan pembinaan K3."
-        primaryAction={{
-          label: "Buat Permohonan",
-          onClick: handleOpenAdd,
-        }}
-      />
-
-
-        <DataTable
-          data={initialData}
-          columns={activeColumns}
-          totalPages={pagination.totalPages}
-          currentPage={pagination.page}
-          totalItems={pagination.totalItems}
-          onPageChange={handlePageChange}
-          onSearch={handleSearch}
-          searchValue={searchParams.get("search") ?? ""}
-          searchPlaceholder="Cari no permohonan atau nama pelatihan..."
-          emptyText="Belum ada data permohonan."
-        />
-
-
-      {/* Modal form tambah/ubah */}
-      <Modal isOpen={isFormOpen} onClose={closeForm} className="max-w-lg">
-        <PelaksanaanFormModal
-          editData={editData}
-          tingkatanOptions={tingkatanOptions}
-          onClose={closeForm}
-        />
-      </Modal>
-
-      {/* Dialog konfirmasi hapus */}
-      <ConfirmDialog
-        isOpen={isDeleteConfirmOpen}
-        onClose={closeDeleteConfirm}
-        onConfirm={handleDelete}
-        title="Hapus Permohonan"
-        message="Yakin ingin menghapus permohonan ini? Permohonan hanya bisa dihapus jika tidak ada pendaftaran atau peserta aktif."
-        confirmLabel="Ya, Hapus"
-        variant="danger"
-        isLoading={actionLoading}
-      />
-
-
-      {/* Alert */}
-      <AlertModal
-        isOpen={isAlertOpen}
-        onClose={closeAlert}
-        type={alertType}
-        title={alertTitle}
-        message={alertMessage}
-        okLabel="OK"
-      />
-    </>
+    <div className="text-gray-700 dark:text-gray-300">
+      <PageHeader title="Permohonan Pelatihan" description="Kegiatan yang berjalan dan baru selesai. Kegiatan lama ada di Riwayat Kegiatan."
+        primaryAction={{ label: "Buat Permohonan", href: "/permohonan/baru", icon: <PlusIcon className="size-4" /> }}
+        actions={<Link href="/master/riwayat-kegiatan">
+          <Button size="sm" variant="outline" startIcon={<TimeIcon className="size-4" />}>Lihat riwayat</Button>
+        </Link>} />
+      <FlashAlert flash={flash.flash} onClose={flash.clear} />
+      <FilterBar filters={filters} />
+      <DataTable data={initialData} columns={getPelaksanaanColumns((row) => setConfirmId(row.id), busy)}
+        currentPage={pagination.page} totalPages={pagination.totalPages} totalItems={pagination.totalItems}
+        searchValue={params.get("search") ?? ""} searchPlaceholder="Cari no. permohonan, pelatihan, kelas, atau lokasi..."
+        emptyText="Belum ada permohonan aktif. Kegiatan lama dapat dilihat di Riwayat Kegiatan."
+        onSearch={(value) => change("search", value)} onPageChange={(page) => change("page", String(page))}
+        renderExpandedRow={(row) => confirmId === row.id
+          ? <InlineConfirm message={`Hapus permohonan ${row.noPermohonan ?? row.tingkatan.training.nama}? Pendaftaran dan peserta aktif harus diselesaikan terlebih dahulu.`}
+              onConfirm={() => remove(row.id)} onCancel={() => setConfirmId(null)} loading={busy} />
+          : null} />
+    </div>
   );
 };
 
