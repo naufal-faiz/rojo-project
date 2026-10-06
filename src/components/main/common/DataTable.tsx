@@ -44,7 +44,7 @@ interface DataTableProps<T> {
   isLoading?: boolean;
   /** Callback saat baris diklik (opsional) */
   onRowClick?: (row: T) => void;
-  /** Panel inline sous la baris, hanya dirender bila callback mengembalikan isi. */
+  /** Panel inline di bawah baris, hanya dirender bila callback mengembalikan isi. */
   renderExpandedRow?: (row: T) => React.ReactNode;
 }
 
@@ -64,7 +64,14 @@ function DataTable<T extends { id: string }>({
   renderExpandedRow,
 }: DataTableProps<T>) {
   const [localSearch, setLocalSearch] = useState(searchValue);
+  const [previousSearch, setPreviousSearch] = useState(searchValue);
   const [, startTransition] = useTransition();
+
+  // Sinkronkan input saat pengguna berpindah riwayat URL tanpa melepas fokus.
+  if (previousSearch !== searchValue) {
+    setPreviousSearch(searchValue);
+    setLocalSearch(searchValue);
+  }
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -126,7 +133,9 @@ function DataTable<T extends { id: string }>({
                 </TableCell>
               </TableRow>
             ) : (
-              data.map((row) => (
+              data.map((row) => {
+                const expandedRow = renderExpandedRow?.(row);
+                return (
                 <React.Fragment key={row.id}>
                 <TableRow
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
@@ -147,9 +156,16 @@ function DataTable<T extends { id: string }>({
                     </TableCell>
                   ))}
                 </TableRow>
-                {renderExpandedRow?.(row) && <TableRow><TableCell colSpan={columns.length} className="p-4">{renderExpandedRow(row)}</TableCell></TableRow>}
+                {expandedRow && (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="p-4 text-gray-700 dark:text-gray-300">
+                      {expandedRow}
+                    </TableCell>
+                  </TableRow>
+                )}
                 </React.Fragment>
-              ))
+                );
+              })
             )}
           </TableBody>
         </Table>

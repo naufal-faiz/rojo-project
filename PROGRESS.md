@@ -8,7 +8,7 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 |---|---|---|
 | R0 | Implementasi selesai; lint, tipe, build lulus | R0 selesai: fondasi antarmuka dan pembersihan |
 | R1 | Implementasi selesai; lint, tipe, build lulus | R1 selesai: aturan pendaftaran dan kegiatan aktif |
-| R2 | Implementasi selesai; tsc dan lint modul lulus | R2 selesai: Master Pelatihan inline |
+| R2 | Implementasi selesai; lint, tipe, build, uji terisolasi lulus; uji browser admin belum diverifikasi | 25e10af + commit penutup R2 |
 | R3 | Belum dikerjakan | - |
 | R4 | Belum dikerjakan | - |
 | R5 | Belum dikerjakan | - |
@@ -24,10 +24,10 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 | U-02 | Tidak dikerjakan | Menunggu fase terkait. |
 | U-03 | Tidak dikerjakan | Menunggu fase terkait. |
 | U-04 | Tidak dikerjakan | Menunggu fase terkait. |
-| U-05 | Tidak dikerjakan | Menunggu fase terkait. |
-| U-06 | Tidak dikerjakan | Menunggu fase terkait. |
+| U-05 | Sebagian | R2 memakai form dan konfirmasi inline; modul lain menunggu fase terkait. |
+| U-06 | Sebagian | Tombol aksi R2 memakai ikon dari icons/index; modul lain menunggu fase terkait. |
 | U-07 | Selesai | Pembersihan R0. |
-| U-08 | Tidak dikerjakan | Menunggu fase terkait. |
+| U-08 | Sebagian | R2 memakai pencarian, filter dan paginasi server; modul lain menunggu fase terkait. |
 | U-09 | Tidak dikerjakan | Menunggu fase terkait. |
 | U-10 | Tidak dikerjakan | Menunggu fase terkait. |
 | U-11 | Tidak dikerjakan | Menunggu fase terkait. |
@@ -40,7 +40,7 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 | B-01 | Selesai | Backend R1 selesai; penerapan UI pada fase modul. |
 | B-02 | Selesai | Backend R1 selesai; penerapan UI pada fase modul. |
 | B-03 | Sebagian | Backend R1 selesai; penerapan UI pada fase modul. |
-| X-01 | Tidak dikerjakan | Menunggu fase terkait. |
+| X-01 | Sebagian | Modal Training dihapus pada R2; modul lain menunggu fase terkait. |
 | X-02 | Selesai | Pembersihan R0. |
 | X-03 | Selesai | Backend R1 selesai; penerapan UI pada fase modul. |
 
@@ -207,4 +207,17 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 ### Validasi R2
 - Daftar Master Pelatihan memakai pencarian, filter punya/tanpa tingkatan, panel tambah inline, edit inline, dan pengelolaan tingkatan inline.
 - Konfirmasi hapus memakai `InlineConfirm`; notifikasi memakai `FlashAlert`; komponen modal lama Training dihapus.
-- `npx tsc --noEmit --incremental false` dan ESLint pada file R2 lulus. Build produksi belum dapat dijalankan karena pemeriksaan akses build ditolak saat batas penggunaan Codex tercapai.
+- Form ubah tingkatan tampil di baris yang dipilih, label terhubung dengan input, dan callback panel DataTable dievaluasi sekali per baris. Input pencarian mengikuti perubahan URL.
+- Validasi penutup: `npm run lint`, `tsc --noEmit --incremental false`, dan `npm run build` lulus. Build memakai akses Google Fonts; masih ada peringatan bawaan Next.js tentang konvensi middleware yang deprecated.
+- Pencarian pola modal, `useModal`, dialog browser, dan reload pada modul Training kosong; `git diff --check` lulus.
+- Uji terisolasi dengan Prisma tiruan lulus: nama kosong ditolak, nama/tingkatan dipangkas, tingkatan awal opsional, hapus ditolak saat relasi aktif, soft delete, filter ada/tanpa tingkatan (kelas internal dikecualikan), pencarian, dan paginasi. Tidak ada perubahan database dari pengujian.
+- Interaksi browser admin belum diverifikasi. Langkah manual di bawah adalah checklist, bukan hasil pengujian yang sudah dijalankan.
+- **D-05** Implementasi parsial R2 sudah tersimpan di `25e10af` ketika pekerjaan dilanjutkan. Perapian dan validasi disimpan dalam commit lanjutan agar riwayat yang ada tetap utuh.
+- Berhenti setelah penutup R2 sesuai instruksi pengguna untuk menyelesaikan satu fitur sampai commit. R3 belum dimulai.
+
+### Uji manual R2 yang tersisa
+1. Login lalu buka `/master/training`. Uji pencarian, filter punya/tanpa tingkatan, paginasi, dan tombol kembali browser.
+2. Tambah pelatihan dengan/tanpa tingkatan awal. Setelah sukses, form tambah tetap terbuka dan fokus kembali ke input nama.
+3. Ubah nama pelatihan inline; perluas tingkatan lalu tambah/ubah/batalkan pada baris yang dipilih.
+4. Hapus tingkatan yang masih dipakai permohonan aktif dan pelatihan dengan tingkatan aktif: error tampil, data tetap ada. Uji batal konfirmasi dan hapus data kosong yang diizinkan.
+5. Periksa tampilan gelap/terang, label input, navigasi keyboard, dan perilaku FlashAlert (sukses hilang setelah lima detik, error dapat ditutup).
