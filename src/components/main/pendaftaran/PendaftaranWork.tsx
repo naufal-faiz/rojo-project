@@ -2,14 +2,10 @@
 import React, { useState } from "react";
 import PendaftaranPerusahaanPanel from "./PendaftaranPerusahaanPanel";
 import PesertaMandiriPanel from "./PesertaMandiriPanel";
-import PendaftaranTerhapusPanel, {
-  DeletedPendaftaranItem,
-  DeletedPesertaItem,
-} from "./PendaftaranTerhapusPanel";
 import { PendaftaranItemData, PesertaItemData } from "./PendaftaranPerusahaanItem";
 import { CabangOption } from "./pesertaBulkTypes";
 
-type Tab = "perusahaan" | "mandiri" | "terhapus";
+type Tab = "perusahaan" | "mandiri";
 
 interface PendaftaranWorkProps {
   /** ID permohonan yang sedang dikelola */
@@ -18,10 +14,6 @@ interface PendaftaranWorkProps {
   pendaftaranList: PendaftaranItemData[];
   /** Peserta mandiri aktif */
   pesertaMandiri: PesertaItemData[];
-  /** Pendaftaran perusahaan terhapus */
-  deletedPendaftaran: DeletedPendaftaranItem[];
-  /** Peserta terhapus */
-  deletedPeserta: DeletedPesertaItem[];
   /** Opsi cabang untuk form peserta baru */
   cabangOptions: CabangOption[];
 }
@@ -30,8 +22,6 @@ const PendaftaranWork: React.FC<PendaftaranWorkProps> = ({
   pelaksanaanId,
   pendaftaranList,
   pesertaMandiri,
-  deletedPendaftaran,
-  deletedPeserta,
   cabangOptions,
 }) => {
   const [tab, setTab] = useState<Tab>("perusahaan");
@@ -39,7 +29,6 @@ const PendaftaranWork: React.FC<PendaftaranWorkProps> = ({
   const tabs: Array<[Tab, string]> = [
     ["perusahaan", `Pendaftaran Perusahaan (${pendaftaranList.length})`],
     ["mandiri", `Peserta Mandiri (${pesertaMandiri.length})`],
-    ["terhapus", `Terhapus (${deletedPendaftaran.length + deletedPeserta.length})`],
   ];
 
   return (
@@ -77,12 +66,6 @@ const PendaftaranWork: React.FC<PendaftaranWorkProps> = ({
         />
       )}
 
-      {tab === "terhapus" && (
-        <PendaftaranTerhapusPanel
-          deletedPendaftaran={deletedPendaftaran}
-          deletedPeserta={deletedPeserta}
-        />
-      )}
     </>
   );
 };

@@ -10,7 +10,6 @@ import PerusahaanFormModal from "./PerusahaanFormModal";
 import CabangManager from "./CabangManager";
 import PicManager from "./PicManager";
 import PerusahaanPesertaList from "./PerusahaanPesertaList";
-import DeletedPerusahaanList from "./DeletedPerusahaanList";
 import { deletePerusahaan } from "@/lib/data/action/perusahaanAction";
 import { TipeCabang, TipePic } from "@/lib/generated/prisma/enums";
 
@@ -41,11 +40,9 @@ interface PerusahaanData {
 
 interface PerusahaanListProps {
   initialData: PerusahaanData[];
-  deletedData: PerusahaanData[];
 }
 
-const PerusahaanList: React.FC<PerusahaanListProps> = ({ initialData, deletedData }) => {
-  const [activeTab, setActiveTab] = useState<"active" | "deleted">("active");
+const PerusahaanList: React.FC<PerusahaanListProps> = ({ initialData }) => {
   const [editData, setEditData] = useState<{ id: string; nama: string; alamatLegal?: string | null } | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -124,32 +121,7 @@ const PerusahaanList: React.FC<PerusahaanListProps> = ({ initialData, deletedDat
         }}
       />
 
-      {/* Tab switch */}
-      <div className="flex gap-2 mb-4">
-        <button
-          onClick={() => setActiveTab("active")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            activeTab === "active"
-              ? "bg-brand-500 text-white dark:bg-brand-600"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-          }`}
-        >
-          Aktif ({initialData.length})
-        </button>
-        <button
-          onClick={() => setActiveTab("deleted")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            activeTab === "deleted"
-              ? "bg-brand-500 text-white dark:bg-brand-600"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-          }`}
-        >
-          Terhapus ({deletedData.length})
-        </button>
-      </div>
-
       {/* Daftar perusahaan aktif */}
-      {activeTab === "active" && (
         <div className="space-y-3">
           {initialData.length === 0 ? (
             <div className="rounded-xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500 dark:border-white/[0.05] dark:bg-white/[0.03] dark:text-gray-400">
@@ -250,13 +222,6 @@ const PerusahaanList: React.FC<PerusahaanListProps> = ({ initialData, deletedDat
             })
           )}
         </div>
-      )}
-
-      {/* Daftar perusahaan terhapus */}
-      {activeTab === "deleted" && (
-        <DeletedPerusahaanList initialData={deletedData} />
-      )}
-
       {/* Modal form tambah/ubah perusahaan */}
       <Modal isOpen={isFormOpen} onClose={closeForm} className="max-w-md">
         <PerusahaanFormModal editData={editData} onClose={closeForm} />

@@ -8,7 +8,6 @@ import ConfirmDialog from "@/components/main/common/ConfirmDialog";
 import AlertModal from "@/components/main/Modal/AlertModal";
 import TrainingFormModal from "./TrainingFormModal";
 import TingkatanManager from "./TingkatanManager";
-import DeletedTrainingList from "./DeletedTrainingList";
 import { deleteTraining } from "@/lib/data/action/trainingAction";
 
 interface Tingkatan {
@@ -24,11 +23,9 @@ interface TrainingData {
 
 interface TrainingListProps {
   initialData: TrainingData[];
-  deletedData: TrainingData[];
 }
 
-const TrainingList: React.FC<TrainingListProps> = ({ initialData, deletedData }) => {
-  const [activeTab, setActiveTab] = useState<"active" | "deleted">("active");
+const TrainingList: React.FC<TrainingListProps> = ({ initialData }) => {
   const [editData, setEditData] = useState<{ id: string; nama: string } | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -109,32 +106,7 @@ const TrainingList: React.FC<TrainingListProps> = ({ initialData, deletedData })
         }}
       />
 
-      {/* Tab switch */}
-      <div className="flex gap-2 mb-4">
-        <button
-          onClick={() => setActiveTab("active")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            activeTab === "active"
-              ? "bg-brand-500 text-white dark:bg-brand-600"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-          }`}
-        >
-          Aktif ({initialData.length})
-        </button>
-        <button
-          onClick={() => setActiveTab("deleted")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            activeTab === "deleted"
-              ? "bg-brand-500 text-white dark:bg-brand-600"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-          }`}
-        >
-          Terhapus ({deletedData.length})
-        </button>
-      </div>
-
       {/* Daftar training aktif */}
-      {activeTab === "active" && (
         <div className="space-y-3">
         {initialData.length === 0 ? (
           <div className="rounded-xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500 dark:border-white/[0.05] dark:bg-white/[0.03] dark:text-gray-400">
@@ -201,13 +173,6 @@ const TrainingList: React.FC<TrainingListProps> = ({ initialData, deletedData })
           ))
         )}
         </div>
-      )}
-
-      {/* Daftar training terhapus */}
-      {activeTab === "deleted" && (
-        <DeletedTrainingList initialData={deletedData} />
-      )}
-
       {/* Modal form tambah/ubah training */}
       <Modal isOpen={isFormOpen} onClose={closeForm} className="max-w-md">
         <TrainingFormModal editData={editData} onClose={closeForm} />

@@ -13,7 +13,7 @@ const AppSidebar: React.FC = () => {
   const {
     openSubmenu,
     subMenuHeight,
-    subMenuRefs,
+    registerSubmenu,
     handleSubmenuToggle,
     isActive,
   } = useSidebarSubmenu();
@@ -39,7 +39,7 @@ const AppSidebar: React.FC = () => {
                 menuType="main"
                 openSubmenu={openSubmenu}
                 subMenuHeight={subMenuHeight}
-                subMenuRefs={subMenuRefs}
+                registerSubmenu={registerSubmenu}
                 onSubmenuToggle={handleSubmenuToggle}
                 isActive={isActive}
               />
@@ -55,7 +55,7 @@ const AppSidebar: React.FC = () => {
                 menuType="main"
                 openSubmenu={openSubmenu}
                 subMenuHeight={subMenuHeight}
-                subMenuRefs={subMenuRefs}
+                registerSubmenu={registerSubmenu}
                 onSubmenuToggle={handleSubmenuToggle}
                 isActive={isActive}
               />
@@ -73,7 +73,7 @@ const AppSidebar: React.FC = () => {
                 menuType="others"
                 openSubmenu={openSubmenu}
                 subMenuHeight={subMenuHeight}
-                subMenuRefs={subMenuRefs}
+                registerSubmenu={registerSubmenu}
                 onSubmenuToggle={handleSubmenuToggle}
                 isActive={isActive}
               />

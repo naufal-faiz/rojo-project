@@ -9,7 +9,7 @@ interface SidebarNavListProps {
   menuType: "main" | "others";
   openSubmenu: { type: "main" | "others"; index: number } | null;
   subMenuHeight: Record<string, number>;
-  subMenuRefs: React.RefObject<Record<string, HTMLDivElement | null>>;
+  registerSubmenu: (key: string, element: HTMLDivElement | null) => void;
   onSubmenuToggle: (index: number, menuType: "main" | "others") => void;
   isActive: (path: string) => boolean;
 }
@@ -19,7 +19,7 @@ const SidebarNavList: React.FC<SidebarNavListProps> = ({
   menuType,
   openSubmenu,
   subMenuHeight,
-  subMenuRefs,
+  registerSubmenu,
   onSubmenuToggle,
   isActive,
 }) => {
@@ -38,7 +38,7 @@ const SidebarNavList: React.FC<SidebarNavListProps> = ({
             menuType={menuType}
             isSubmenuOpen={isSubmenuOpen}
             subMenuHeight={subMenuHeight[subMenuKey] || 0}
-            subMenuRefs={subMenuRefs}
+            registerSubmenu={registerSubmenu}
             onSubmenuToggle={onSubmenuToggle}
             isActive={isActive}
           />

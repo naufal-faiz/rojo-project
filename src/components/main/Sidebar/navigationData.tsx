@@ -1,18 +1,11 @@
 import {
-  CalenderIcon,
   GridIcon,
-  ListIcon,
-  PageIcon,
   TimeIcon,
   UserCircleIcon,
-  VideoIcon,
-  ShootingStarIcon,
   Certificate,
   Application,
   DocsIcon,
-  UserIcon,
   Enterprise,
-  Gear,
   SafetyVest,
   GroupIcon,
 } from "@/icons/index";

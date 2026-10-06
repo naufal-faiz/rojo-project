@@ -6,14 +6,13 @@ import { ChevronDownIcon } from "@/icons/index";
 import { useSidebar } from "@/lib/context/SidebarContext";
 import { NavigationData } from "./navigationData";
 
-// eslint-disable-next-line react-hooks/immutability, react-compiler/react-compiler
 interface SidebarNavigationDataProps {
   nav: NavigationData;
   index: number;
   menuType: "main" | "others";
   isSubmenuOpen: boolean;
   subMenuHeight: number;
-  subMenuRefs: React.RefObject<Record<string, HTMLDivElement | null>>;
+  registerSubmenu: (key: string, element: HTMLDivElement | null) => void;
   onSubmenuToggle: (index: number, menuType: "main" | "others") => void;
   isActive: (path: string) => boolean;
 }
@@ -24,7 +23,7 @@ const SidebarNavigationData: React.FC<SidebarNavigationDataProps> = ({
   menuType,
   isSubmenuOpen,
   subMenuHeight,
-  subMenuRefs,
+  registerSubmenu,
   onSubmenuToggle,
   isActive,
 }) => {
@@ -33,10 +32,8 @@ const SidebarNavigationData: React.FC<SidebarNavigationDataProps> = ({
   const subMenuKey = `${menuType}-${index}`;
 
   const setSubMenuRef = useCallback((el: HTMLDivElement | null) => {
-    if (subMenuRefs.current && el) {
-      subMenuRefs.current[subMenuKey] = el;
-    }
-  }, [subMenuKey, subMenuRefs]);
+    registerSubmenu(subMenuKey, el);
+  }, [subMenuKey, registerSubmenu]);
 
   return (
     <li>

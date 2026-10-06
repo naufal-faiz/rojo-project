@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getPendaftaranKerja, getDeletedPendaftaran } from "@/lib/data/get/getPendaftaran";
+import { getPendaftaranKerja } from "@/lib/data/get/getPendaftaran";
 import { prisma } from "@/lib/prisma";
 import PageHeader from "@/components/main/common/PageHeader";
 import PendaftaranWork from "@/components/main/pendaftaran/PendaftaranWork";
@@ -16,9 +16,8 @@ export default async function PendaftaranKerjaPage({
 }) {
   const { pelaksanaanId } = await params;
 
-  const [pelaksanaan, deleted, cabangOptions] = await Promise.all([
+  const [pelaksanaan, cabangOptions] = await Promise.all([
     getPendaftaranKerja(pelaksanaanId),
-    getDeletedPendaftaran(pelaksanaanId),
     prisma.cabang.findMany({
       where: { deletedAt: null },
       include: { perusahaan: true },
@@ -43,8 +42,6 @@ export default async function PendaftaranKerjaPage({
         pelaksanaanId={pelaksanaan.id}
         pendaftaranList={pelaksanaan.pendaftaran}
         pesertaMandiri={pelaksanaan.pesertaPelaksanaan}
-        deletedPendaftaran={deleted.pendaftaran}
-        deletedPeserta={deleted.peserta}
         cabangOptions={cabangOptions}
       />
     </div>

@@ -2,7 +2,49 @@
 
 Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 
-## Status fase
+## Status revisi R0–R8
+
+| Fase | Status | Commit |
+|---|---|---|
+| R0 | Implementasi selesai; lint, tipe, build lulus | R0 selesai: fondasi antarmuka dan pembersihan |
+| R1 | Belum dikerjakan | - |
+| R2 | Belum dikerjakan | - |
+| R3 | Belum dikerjakan | - |
+| R4 | Belum dikerjakan | - |
+| R5 | Belum dikerjakan | - |
+| R6 | Belum dikerjakan | - |
+| R7 | Belum dikerjakan | - |
+| R8 | Belum dikerjakan | - |
+
+## Checklist revisi
+
+| ID | Status | Catatan |
+|---|---|---|
+| U-01 | Tidak dikerjakan | Menunggu fase terkait. |
+| U-02 | Tidak dikerjakan | Menunggu fase terkait. |
+| U-03 | Tidak dikerjakan | Menunggu fase terkait. |
+| U-04 | Tidak dikerjakan | Menunggu fase terkait. |
+| U-05 | Tidak dikerjakan | Menunggu fase terkait. |
+| U-06 | Tidak dikerjakan | Menunggu fase terkait. |
+| U-07 | Selesai | Pembersihan R0. |
+| U-08 | Tidak dikerjakan | Menunggu fase terkait. |
+| U-09 | Tidak dikerjakan | Menunggu fase terkait. |
+| U-10 | Tidak dikerjakan | Menunggu fase terkait. |
+| U-11 | Tidak dikerjakan | Menunggu fase terkait. |
+| U-12 | Tidak dikerjakan | Menunggu fase terkait. |
+| U-13 | Tidak dikerjakan | Menunggu fase terkait. |
+| U-14 | Tidak dikerjakan | Menunggu fase terkait. |
+| U-15 | Tidak dikerjakan | Menunggu fase terkait. |
+| U-16 | Tidak dikerjakan | Menunggu fase terkait. |
+| U-17 | Tidak dikerjakan | Menunggu fase terkait. |
+| B-01 | Tidak dikerjakan | Menunggu fase terkait. |
+| B-02 | Tidak dikerjakan | Menunggu fase terkait. |
+| B-03 | Tidak dikerjakan | Menunggu fase terkait. |
+| X-01 | Tidak dikerjakan | Menunggu fase terkait. |
+| X-02 | Selesai | Pembersihan R0. |
+| X-03 | Tidak dikerjakan | Menunggu fase terkait. |
+
+## Status fase (arsip v0.2)
 
 | Fase | Status | Commit |
 |---|---|---|
@@ -132,3 +174,19 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 3. `/master/peserta/[id]` untuk peserta mandiri → riwayat kegiatan menampilkan nama pelatihan dan tanggalnya (bukan "-").
 4. `/permohonan` dan `/master/peserta`: kolom tabel, pencarian, paginasi, tambah/ubah/hapus/restore berfungsi seperti sebelumnya setelah pemecahan file.
 5. Semua halaman menu bisa dibuka: `/`, `/permohonan`, `/pendaftaran`, `/sertifikat`, `/invoice`, `/master/training`, `/master/perusahaan`, `/master/peserta`, `/master/riwayat-kegiatan`.
+
+## Catatan revisi v0.3
+
+- **A-28** PRD v0.3 menjadi acuan bila tabel lama AGENTS bagian 3 menyebut Riwayat Kegiatan belum ada. Riwayat tetap dikerjakan di R7.
+- **A-29** UI terhapus di Peserta dan Permohonan juga dihapus di R0 sesuai larangan seluruh UI pemulihan (PRD 5.10); getter dan server action restore tetap dipertahankan.
+- **A-30** Button mendapat isLoading opsional; PageHeader mendapat backHref/badges opsional; RowActions menerima editHref opsional untuk halaman ubah permohonan.
+- **D-04** Lint awal gagal pada Sidebar (rule tidak tersedia dan mutasi ref lewat props). R0 memperbaiki registrasi ref melalui callback pemilik ref serta impor tidak terpakai agar gerbang kualitas dapat dijalankan.
+- Status migrasi: tiga migrasi, database up to date (pemeriksaan baca saja).
+- Catatan arsip: langkah uji F0–F7/Jalur M di atas menggambarkan v0.2 dan digantikan langkah revisi berikut. Jalur impor sudah dihapus; jangan menjalankan instruksi impor arsip.
+
+### Uji manual R0
+1. Buka seluruh menu: daftar aktif tetap tampil; tab Terhapus tidak ada.
+2. Komponen baru diuji lewat modul yang dimigrasi R2–R7: sukses hilang dalam lima detik, error/warning bertahan sampai ditutup.
+3. Dropdown: ketik cepat, navigasi panah/Enter/Esc, hasil maksimal sepuluh, input dan tinggi daftar tetap stabil.
+
+- Validasi R0: npm run lint bersih; tsc --noEmit --incremental false lulus; npm run build lulus setelah akses Google Fonts diizinkan. Pencarian pola komponen R0 dan UI terhapus kosong. Seluruh route menu ada di hasil build. Uji interaksi admin belum diverifikasi karena belum tersedia sesi login browser.

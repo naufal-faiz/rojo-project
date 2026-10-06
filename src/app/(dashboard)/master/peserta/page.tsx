@@ -1,4 +1,4 @@
-import { getAllPeserta, getDeletedPeserta } from "@/lib/data/get/getPeserta";
+import { getAllPeserta } from "@/lib/data/get/getPeserta";
 import { prisma } from "@/lib/prisma";
 import PesertaList from "@/components/main/peserta/PesertaList";
 
@@ -16,9 +16,8 @@ export default async function PesertaPage({
   const page = Number(resolvedParams?.page ?? 1);
   const search = resolvedParams?.search ?? "";
 
-  const [activeResult, deletedResult, cabangOptions] = await Promise.all([
+  const [activeResult, cabangOptions] = await Promise.all([
     getAllPeserta({ page, limit: 10, search }),
-    getDeletedPeserta({ search }),
     prisma.cabang.findMany({
       where: { deletedAt: null },
       include: { perusahaan: true },
@@ -30,7 +29,6 @@ export default async function PesertaPage({
     <div className="p-4 sm:p-6">
       <PesertaList
         initialData={activeResult.data}
-        deletedData={deletedResult.data}
         cabangOptions={cabangOptions}
         pagination={activeResult.pagination}
       />

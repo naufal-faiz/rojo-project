@@ -14,7 +14,6 @@ export function useSidebarSubmenu() {
 
   const isActive = useCallback((path: string) => path === pathname, [pathname]);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     let submenuMatched = false;
     const sections: Array<{ type: "main" | "others"; items: typeof navigationData }> = [
@@ -22,9 +21,8 @@ export function useSidebarSubmenu() {
       { type: "others", items: othersItems },
     ];
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    sections.forEach(({ type, items }) => {
-      items.forEach((nav, index) => {
+    sections.forEach(({ items }) => {
+      items.forEach((nav) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
             if (isActive(subItem.path)) {
@@ -60,10 +58,14 @@ export function useSidebarSubmenu() {
     );
   };
 
+  const registerSubmenu = useCallback((key: string, element: HTMLDivElement | null) => {
+    subMenuRefs.current[key] = element;
+  }, []);
+
   return {
     openSubmenu,
     subMenuHeight,
-    subMenuRefs,
+    registerSubmenu,
     handleSubmenuToggle,
     isActive,
   };
