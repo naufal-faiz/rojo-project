@@ -18,7 +18,7 @@ export async function checkDuplicatePerusahaan(nama: string) {
                 deletedAt: null
             }
         })
-        return { exists: Boolean(existing), existingName: existing?.nama }
+        return { exists: Boolean(existing), existingName: existing?.nama, existingId: existing?.id }
     } catch {
         return { exists: false }
     }
@@ -31,7 +31,7 @@ export async function createPerusahaan(data: { nama: string; alamatLegal?: strin
     }
 
     try {
-        await prisma.$transaction(async (tx) => {
+        const perusahaanId = await prisma.$transaction(async (tx) => {
             // 1. Buat perusahaan
             const perusahaan = await tx.perusahaan.create({
                 data: {
@@ -49,10 +49,11 @@ export async function createPerusahaan(data: { nama: string; alamatLegal?: strin
                     alamat: data.alamatLegal?.trim() || null
                 }
             })
+            return perusahaan.id
         })
 
         revalidatePath("/master/perusahaan")
-        return { success: true }
+        return { success: true, id: perusahaanId }
     } catch (err) {
         console.error("Gagal membuat perusahaan:", err)
         return { success: false, error: "Gagal menyimpan data perusahaan." }

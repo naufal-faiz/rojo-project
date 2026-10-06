@@ -1,255 +1,62 @@
 "use client";
-import React, { useState } from "react";
-import { Modal } from "@/components/ui/modal";
-import { useModal } from "@/hooks/useModal";
-import Button from "@/components/ui/button/Button";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import PageHeader from "@/components/main/common/PageHeader";
-import ConfirmDialog from "@/components/main/common/ConfirmDialog";
-import AlertModal from "@/components/main/Modal/AlertModal";
-import PerusahaanFormModal from "./PerusahaanFormModal";
-import CabangManager from "./CabangManager";
-import PicManager from "./PicManager";
-import PerusahaanPesertaList from "./PerusahaanPesertaList";
+import DataTable from "@/components/main/common/DataTable";
+import ComponentCard from "@/components/main/common/ComponentCard";
+import FilterBar from "@/components/main/common/FilterBar";
+import FlashAlert from "@/components/main/common/FlashAlert";
+import useFlash from "@/components/main/common/useFlash";
+import InlineConfirm from "@/components/main/common/InlineConfirm";
+import { PlusIcon } from "@/icons/index";
 import { deletePerusahaan } from "@/lib/data/action/perusahaanAction";
-import { TipeCabang, TipePic } from "@/lib/generated/prisma/enums";
-
-interface Cabang {
-  id: string;
-  nama: string;
-  tipe: TipeCabang;
-  alamat?: string | null;
-  peserta?: Array<{ id: string; nama: string }>;
-}
-
-interface PerusahaanPic {
-  pic: {
-    id: string;
-    nama: string;
-    noTelp?: string | null;
-    tipe: TipePic;
-  };
-}
-
-interface PerusahaanData {
-  id: string;
-  nama: string;
-  alamatLegal?: string | null;
-  cabang: Cabang[];
-  perusahaanPic: PerusahaanPic[];
-}
+import PerusahaanForm from "./PerusahaanForm";
+import { getPerusahaanColumns, PerusahaanRow } from "./PerusahaanColumns";
+import usePerusahaanQuery from "./usePerusahaanQuery";
 
 interface PerusahaanListProps {
-  initialData: PerusahaanData[];
+  /** Halaman perusahaan aktif sesuai parameter URL. */
+  initialData: PerusahaanRow[];
+  pagination: { page: number; totalItems: number; totalPages: number };
 }
-
-const PerusahaanList: React.FC<PerusahaanListProps> = ({ initialData }) => {
-  const [editData, setEditData] = useState<{ id: string; nama: string; alamatLegal?: string | null } | null>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [alertType, setAlertType] = useState<"success" | "error">("success");
-  const [alertTitle, setAlertTitle] = useState("");
-  const [alertMessage, setAlertMessage] = useState("");
-
-  const {
-    isOpen: isFormOpen,
-    openModal: openForm,
-    closeModal: closeForm,
-  } = useModal();
-  const {
-    isOpen: isConfirmOpen,
-    openModal: openConfirm,
-    closeModal: closeConfirm,
-  } = useModal();
-  const {
-    isOpen: isAlertOpen,
-    openModal: openAlert,
-    closeModal: closeAlert,
-  } = useModal();
-
-  const handleOpenAdd = () => {
-    setEditData(null);
-    openForm();
-  };
-
-  const handleOpenEdit = (perusahaan: PerusahaanData) => {
-    setEditData({ id: perusahaan.id, nama: perusahaan.nama, alamatLegal: perusahaan.alamatLegal });
-    openForm();
-  };
-
-  const handleOpenDelete = (id: string) => {
-    setDeleteId(id);
-    openConfirm();
-  };
-
-  const handleDelete = async () => {
-    if (!deleteId) return;
-    setDeleteLoading(true);
-    try {
-      const result = await deletePerusahaan(deleteId);
-      if (!result.success) {
-        closeConfirm();
-        setAlertType("error");
-        setAlertTitle("Gagal Menghapus");
-        setAlertMessage(result.error ?? "Gagal menghapus perusahaan.");
-        openAlert();
-      } else {
-        closeConfirm();
-        setDeleteId(null);
-        setAlertType("success");
-        setAlertTitle("Berhasil");
-        setAlertMessage("Perusahaan berhasil dihapus.");
-        openAlert();
-      }
-    } finally {
-      setDeleteLoading(false);
+const PerusahaanList: React.FC<PerusahaanListProps> = ({ initialData, pagination }) => {
+  const router = useRouter();
+  const { params, change } = usePerusahaanQuery();
+  const flash = useFlash(params.get("deleted") === "1" ? { variant: "success", message: "Perusahaan dihapus." } : null);
+  const [adding, setAdding] = useState(false);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    if (params.has("deleted")) {
+      const next = new URLSearchParams(params.toString());
+      next.delete("deleted");
+      router.replace(`?${next}`, { scroll: false });
     }
+  }, [params, router]);
+  const remove = async (id: string) => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const result = await deletePerusahaan(id);
+      if (result.success) { setConfirmId(null); flash.showSuccess("Perusahaan dihapus."); }
+      else flash.showError(result.error ?? "Gagal menghapus perusahaan.");
+    } catch { flash.showError("Gagal menghapus perusahaan."); }
+    finally { setBusy(false); }
   };
-
-  const toggleExpand = (id: string) => {
-    setExpandedId((prev) => (prev === id ? null : id));
-  };
-
   return (
-    <>
-      <PageHeader
-        title="Master Perusahaan"
-        description="Kelola data Perusahaan, Cabang, dan PIC untuk pendaftaran kegiatan."
-        primaryAction={{
-          label: "Tambah Perusahaan",
-          onClick: handleOpenAdd,
-        }}
-      />
-
-      {/* Daftar perusahaan aktif */}
-        <div className="space-y-3">
-          {initialData.length === 0 ? (
-            <div className="rounded-xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500 dark:border-white/[0.05] dark:bg-white/[0.03] dark:text-gray-400">
-              Belum ada data perusahaan. Klik &quot;Tambah Perusahaan&quot; untuk mulai.
-            </div>
-          ) : (
-            initialData.map((perusahaan) => {
-              const daftarPeserta = perusahaan.cabang.flatMap((cabang) =>
-                (cabang.peserta ?? []).map((peserta) => ({
-                  id: peserta.id,
-                  nama: peserta.nama,
-                  cabang: cabang.nama,
-                }))
-              );
-
-              return (
-              <div
-                key={perusahaan.id}
-                className="rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]"
-              >
-                {/* Baris perusahaan */}
-                <div className="flex items-center justify-between gap-4 px-5 py-4">
-                  <button
-                    type="button"
-                    onClick={() => toggleExpand(perusahaan.id)}
-                    className="flex items-center gap-2 text-left flex-1 min-w-0"
-                  >
-                    <span
-                      className={`text-gray-400 transition-transform duration-200 ${
-                        expandedId === perusahaan.id ? "rotate-90" : ""
-                      }`}
-                    >
-                      ▶
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <span className="font-medium text-gray-800 dark:text-white/90 truncate block">
-                        {perusahaan.nama}
-                      </span>
-                      <span className="text-xs text-gray-400 dark:text-gray-500">
-                        {perusahaan.cabang.length} cabang • {perusahaan.perusahaanPic.length} PIC
-                      </span>
-                    </div>
-                  </button>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleOpenEdit(perusahaan)}
-                    >
-                      Ubah
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleOpenDelete(perusahaan.id)}
-                    >
-                      Hapus
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Panel expand (cabang + PIC) */}
-                {expandedId === perusahaan.id && (
-                  <div className="border-t border-gray-100 px-5 py-4 dark:border-white/[0.05] space-y-4">
-                    {/* Cabang */}
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
-                        Cabang
-                      </p>
-                      <CabangManager
-                        perusahaanId={perusahaan.id}
-                        cabang={perusahaan.cabang}
-                      />
-                    </div>
-
-                    {/* PIC */}
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
-                        PIC (Person In Charge)
-                      </p>
-                      <PicManager
-                        perusahaanId={perusahaan.id}
-                        picList={perusahaan.perusahaanPic}
-                      />
-                    </div>
-
-                    {/* Peserta */}
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
-                        Peserta
-                      </p>
-                      <PerusahaanPesertaList peserta={daftarPeserta} />
-                    </div>
-                  </div>
-                )}
-              </div>
-              );
-            })
-          )}
-        </div>
-      {/* Modal form tambah/ubah perusahaan */}
-      <Modal isOpen={isFormOpen} onClose={closeForm} className="max-w-md">
-        <PerusahaanFormModal editData={editData} onClose={closeForm} />
-      </Modal>
-
-      {/* Dialog konfirmasi hapus */}
-      <ConfirmDialog
-        isOpen={isConfirmOpen}
-        onClose={closeConfirm}
-        onConfirm={handleDelete}
-        title="Hapus Perusahaan"
-        message="Yakin ingin menghapus perusahaan ini? Perusahaan hanya bisa dihapus jika tidak ada pendaftaran atau peserta aktif."
-        confirmLabel="Ya, Hapus"
-        variant="danger"
-        isLoading={deleteLoading}
-      />
-
-      {/* Alert */}
-      <AlertModal
-        isOpen={isAlertOpen}
-        onClose={closeAlert}
-        type={alertType}
-        title={alertTitle}
-        message={alertMessage}
-        okLabel="OK"
-      />
-    </>
+    <div className="text-gray-700 dark:text-gray-300">
+      <PageHeader title="Master Perusahaan" description="Kelola informasi perusahaan, cabang, PIC, dan peserta."
+        primaryAction={{ label: "Tambah Perusahaan", onClick: () => setAdding(true), icon: <PlusIcon className="size-4" /> }} />
+      <FlashAlert flash={flash.flash} onClose={flash.clear} />
+      {adding && <ComponentCard title="Tambah Perusahaan" className="mb-4"><PerusahaanForm flash={flash} onClose={() => setAdding(false)} /></ComponentCard>}
+      <FilterBar filters={[{ key: "filter", label: "Kelengkapan data", options: [{ value: "tanpaPic", label: "Tanpa PIC" }, { value: "tanpaPeserta", label: "Tanpa peserta" }] }]} />
+      <DataTable data={initialData} columns={getPerusahaanColumns(setConfirmId, busy)}
+        currentPage={pagination.page} totalPages={pagination.totalPages} totalItems={pagination.totalItems}
+        searchValue={params.get("search") ?? ""} searchPlaceholder="Cari nama perusahaan..."
+        onSearch={(value) => change("search", value, "page")} onPageChange={(page) => change("page", String(page), "page")}
+        renderExpandedRow={(row) => confirmId === row.id ? <InlineConfirm message={`Hapus perusahaan ${row.nama}?`}
+          onConfirm={() => remove(row.id)} onCancel={() => setConfirmId(null)} loading={busy} /> : null} />
+    </div>
   );
 };
-
 export default PerusahaanList;

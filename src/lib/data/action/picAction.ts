@@ -10,12 +10,14 @@ import { TipePic } from "@/lib/generated/prisma/enums"
 
 export async function createPicAndLink(perusahaanId: string, data: { nama: string; noTelp?: string; tipe: TipePic }) {
     const trimmedNama = data.nama?.trim()
-    if (!trimmedNama) {
+    if (!trimmedNama || !Object.values(TipePic).includes(data.tipe)) {
         return { success: false, error: "Nama PIC wajib diisi." }
     }
 
     try {
         await prisma.$transaction(async (tx) => {
+            const parent = await tx.perusahaan.findUnique({ where: { id: perusahaanId, deletedAt: null } })
+            if (!parent) throw new Error("Perusahaan tidak ditemukan atau sudah dihapus.")
             // 1. Buat PIC
             const pic = await tx.pic.create({
                 data: {
@@ -45,43 +47,48 @@ export async function createPicAndLink(perusahaanId: string, data: { nama: strin
 
 export async function deletePic(id: string) {
     try {
+        await prisma.$transaction(async (tx) => {
         // Cek turunan: PIC masih dipakai pendaftaran perusahaan aktif.
-        const pendaftaranCount = await prisma.pendaftaranPerusahaan.count({
+        const pendaftaranCount = await tx.pendaftaranPerusahaan.count({
             where: { picId: id, deletedAt: null }
         })
 
         if (pendaftaranCount > 0) {
-            return {
-                success: false,
-                error: `Tidak dapat menghapus: PIC ini dipakai di ${pendaftaranCount} pendaftaran aktif.`
-            }
+            throw new Error(`Tidak dapat menghapus: PIC ini dipakai di ${pendaftaranCount} pendaftaran aktif.`)
         }
 
-        await prisma.pic.update({
+        await tx.pic.update({
             where: { id, deletedAt: null },
             data: { deletedAt: new Date() }
         })
+        }, { isolationLevel: "Serializable" })
 
         revalidatePath("/master/perusahaan")
+        revalidatePath("/master/perusahaan/[id]", "page")
         return { success: true }
     } catch (err) {
         console.error("Gagal menghapus PIC:", err)
-        return { success: false, error: "Gagal menghapus PIC." }
+        return { success: false, error: err instanceof Error ? err.message : "Gagal menghapus PIC." }
     }
 }
 
 export async function unlinkPic(perusahaanId: string, picId: string) {
     try {
-        await prisma.perusahaanPic.deleteMany({
+        await prisma.$transaction(async (tx) => {
+        if (await tx.pendaftaranPerusahaan.count({ where: { perusahaanId, picId, deletedAt: null } })) {
+            throw new Error("PIC masih dipakai pendaftaran aktif perusahaan ini dan tidak dapat dilepas.")
+        }
+        await tx.perusahaanPic.deleteMany({
             where: { perusahaanId, picId }
         })
+        }, { isolationLevel: "Serializable" })
 
         revalidatePath("/master/perusahaan")
         revalidatePath(`/master/perusahaan/${perusahaanId}`)
         return { success: true }
     } catch (err) {
         console.error("Gagal melepas PIC:", err)
-        return { success: false, error: "Gagal melepas kontak PIC." }
+        return { success: false, error: err instanceof Error ? err.message : "Gagal melepas kontak PIC." }
     }
 }
 
@@ -112,24 +119,29 @@ export async function searchAvailableMasterPic(search: string) {
 
 export async function linkPic(perusahaanId: string, picId: string) {
     try {
-        const existing = await prisma.perusahaanPic.findFirst({
+        await prisma.$transaction(async (tx) => {
+        const parent = await tx.perusahaan.findUnique({ where: { id: perusahaanId, deletedAt: null } })
+        const pic = await tx.pic.findUnique({ where: { id: picId, deletedAt: null } })
+        if (!parent || !pic) throw new Error("Perusahaan atau PIC tidak aktif.")
+        const existing = await tx.perusahaanPic.findFirst({
             where: { perusahaanId, picId }
         })
 
         if (existing) {
-            return { success: false, error: "PIC ini sudah terhubung ke perusahaan." }
+            throw new Error("PIC ini sudah terhubung ke perusahaan.")
         }
 
-        await prisma.perusahaanPic.create({
+        await tx.perusahaanPic.create({
             data: { perusahaanId, picId }
         })
+        }, { isolationLevel: "Serializable" })
 
         revalidatePath("/master/perusahaan")
         revalidatePath(`/master/perusahaan/${perusahaanId}`)
         return { success: true }
     } catch (err) {
         console.error("Gagal menghubungkan PIC:", err)
-        return { success: false, error: "Gagal menghubungkan PIC ke perusahaan." }
+        return { success: false, error: err instanceof Error ? err.message : "Gagal menghubungkan PIC ke perusahaan." }
     }
 }
 

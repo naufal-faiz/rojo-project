@@ -9,7 +9,7 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 | R0 | Implementasi selesai; lint, tipe, build lulus | R0 selesai: fondasi antarmuka dan pembersihan |
 | R1 | Implementasi selesai; lint, tipe, build lulus | R1 selesai: aturan pendaftaran dan kegiatan aktif |
 | R2 | Implementasi selesai; lint, tipe, build, uji terisolasi lulus; uji browser admin belum diverifikasi | 25e10af + commit penutup R2 |
-| R3 | Belum dikerjakan | - |
+| R3 | Implementasi selesai; lint, tipe, build, uji terisolasi dan pemeriksaan browser baca saja lulus | R3 selesai: detail perusahaan dan pengelolaan inline |
 | R4 | Belum dikerjakan | - |
 | R5 | Belum dikerjakan | - |
 | R6 | Belum dikerjakan | - |
@@ -20,27 +20,27 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 
 | ID | Status | Catatan |
 |---|---|---|
-| U-01 | Tidak dikerjakan | Menunggu fase terkait. |
-| U-02 | Tidak dikerjakan | Menunggu fase terkait. |
-| U-03 | Tidak dikerjakan | Menunggu fase terkait. |
-| U-04 | Tidak dikerjakan | Menunggu fase terkait. |
-| U-05 | Sebagian | R2 memakai form dan konfirmasi inline; modul lain menunggu fase terkait. |
-| U-06 | Sebagian | Tombol aksi R2 memakai ikon dari icons/index; modul lain menunggu fase terkait. |
+| U-01 | Selesai | Daftar menuju route detail perusahaan R3. |
+| U-02 | Selesai | Peserta dan PIC ditambah inline di detail. |
+| U-03 | Selesai | Header dan grid informasi:cabang 60:40, PIC:peserta 30:70. |
+| U-04 | Selesai | Cabang, PIC, peserta inline; peserta ditautkan ke cabang perusahaan aktif. |
+| U-05 | Sebagian | R2–R3 memakai form dan konfirmasi inline; modul lain menunggu fase terkait. |
+| U-06 | Sebagian | Tombol aksi R2–R3 memakai ikon dari icons/index; modul lain menunggu fase terkait. |
 | U-07 | Selesai | Pembersihan R0. |
-| U-08 | Sebagian | R2 memakai pencarian, filter dan paginasi server; modul lain menunggu fase terkait. |
-| U-09 | Tidak dikerjakan | Menunggu fase terkait. |
+| U-08 | Sebagian | R2–R3 memakai pencarian, filter dan paginasi server; modul lain menunggu fase terkait. |
+| U-09 | Sebagian | R3 memakai SearchableSelect server untuk PIC dan peserta (maksimal 10); modul lain menyusul. |
 | U-10 | Tidak dikerjakan | Menunggu fase terkait. |
 | U-11 | Tidak dikerjakan | Menunggu fase terkait. |
 | U-12 | Tidak dikerjakan | Menunggu fase terkait. |
 | U-13 | Tidak dikerjakan | Menunggu fase terkait. |
-| U-14 | Tidak dikerjakan | Menunggu fase terkait. |
+| U-14 | Selesai | Peserta tanpa perusahaan dapat dihubungkan; filter cabang tersedia. |
 | U-15 | Tidak dikerjakan | Menunggu fase terkait. |
 | U-16 | Tidak dikerjakan | Menunggu fase terkait. |
 | U-17 | Tidak dikerjakan | Menunggu fase terkait. |
 | B-01 | Selesai | Backend R1 selesai; penerapan UI pada fase modul. |
 | B-02 | Selesai | Backend R1 selesai; penerapan UI pada fase modul. |
 | B-03 | Sebagian | Backend R1 selesai; penerapan UI pada fase modul. |
-| X-01 | Sebagian | Modal Training dihapus pada R2; modul lain menunggu fase terkait. |
+| X-01 | Sebagian | Modal Training dan Perusahaan diganti pada R2–R3; modul lain menunggu fase terkait. |
 | X-02 | Selesai | Pembersihan R0. |
 | X-03 | Selesai | Backend R1 selesai; penerapan UI pada fase modul. |
 
@@ -92,7 +92,7 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 
 ## Deviasi dari PRD
 
-- **D-01** (sudah ada di PRD 9.2) Detail perusahaan tetap berupa baris expand inline, bukan route. Daftar peserta sudah ditambahkan di baris expand sesuai utang teknis #5, tanpa membuat route baru.
+- **D-01** Arsip v0.2: detail perusahaan sebelumnya berupa baris expand. Diselesaikan R3 dengan route `/master/perusahaan/[id]`.
 - **D-02** PRD 9.4 menyebut tiga cara menambah peserta, termasuk "tambah peserta baru cepat memakai `PesertaFormModal`". Karena `PesertaFormModal` tidak mengembalikan id peserta, ditambahkan prop opsional `onCreated` (backward-compatible) agar peserta baru langsung didaftarkan.
 - **D-03** Detail permohonan menampilkan status peserta mandiri dengan `StatusBadge` (sebelumnya teks mentah). Bagian dari utang teknis #3/#4.
 
@@ -221,3 +221,26 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 3. Ubah nama pelatihan inline; perluas tingkatan lalu tambah/ubah/batalkan pada baris yang dipilih.
 4. Hapus tingkatan yang masih dipakai permohonan aktif dan pelatihan dengan tingkatan aktif: error tampil, data tetap ada. Uji batal konfirmasi dan hapus data kosong yang diizinkan.
 5. Periksa tampilan gelap/terang, label input, navigasi keyboard, dan perilaku FlashAlert (sukses hilang setelah lima detik, error dapat ditutup).
+
+### R3 — Perusahaan, cabang, PIC, dan peserta
+- Route detail menggantikan expand lama. Daftar memakai pencarian nama, filter tanpa PIC/tanpa peserta, paginasi server dan jumlah peserta aktif tanpa memuat seluruh data peserta.
+- Detail memakai header dan grid 60:40 / 30:70, informasi yang dapat diubah inline, cabang lima per halaman, PIC inline, serta peserta sepuluh per halaman dengan pencarian dan filter cabang di URL.
+- Peserta baru dan penghubungan peserta master memvalidasi cabang/perusahaan aktif, hanya menerima master tanpa perusahaan, dan menolak nama duplikat ter-normalisasi dengan tautan ke peserta yang ada. Operasi memakai transaksi serializable.
+- PIC dapat dibuat, dihubungkan, diubah (dengan catatan penggunaan bersama), dilepas, dan dihapus. Pemeriksaan pendaftaran aktif dan mutasi lepas/hapus dilakukan dalam transaksi. Cabang HQ tidak dapat dihapus atau diubah tipenya.
+- **A-34** Penolakan nama peserta memakai `normalisasiNama` yang sudah ada, termasuk penghapusan anotasi kurung. Nama pembeda harus ditulis di luar kurung agar tidak dianggap sama.
+- **A-35** `PageHeader.actions`, nilai awal opsional `useFlash`, dan `Button.value` ditambahkan secara backward-compatible untuk aksi header, pesan sukses setelah navigasi, serta Simpan & tambah lagi.
+- **D-06** Aturan hapus perusahaan lama dipertahankan sesuai PRD 0.8: pendaftaran/peserta aktif memblokir, sedangkan cabang kosong ikut di-soft-delete dalam transaksi. Ini berbeda dari tabel 5.10 yang menyebut cabang aktif sebagai pemblokir; memblokir seluruh cabang termasuk HQ akan membuat perusahaan tidak pernah dapat dihapus. Tidak ada perubahan skema.
+- **D-07** Komponen modal khusus Perusahaan dan hook lamanya yang sudah tidak memiliki pengimpor dihapus dalam R3 agar gerbang pola modul bersih. Komponen modal bersama tetap menunggu R8.
+- Validasi: tiga migrasi sudah up to date (baca saja); lint seluruh proyek, TypeScript, build produksi, dan `git diff --check` lulus. Build tetap memberi peringatan Next.js tentang middleware yang deprecated. Pola modal/dialog, SVG inline dan reload pada modul Perusahaan kosong.
+- Uji transaksi tiruan lulus: penolakan cabang/perusahaan di luar scope, master yang sudah punya perusahaan, nama duplikat dan tautannya, penetapan cabang, blokir hapus peserta aktif, parent PIC terhapus, PIC yang sedang dipakai, proteksi HQ, dan filter daftar. Pengujian ini tidak menulis database.
+- Uji browser setelah login: daftar dan detail dengan data aktual terbuka; jumlah cabang/PIC/peserta tampil; form peserta inline autofocus dan default HQ; mode master menampilkan dropdown dengan hasil kosong yang benar; form HQ mengunci tipe; konfirmasi lepas PIC digantikan konfirmasi hapus peserta sehingga hanya satu terbuka; pembatalan bekerja. Log error browser kosong. Tampilan layar sempit ditinjau.
+- Batas validasi: penyimpanan/hapus data nyata, tampilan desktop lebar/dark, dan paginasi dengan data lebih dari satu halaman belum diuji lewat browser. Aturan mutasinya diuji terisolasi. Tidak ada data perusahaan yang diubah untuk pengujian browser.
+
+### Langkah uji manual R3 lanjutan
+1. Tambah perusahaan dengan nama mirip: peringatan dan tautan muncul. Simpan perusahaan baru: pindah ke detail, notifikasi sukses tampil, HQ tercipta.
+2. Ubah informasi, tambah cabang, lalu Simpan & tambah lagi: form tetap terbuka, nama/alamat kosong, fokus kembali. HQ tidak menawarkan hapus; tipe HQ terkunci.
+3. Tambah PIC baru atau hubungkan master; edit PIC yang dipakai beberapa perusahaan menampilkan catatan. Lepas/hapus PIC yang dipakai pendaftaran aktif ditolak.
+4. Tambah peserta dengan default HQ atau cabang lain. Nama sama setelah normalisasi ditolak dengan tautan. Hubungkan master tanpa perusahaan; peserta langsung muncul pada perusahaan dan cabang yang dipilih.
+5. Ubah peserta inline; hapus peserta yang punya pendaftaran aktif ditolak. Detail peserta menuju route yang sudah ada.
+6. Uji pencarian/filter URL, kembali browser, cabang lebih dari lima, peserta lebih dari sepuluh, tampilan desktop dan dark mode.
+- Berhenti setelah commit R3 sesuai cakupan pengguna. R4 belum dimulai.

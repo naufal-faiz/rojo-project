@@ -8,8 +8,8 @@ export interface FlashMessage {
   linkText?: string;
 }
 
-export default function useFlash() {
-  const [flash, setFlash] = useState<FlashMessage | null>(null);
+export default function useFlash(initialFlash: FlashMessage | null = null) {
+  const [flash, setFlash] = useState<FlashMessage | null>(initialFlash);
   const clear = useCallback(() => setFlash(null), []);
   useEffect(() => {
     if (flash?.variant !== "success") return;

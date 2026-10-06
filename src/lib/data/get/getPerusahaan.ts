@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { cache } from "react"
 
 type GetPerusahaanOptions = {
+    filter?: string
     search?: string
     page?: number
     limit?: number
@@ -15,6 +16,8 @@ export const getAllPerusahaan = cache(async (options: GetPerusahaanOptions = {})
         const search = options.search?.trim()
         const where = {
             deletedAt: null,
+            ...(options.filter === "tanpaPic" ? { perusahaanPic: { none: { pic: { deletedAt: null } } } } : {}),
+            ...(options.filter === "tanpaPeserta" ? { cabang: { none: { deletedAt: null, peserta: { some: { deletedAt: null } } } } } : {}),
             ...(search ? { nama: { contains: search, mode: "insensitive" as const } } : {})
         }
         const [data, totalItems] = await Promise.all([
@@ -24,11 +27,7 @@ export const getAllPerusahaan = cache(async (options: GetPerusahaanOptions = {})
                     cabang: {
                         where: { deletedAt: null },
                         include: {
-                            peserta: {
-                                where: { deletedAt: null },
-                                orderBy: { nama: "asc" },
-                                select: { id: true, nama: true }
-                            }
+                            _count: { select: { peserta: { where: { deletedAt: null } } } }
                         },
                         orderBy: { createdAt: "asc" }
                     },

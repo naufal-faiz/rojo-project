@@ -8,6 +8,7 @@ interface PageHeaderProps {
   description?: string;
   backHref?: string;
   badges?: React.ReactNode;
+  actions?: React.ReactNode;
   primaryAction?: {
     label: string;
     onClick?: () => void;
@@ -16,7 +17,7 @@ interface PageHeaderProps {
   };
 }
 
-const PageHeader: React.FC<PageHeaderProps> = ({ title, description, primaryAction, backHref, badges }) => {
+const PageHeader: React.FC<PageHeaderProps> = ({ title, description, primaryAction, backHref, badges, actions }) => {
   return (
     <div className="flex flex-col gap-4 mb-6 md:flex-row md:items-center md:justify-between">
       <div>
@@ -31,9 +32,9 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, description, primaryActi
           </p>
         )}
       </div>
-      {primaryAction && (
+      {(primaryAction || actions) && (
         <div className="flex items-center gap-3">
-          {primaryAction.href ? (
+          {primaryAction && (primaryAction.href ? (
             <Link href={primaryAction.href}>
               <Button size="sm" startIcon={primaryAction.icon}>
                 {primaryAction.label}
@@ -43,7 +44,8 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, description, primaryActi
             <Button size="sm" onClick={primaryAction.onClick} startIcon={primaryAction.icon}>
               {primaryAction.label}
             </Button>
-          )}
+          ))}
+          {actions}
         </div>
       )}
     </div>

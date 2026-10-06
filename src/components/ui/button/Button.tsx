@@ -11,6 +11,7 @@ interface ButtonProps {
   isLoading?: boolean; // Menonaktifkan tombol selama penyimpanan
   className?: string; // Extra classes
   type?: "button" | "submit" | "reset"; // Button type untuk form
+  value?: string; // Membedakan tombol submit dalam form yang sama
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -24,6 +25,7 @@ const Button: React.FC<ButtonProps> = ({
   disabled = false,
   isLoading = false,
   type = "button",
+  value,
 }) => {
   // Size Classes
   const sizeClasses = {
@@ -42,6 +44,7 @@ const Button: React.FC<ButtonProps> = ({
   return (
     <button
       type={type}
+      value={value}
       className={`inline-flex items-center justify-center font-medium gap-2 rounded-lg transition ${className} ${
         sizeClasses[size]
       } ${variantClasses[variant]} ${
