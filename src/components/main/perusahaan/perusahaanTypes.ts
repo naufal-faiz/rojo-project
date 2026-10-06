@@ -4,7 +4,8 @@ import type useFlash from "@/components/main/common/useFlash";
 export type PerusahaanDetailData = NonNullable<Awaited<ReturnType<typeof getPerusahaanDetail>>>;
 export type CabangOption = PerusahaanDetailData["perusahaan"]["cabang"][number];
 export type CabangData = PerusahaanDetailData["cabang"]["data"][number];
-export type PicData = PerusahaanDetailData["perusahaan"]["perusahaanPic"][number]["pic"];
+export type PicRow = PerusahaanDetailData["pic"]["data"][number];
+export type PicData = PicRow["pic"];
 export type PesertaData = PerusahaanDetailData["peserta"]["data"][number];
 export interface PerusahaanPanelProps {
   /** Semua panel memakai notifikasi dan satu konfirmasi milik halaman detail. */

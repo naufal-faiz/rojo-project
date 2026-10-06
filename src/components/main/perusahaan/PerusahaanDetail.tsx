@@ -49,7 +49,7 @@ const PerusahaanDetail: React.FC<PerusahaanDetailProps> = ({ data }) => {
   return (
     <div className="p-4 text-gray-700 dark:text-gray-300 sm:p-6">
       <PageHeader title={perusahaan.nama} backHref="/master/perusahaan"
-        badges={<><Badge>{perusahaan.cabang.length} cabang</Badge><Badge>{perusahaan.perusahaanPic.length} PIC</Badge><Badge>{data.totalPeserta} peserta</Badge></>}
+        badges={<><Badge>{perusahaan.cabang.length} cabang</Badge><Badge>{data.totalPic} PIC</Badge><Badge>{data.totalPeserta} peserta</Badge></>}
         primaryAction={{ label: "Ubah", icon: <PencilIcon className="size-4" />, onClick: () => { setEditing(true); setConfirmId(null); } }}
         actions={<Button size="sm" variant="outline" disabled={busy} onClick={() => { setConfirmId("perusahaan"); setEditing(false); }} startIcon={<TrashBinIcon className="size-4" />}>Hapus</Button>} />
       <FlashAlert flash={flash.flash} onClose={flash.clear} />
@@ -60,13 +60,13 @@ const PerusahaanDetail: React.FC<PerusahaanDetailProps> = ({ data }) => {
             <div><dt className="text-sm">Nama</dt><dd className="font-medium">{perusahaan.nama}</dd></div>
             <div><dt className="text-sm">Alamat legal</dt><dd>{perusahaan.alamatLegal || "-"}</dd></div>
             <div><dt className="text-sm">Dibuat</dt><dd>{new Intl.DateTimeFormat("id-ID", { dateStyle: "long", timeZone: "Asia/Jakarta" }).format(new Date(perusahaan.createdAt))}</dd></div>
-            <div><dt className="text-sm">Ringkasan</dt><dd>{perusahaan.cabang.length} cabang, {perusahaan.perusahaanPic.length} PIC, {data.totalPeserta} peserta aktif</dd></div>
+            <div><dt className="text-sm">Ringkasan</dt><dd>{perusahaan.cabang.length} cabang, {data.totalPic} PIC, {data.totalPeserta} peserta aktif</dd></div>
           </dl>}
         </ComponentCard>
-        <CabangManager {...panel} cabang={data.cabang} totalCabang={perusahaan.cabang.length} />
+        <CabangManager {...panel} cabang={data.cabang} />
       </div>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-10">
-        <PicManager {...panel} picList={perusahaan.perusahaanPic} />
+        <PicManager {...panel} pic={data.pic} />
         <PerusahaanPesertaList {...panel} cabang={perusahaan.cabang} peserta={data.peserta} />
       </div>
     </div>

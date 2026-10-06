@@ -11,7 +11,7 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 | R2 | Implementasi selesai; lint, tipe, build, uji terisolasi lulus; uji browser admin belum diverifikasi | 25e10af + commit penutup R2 |
 | R3 | Implementasi selesai; lint, tipe, build, uji terisolasi dan pemeriksaan browser baca saja lulus | R3 selesai: detail perusahaan dan pengelolaan inline |
 | R4 | Implementasi selesai; lint, tipe, build lulus | R4 selesai: daftar, panel inline, dan detail peserta |
-| R5 | Implementasi selesai; lint, tipe, build, dan gerbang pola lulus | Belum di-commit (berhenti sebelum commit R5 sesuai permintaan) |
+| R5 | Implementasi selesai; lint, tipe, build, dan gerbang pola lulus | R5 selesai: halaman buat/ubah permohonan dan detail bergrid (`8cbb0ef`) |
 | R6 | Belum dikerjakan | - |
 | R7 | Belum dikerjakan | - |
 | R8 | Belum dikerjakan | - |
@@ -102,6 +102,7 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 - **D-01** Arsip v0.2: detail perusahaan sebelumnya berupa baris expand. Diselesaikan R3 dengan route `/master/perusahaan/[id]`.
 - **D-02** PRD 9.4 menyebut tiga cara menambah peserta, termasuk "tambah peserta baru cepat memakai `PesertaFormModal`". Karena `PesertaFormModal` tidak mengembalikan id peserta, ditambahkan prop opsional `onCreated` (backward-compatible) agar peserta baru langsung didaftarkan.
 - **D-03** Detail permohonan menampilkan status peserta mandiri dengan `StatusBadge` (sebelumnya teks mentah). Bagian dari utang teknis #3/#4.
+- **D-08** Permintaan pemilik **di luar PRD** setelah R5: kartu **Cabang** dan **PIC** pada detail perusahaan memakai `DataTable` agar mengikuti model tabel grid Peserta, dengan pencarian di server dan paginasi (Cabang 5/halaman, PIC sebelumnya tanpa paginasi kini 5/halaman via `picPage`/`picSearch`). Pencarian Cabang yang sebelumnya hanya tampil bila cabang lebih dari lima kini selalu tampil mengikuti `DataTable`. Struktur data `getPerusahaanDetail` berubah: `perusahaan.perusahaanPic` diganti `pic` (berhalaman) dan ditambah `totalPic`; badge/ringkasan memakai `totalPic`. Tidak ada perubahan skema.
 
 ## Utang teknis baru
 
@@ -280,7 +281,7 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 - `PelaksanaanFormModal`, `usePelaksanaanForm`, dan `SesiManager` (termasuk `ConfirmDialog`/`AlertModal` terakhir di modul) dihapus; panel status TemanK3 memakai `FlashAlert`.
 - Validasi: `npm run lint`, `npx tsc --noEmit --incremental false`, dan `npm run build` lulus. Gerbang pola antarmuka folder `src/components/main/permohonan` dan `src/app/(dashboard)` kosong untuk `AlertModal|ConfirmDialog|AlertDialog`, `useModal|ui/modal|FormModal`, `<svg`, dan `window.location.reload`.
 - Batas validasi: uji browser dan uji data nyata belum dijalankan (belum ada sesi login pada sesi kerja); perubahan skema tidak ada.
-- Belum di-commit sesuai permintaan berhenti sebelum commit R5; `PROGRESS.md` dan seluruh berkas R5 masih di working tree.
+- Di-commit sebagai `8cbb0ef` setelah pengembangan R5 selesai.
 
 ### Langkah uji manual R5
 1. Buka `/permohonan`. Hanya kegiatan aktif yang tampil; kegiatan lama tidak muncul dan bisa diakses lewat tombol "Lihat riwayat". Coba pencarian dan keempat filter; URL berubah dan paginasi kembali ke halaman 1.
@@ -293,3 +294,9 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 8. Klik "Ubah" dari detail → halaman ubah terisi lengkap (termasuk sesi). Ubah data dan jadwal, Simpan → kembali ke detail dengan notifikasi "Perubahan permohonan disimpan".
 9. Klik "Hapus" pada detail/daftar: permohonan berisi pendaftaran/peserta aktif ditolak dengan pesan; setelah kosong, penghapusan berhasil dan daftar menampilkan notifikasi hijau.
 10. Uji tampilan gelap/terang, layar sempit, dan navigasi keyboard pada form serta dropdown status.
+
+### Tambahan pasca-R5 (di luar PRD — D-08)
+- Kartu Cabang dan PIC pada `/master/perusahaan/[id]` memakai `DataTable` mengikuti grid Peserta: header kolom, baris beraksi, pencarian server, dan paginasi.
+- Cabang: kolom Nama, Tipe (badge), Alamat, Aksi; paginasi 5/halaman (sudah ada) dan filter tipe tetap. PIC: kolom Nama, Telepon, Tipe (badge), Aksi; **kini berpagina 5/halaman** dengan pencarian `picSearch` (sebelumnya memuat seluruh PIC). `getPerusahaanDetail` mengembalikan `pic` berhalaman dan `totalPic` untuk badge/ringkasan.
+- Validasi: `npm run lint`, `npx tsc --noEmit --incremental false`, dan `npm run build` lulus; gerbang pola antarmuka modul Perusahaan dan `src/app/(dashboard)` kosong. Uji browser belum dijalankan.
+- Langkah uji: buka detail perusahaan; pada tabel Cabang coba pencarian, filter tipe, paginasi (bila >5), ubah inline, dan hapus (HQ tanpa tombol hapus). Pada tabel PIC coba pencarian, paginasi (buat >5 PIC), ubah inline, lepas, dan hapus dengan konfirmasi inline.
