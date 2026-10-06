@@ -1,7 +1,9 @@
 import { prisma } from "@/lib/prisma"
 import { cache } from "react"
+import { KELAS_UMUM } from "@/lib/tingkatan"
 
 type GetAllTrainingsOptions = {
+    tingkatan?: string
     search?: string
     page?: number
     limit?: number
@@ -15,6 +17,7 @@ export const getAllTrainings = cache(async (options: GetAllTrainingsOptions = {}
         const search = options.search?.trim()
         const where = {
             deletedAt: null,
+            ...(options.tingkatan === "ada" ? { tingkatan: { some: { deletedAt: null, kelas: { not: KELAS_UMUM } } } } : options.tingkatan === "tanpa" ? { tingkatan: { none: { deletedAt: null, kelas: { not: KELAS_UMUM } } } } : {}),
             ...(search ? { nama: { contains: search, mode: "insensitive" as const } } : {})
         }
         const [data, totalItems] = await Promise.all([

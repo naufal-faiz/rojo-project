@@ -8,7 +8,7 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 |---|---|---|
 | R0 | Implementasi selesai; lint, tipe, build lulus | R0 selesai: fondasi antarmuka dan pembersihan |
 | R1 | Implementasi selesai; lint, tipe, build lulus | R1 selesai: aturan pendaftaran dan kegiatan aktif |
-| R2 | Belum dikerjakan | - |
+| R2 | Implementasi selesai; tsc dan lint modul lulus | R2 selesai: Master Pelatihan inline |
 | R3 | Belum dikerjakan | - |
 | R4 | Belum dikerjakan | - |
 | R5 | Belum dikerjakan | - |
@@ -203,3 +203,8 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 5. Training tanpa tingkatan dapat dipilih pada form R5 dan label tidak menampilkan kelas internal.
 
 - Validasi R1: lint bersih, tsc tanpa error, build produksi lulus. Uji data langsung belum dijalankan; pengujian transaksi menggunakan fixture terisolasi tanpa mengubah database bersama.
+
+### Validasi R2
+- Daftar Master Pelatihan memakai pencarian, filter punya/tanpa tingkatan, panel tambah inline, edit inline, dan pengelolaan tingkatan inline.
+- Konfirmasi hapus memakai `InlineConfirm`; notifikasi memakai `FlashAlert`; komponen modal lama Training dihapus.
+- `npx tsc --noEmit --incremental false` dan ESLint pada file R2 lulus. Build produksi belum dapat dijalankan karena pemeriksaan akses build ditolak saat batas penggunaan Codex tercapai.

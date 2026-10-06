@@ -45,7 +45,6 @@ next-env.d.ts
 /src/lib/generated/prisma
 
 # AI / Agents / Claude
-AGENTS.md
 CLAUDE.md
 GEMINI.md
 skills-lock.json

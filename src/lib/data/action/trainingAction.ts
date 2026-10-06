@@ -7,13 +7,13 @@ import { revalidatePath } from "next/cache"
 // TRAINING ACTIONS
 // ────────────────────────────────────
 
-export async function createTraining(nama: string) {
+export async function createTraining(nama: string, kelasAwal?: string) {
     const trimmed = nama?.trim()
     if (!trimmed) {
         return { success: false, error: "Nama training wajib diisi." }
     }
     try {
-        await prisma.training.create({ data: { nama: trimmed } })
+        await prisma.$transaction(async (tx) => tx.training.create({ data: { nama: trimmed, ...(kelasAwal?.trim() ? { tingkatan: { create: { kelas: kelasAwal.trim() } } } : {}) } }))
         revalidatePath("/master/training")
         return { success: true }
     } catch (err) {

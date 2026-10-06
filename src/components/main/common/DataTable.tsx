@@ -44,6 +44,8 @@ interface DataTableProps<T> {
   isLoading?: boolean;
   /** Callback saat baris diklik (opsional) */
   onRowClick?: (row: T) => void;
+  /** Panel inline sous la baris, hanya dirender bila callback mengembalikan isi. */
+  renderExpandedRow?: (row: T) => React.ReactNode;
 }
 
 function DataTable<T extends { id: string }>({
@@ -59,6 +61,7 @@ function DataTable<T extends { id: string }>({
   emptyText = "Tidak ada data.",
   isLoading = false,
   onRowClick,
+  renderExpandedRow,
 }: DataTableProps<T>) {
   const [localSearch, setLocalSearch] = useState(searchValue);
   const [, startTransition] = useTransition();
@@ -124,8 +127,8 @@ function DataTable<T extends { id: string }>({
               </TableRow>
             ) : (
               data.map((row) => (
+                <React.Fragment key={row.id}>
                 <TableRow
-                  key={row.id}
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
                   className={`border-b border-gray-100 last:border-0 hover:bg-gray-50/60 dark:border-white/[0.05] dark:hover:bg-white/[0.03] transition-colors ${
                     onRowClick ? "cursor-pointer" : ""
@@ -144,6 +147,8 @@ function DataTable<T extends { id: string }>({
                     </TableCell>
                   ))}
                 </TableRow>
+                {renderExpandedRow?.(row) && <TableRow><TableCell colSpan={columns.length} className="p-4">{renderExpandedRow(row)}</TableCell></TableRow>}
+                </React.Fragment>
               ))
             )}
           </TableBody>

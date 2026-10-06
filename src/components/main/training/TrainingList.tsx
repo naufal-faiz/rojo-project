@@ -1,206 +1,28 @@
 "use client";
 import React, { useState } from "react";
-import { Modal } from "@/components/ui/modal";
-import { useModal } from "@/hooks/useModal";
-import Button from "@/components/ui/button/Button";
+import { useRouter, useSearchParams } from "next/navigation";
 import PageHeader from "@/components/main/common/PageHeader";
-import ConfirmDialog from "@/components/main/common/ConfirmDialog";
-import AlertModal from "@/components/main/Modal/AlertModal";
-import TrainingFormModal from "./TrainingFormModal";
-import TingkatanManager from "./TingkatanManager";
+import DataTable from "@/components/main/common/DataTable";
+import FilterBar from "@/components/main/common/FilterBar";
+import ComponentCard from "@/components/main/common/ComponentCard";
+import FlashAlert from "@/components/main/common/FlashAlert";
+import InlineConfirm from "@/components/main/common/InlineConfirm";
+import useFlash from "@/components/main/common/useFlash";
+import { PlusIcon } from "@/icons/index";
 import { deleteTraining } from "@/lib/data/action/trainingAction";
-
-interface Tingkatan {
-  id: string;
-  kelas: string;
-}
-
-interface TrainingData {
-  id: string;
-  nama: string;
-  tingkatan: Tingkatan[];
-}
-
-interface TrainingListProps {
-  initialData: TrainingData[];
-}
-
-const TrainingList: React.FC<TrainingListProps> = ({ initialData }) => {
-  const [editData, setEditData] = useState<{ id: string; nama: string } | null>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [alertType, setAlertType] = useState<"success" | "error">("success");
-  const [alertTitle, setAlertTitle] = useState("");
-  const [alertMessage, setAlertMessage] = useState("");
-
-  const {
-    isOpen: isFormOpen,
-    openModal: openForm,
-    closeModal: closeForm,
-  } = useModal();
-  const {
-    isOpen: isConfirmOpen,
-    openModal: openConfirm,
-    closeModal: closeConfirm,
-  } = useModal();
-  const {
-    isOpen: isAlertOpen,
-    openModal: openAlert,
-    closeModal: closeAlert,
-  } = useModal();
-
-  const handleOpenAdd = () => {
-    setEditData(null);
-    openForm();
-  };
-
-  const handleOpenEdit = (training: TrainingData) => {
-    setEditData({ id: training.id, nama: training.nama });
-    openForm();
-  };
-
-  const handleOpenDelete = (id: string) => {
-    setDeleteId(id);
-    openConfirm();
-  };
-
-  const handleDelete = async () => {
-    if (!deleteId) return;
-    setDeleteLoading(true);
-    try {
-      const result = await deleteTraining(deleteId);
-      if (!result.success) {
-        // Error: tutup confirm, tampilkan alert error
-        closeConfirm();
-        setAlertType("error");
-        setAlertTitle("Gagal Menghapus");
-        setAlertMessage(result.error ?? "Gagal menghapus training.");
-        openAlert();
-      } else {
-        // Sukses: tutup confirm, tampilkan alert sukses
-        closeConfirm();
-        setDeleteId(null);
-        setAlertType("success");
-        setAlertTitle("Berhasil");
-        setAlertMessage("Training berhasil dihapus.");
-        openAlert();
-      }
-    } finally {
-      setDeleteLoading(false);
-    }
-  };
-
-  const toggleExpand = (id: string) => {
-    setExpandedId((prev) => (prev === id ? null : id));
-  };
-
-  return (
-    <>
-      <PageHeader
-        title="Master Pelatihan"
-        description="Kelola data Training dan Tingkatan yang digunakan dalam permohonan."
-        primaryAction={{
-          label: "Tambah Training",
-          onClick: handleOpenAdd,
-        }}
-      />
-
-      {/* Daftar training aktif */}
-        <div className="space-y-3">
-        {initialData.length === 0 ? (
-          <div className="rounded-xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500 dark:border-white/[0.05] dark:bg-white/[0.03] dark:text-gray-400">
-            Belum ada data training. Klik &quot;Tambah Training&quot; untuk mulai.
-          </div>
-        ) : (
-          initialData.map((training) => (
-            <div
-              key={training.id}
-              className="rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]"
-            >
-              {/* Baris training */}
-              <div className="flex items-center justify-between gap-4 px-5 py-4">
-                <button
-                  type="button"
-                  onClick={() => toggleExpand(training.id)}
-                  className="flex items-center gap-2 text-left flex-1 min-w-0"
-                >
-                  <span
-                    className={`text-gray-400 transition-transform duration-200 ${
-                      expandedId === training.id ? "rotate-90" : ""
-                    }`}
-                  >
-                    ▶
-                  </span>
-                  <span className="font-medium text-gray-800 dark:text-white/90 truncate">
-                    {training.nama}
-                  </span>
-                  <span className="ml-1 text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
-                    ({training.tingkatan.length} tingkatan)
-                  </span>
-                </button>
-                <div className="flex items-center gap-2 shrink-0">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleOpenEdit(training)}
-                  >
-                    Ubah
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleOpenDelete(training.id)}
-                  >
-                    Hapus
-                  </Button>
-                </div>
-              </div>
-
-              {/* Panel tingkatan (expand) */}
-              {expandedId === training.id && (
-                <div className="border-t border-gray-100 px-5 py-4 dark:border-white/[0.05]">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
-                    Tingkatan
-                  </p>
-                  <TingkatanManager
-                    trainingId={training.id}
-                    tingkatan={training.tingkatan}
-                  />
-                </div>
-              )}
-            </div>
-          ))
-        )}
-        </div>
-      {/* Modal form tambah/ubah training */}
-      <Modal isOpen={isFormOpen} onClose={closeForm} className="max-w-md">
-        <TrainingFormModal editData={editData} onClose={closeForm} />
-      </Modal>
-
-      {/* Dialog konfirmasi hapus */}
-      <ConfirmDialog
-        isOpen={isConfirmOpen}
-        onClose={closeConfirm}
-        onConfirm={handleDelete}
-        title="Hapus Training"
-        message="Yakin ingin menghapus training ini? Training hanya bisa dihapus jika tidak ada tingkatan aktif."
-        confirmLabel="Ya, Hapus"
-        variant="danger"
-        isLoading={deleteLoading}
-      />
-
-      {/* Alert untuk keberhasilan/kegagalan aksi */}
-      <AlertModal
-        isOpen={isAlertOpen}
-        onClose={closeAlert}
-        type={alertType}
-        title={alertTitle}
-        message={alertMessage}
-        okLabel="OK"
-      />
-    </>
-  );
+import TrainingForm from "./TrainingForm";
+import TingkatanManager from "./TingkatanManager";
+import { getTrainingColumns, TrainingData } from "./TrainingColumns";
+interface Props { initialData: TrainingData[]; pagination: { page: number; totalItems: number; totalPages: number } }
+const TrainingList: React.FC<Props> = ({ initialData, pagination }) => {
+  const router = useRouter(); const params = useSearchParams(); const flash = useFlash();
+  const [adding, setAdding] = useState(false); const [edit, setEdit] = useState<string | null>(null); const [expanded, setExpanded] = useState<string | null>(null); const [confirm, setConfirm] = useState<string | null>(null); const [busy, setBusy] = useState(false);
+  const navigate = (key: string, value: string) => { const next = new URLSearchParams(params.toString()); if (value) next.set(key, value); else next.delete(key); if (key !== "page") next.set("page", "1"); router.push(`?${next}`, { scroll: false }); };
+  const remove = async (id: string) => { setBusy(true); try { const result = await deleteTraining(id); if (result.success) { setConfirm(null); flash.showSuccess("Pelatihan dihapus."); } else flash.showError(result.error ?? "Gagal menghapus."); } catch { flash.showError("Gagal menghapus pelatihan."); } finally { setBusy(false); } };
+  return <><PageHeader title="Master Pelatihan" description="Kelola pelatihan dan tingkatan." primaryAction={{ label: "Tambah Training", onClick: () => setAdding(true), icon: <PlusIcon className="size-4" /> }} /><FlashAlert flash={flash.flash} onClose={flash.clear} />
+    {adding && <ComponentCard title="Tambah Training" className="mb-4"><TrainingForm onClose={() => setAdding(false)} onSuccess={flash.showSuccess} onError={flash.showError} /></ComponentCard>}
+    <FilterBar filters={[{ key: "tingkatan", label: "Tingkatan", options: [{ value: "ada", label: "Punya tingkatan" }, { value: "tanpa", label: "Tanpa tingkatan" }] }]} />
+    <DataTable data={initialData} columns={getTrainingColumns((row) => setExpanded(expanded === row.id ? null : row.id), (row) => { setEdit(row.id); setConfirm(null); }, setConfirm)} totalPages={pagination.totalPages} currentPage={pagination.page} totalItems={pagination.totalItems} onPageChange={(page) => navigate("page", String(page))} onSearch={(query) => navigate("search", query)} searchValue={params.get("search") ?? ""} searchPlaceholder="Cari nama pelatihan..." renderExpandedRow={(row) => confirm === row.id ? <InlineConfirm message="Hapus pelatihan ini? Hapus tingkatan aktif terlebih dahulu." onConfirm={() => remove(row.id)} onCancel={() => setConfirm(null)} loading={busy} /> : edit === row.id ? <TrainingForm editData={row} onClose={() => setEdit(null)} onSuccess={flash.showSuccess} onError={flash.showError} /> : expanded === row.id ? <TingkatanManager trainingId={row.id} tingkatan={row.tingkatan} confirmId={confirm} setConfirmId={setConfirm} onSuccess={flash.showSuccess} onError={flash.showError} /> : null} />
+  </>;
 };
-
 export default TrainingList;
