@@ -8,6 +8,7 @@ import { PesertaOption } from "./pesertaBulkTypes";
 interface PesertaPilihTabProps {
   /** Permohonan yang sedang dikelola */
   pelaksanaanId: string;
+  pendaftaranPerusahaanId?: string | null;
   /** ID peserta yang sudah dicentang */
   selectedIds: string[];
   /** Dipanggil saat centang berubah */
@@ -16,6 +17,7 @@ interface PesertaPilihTabProps {
 
 const PesertaPilihTab: React.FC<PesertaPilihTabProps> = ({
   pelaksanaanId,
+  pendaftaranPerusahaanId,
   selectedIds,
   onToggle,
 }) => {
@@ -28,7 +30,7 @@ const PesertaPilihTab: React.FC<PesertaPilihTabProps> = ({
     const timer = setTimeout(async () => {
       if (!aktif) return;
       setLoading(true);
-      const hasil = await searchPesertaPendaftaran(pelaksanaanId, keyword);
+      const hasil = await searchPesertaPendaftaran(pelaksanaanId, keyword, pendaftaranPerusahaanId);
       if (!aktif) return;
       setOptions(hasil);
       setLoading(false);
@@ -38,7 +40,7 @@ const PesertaPilihTab: React.FC<PesertaPilihTabProps> = ({
       aktif = false;
       clearTimeout(timer);
     };
-  }, [keyword, pelaksanaanId]);
+  }, [keyword, pelaksanaanId, pendaftaranPerusahaanId]);
 
   return (
     <div className="space-y-3">

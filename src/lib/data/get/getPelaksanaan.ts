@@ -1,7 +1,9 @@
 import { prisma } from "@/lib/prisma"
 import { cache } from "react"
+import { whereKegiatanAktif } from "./whereKegiatanAktif"
 
 type GetPelaksanaanOptions = {
+    aktif?: boolean
     search?: string
     page?: number
     limit?: number
@@ -16,11 +18,13 @@ export const getAllPelaksanaan = cache(async (options: GetPelaksanaanOptions = {
 
         const where = {
             deletedAt: null,
+            ...(options.aktif ? { AND: [whereKegiatanAktif()] } : {}),
             ...(search ? {
                 OR: [
                     { noPermohonan: { contains: search, mode: "insensitive" as const } },
                     { tingkatan: { training: { nama: { contains: search, mode: "insensitive" as const } } } },
-                    { lokasi: { contains: search, mode: "insensitive" as const } }
+                    { lokasi: { contains: search, mode: "insensitive" as const } },
+                    { tingkatan: { kelas: { contains: search, mode: "insensitive" as const } } }
                 ]
             } : {})
         }

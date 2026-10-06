@@ -59,7 +59,7 @@ const PesertaBulkModal: React.FC<PesertaBulkModalProps> = ({
 
   const handlePreview = async () => {
     setPreviewLoading(true);
-    const hasil = await previewTempelPeserta(pelaksanaanId, pastedText.split("\n"));
+    const hasil = await previewTempelPeserta(pelaksanaanId, pastedText.split("\n"), pendaftaranPerusahaanId);
     setPreview(hasil);
     setPreviewLoading(false);
   };
@@ -177,7 +177,7 @@ const PesertaBulkModal: React.FC<PesertaBulkModalProps> = ({
       </div>
 
       {tab === "pilih" && (
-        <PesertaPilihTab pelaksanaanId={pelaksanaanId} selectedIds={selected.map((item) => item.id)} onToggle={handleToggle} />
+        <PesertaPilihTab pendaftaranPerusahaanId={pendaftaranPerusahaanId} pelaksanaanId={pelaksanaanId} selectedIds={selected.map((item) => item.id)} onToggle={handleToggle} />
       )}
 
       {tab === "tempel" && (

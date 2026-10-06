@@ -7,7 +7,7 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 | Fase | Status | Commit |
 |---|---|---|
 | R0 | Implementasi selesai; lint, tipe, build lulus | R0 selesai: fondasi antarmuka dan pembersihan |
-| R1 | Belum dikerjakan | - |
+| R1 | Implementasi selesai; lint, tipe, build lulus | R1 selesai: aturan pendaftaran dan kegiatan aktif |
 | R2 | Belum dikerjakan | - |
 | R3 | Belum dikerjakan | - |
 | R4 | Belum dikerjakan | - |
@@ -37,12 +37,12 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 | U-15 | Tidak dikerjakan | Menunggu fase terkait. |
 | U-16 | Tidak dikerjakan | Menunggu fase terkait. |
 | U-17 | Tidak dikerjakan | Menunggu fase terkait. |
-| B-01 | Tidak dikerjakan | Menunggu fase terkait. |
-| B-02 | Tidak dikerjakan | Menunggu fase terkait. |
-| B-03 | Tidak dikerjakan | Menunggu fase terkait. |
+| B-01 | Selesai | Backend R1 selesai; penerapan UI pada fase modul. |
+| B-02 | Selesai | Backend R1 selesai; penerapan UI pada fase modul. |
+| B-03 | Sebagian | Backend R1 selesai; penerapan UI pada fase modul. |
 | X-01 | Tidak dikerjakan | Menunggu fase terkait. |
 | X-02 | Selesai | Pembersihan R0. |
-| X-03 | Tidak dikerjakan | Menunggu fase terkait. |
+| X-03 | Selesai | Backend R1 selesai; penerapan UI pada fase modul. |
 
 ## Status fase (arsip v0.2)
 
@@ -190,3 +190,16 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 3. Dropdown: ketik cepat, navigasi panah/Enter/Esc, hasil maksimal sepuluh, input dan tinggi daftar tetap stabil.
 
 - Validasi R0: npm run lint bersih; tsc --noEmit --incremental false lulus; npm run build lulus setelah akses Google Fonts diizinkan. Pencarian pola komponen R0 dan UI terhapus kosong. Seluruh route menu ada di hasil build. Uji interaksi admin belum diverifikasi karena belum tersedia sesi login browser.
+
+### Catatan dan uji manual R1
+- **A-31** Sesi tidak memiliki deletedAt di skema, sehingga seluruh sesi milik kegiatan aktif dipakai untuk batas tujuh hari. Tidak ada perubahan skema.
+- **A-32** Training yang hanya mempunyai kelas internal KELAS_UMUM tetap ditampilkan sebagai tanpa tingkatan. Transaksi serializable mencegah pembuatan kelas otomatis ganda.
+- **A-33** Penyimpanan jadwal sesi dalam transaksi disiapkan bersama input permohonan di R1 untuk digunakan form R5; field status tetap dikelola lewat aksi status.
+- Uji terisolasi dengan transaksi tiruan lulus: pergantian tanggal WIB, penolakan peserta perusahaan lain sebelum menulis, mandiri tanpa mutasi perusahaan, penautan HQ, pemulihan hanya mengubah deletedAt/pendaftaranPerusahaanId.
+1. Pendaftaran perusahaan X: pencarian tidak menampilkan peserta Y; pemanggilan server dengan ID peserta Y ditolak tanpa menyebut nama Y.
+2. Pilih peserta tanpa perusahaan: peserta tercatat di HQ/cabang pilihan X dan muncul di master X.
+3. Daftarkan peserta berperusahaan secara mandiri: perusahaan asal tidak berubah.
+4. Tambahkan kembali peserta/pendaftaran yang dihapus: pesan dipulihkan dan data sertifikat lama tetap.
+5. Training tanpa tingkatan dapat dipilih pada form R5 dan label tidak menampilkan kelas internal.
+
+- Validasi R1: lint bersih, tsc tanpa error, build produksi lulus. Uji data langsung belum dijalankan; pengujian transaksi menggunakan fixture terisolasi tanpa mengubah database bersama.

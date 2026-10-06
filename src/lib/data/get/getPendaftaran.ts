@@ -1,8 +1,10 @@
 import { prisma } from "@/lib/prisma"
 import { cache } from "react"
+import { whereKegiatanAktif } from "./whereKegiatanAktif"
 import { JenisSertifikasi } from "@/lib/generated/prisma/enums"
 
 type GetPendaftaranOptions = {
+    aktif?: boolean
     search?: string
     page?: number
     limit?: number
@@ -19,12 +21,14 @@ export const getAllPendaftaran = cache(async (options: GetPendaftaranOptions = {
 
         const where = {
             deletedAt: null,
+            ...(options.aktif ? { AND: [whereKegiatanAktif()] } : {}),
             ...(options.jenisSertifikasi ? { jenisSertifikasi: options.jenisSertifikasi } : {}),
             ...(search ? {
                 OR: [
                     { noPermohonan: { contains: search, mode: "insensitive" as const } },
                     { tingkatan: { training: { nama: { contains: search, mode: "insensitive" as const } } } },
-                    { lokasi: { contains: search, mode: "insensitive" as const } }
+                    { lokasi: { contains: search, mode: "insensitive" as const } },
+                    { tingkatan: { kelas: { contains: search, mode: "insensitive" as const } } }
                 ]
             } : {})
         }

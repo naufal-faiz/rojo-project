@@ -3,113 +3,48 @@
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import {
-    JenisKegiatan,
-    TipePelaksanaan,
-    Penyelenggara,
     JenisSertifikasi,
     StatusTemanK3
 } from "@/lib/generated/prisma/enums"
 
-export async function createPelaksanaan(data: {
-    noPermohonan?: string | null
-    tingkatanId: string
-    jenisKegiatan: JenisKegiatan
-    tipePelaksanaan: TipePelaksanaan
-    lokasi?: string | null
-    penyelenggara: Penyelenggara
-    jenisSertifikasi: JenisSertifikasi
-    status?: StatusTemanK3 | null
-    uploadedAt?: Date | null
-    catatan?: string | null
-}) {
+import { PelaksanaanInput, validatePelaksanaanInput, validateSesi } from "./pelaksanaanInput"
+
+export async function createPelaksanaan(data: PelaksanaanInput) {
     try {
-        if (data.noPermohonan) {
-            const existing = await prisma.pelaksanaan.findUnique({
-                where: { noPermohonan: data.noPermohonan }
-            })
-            if (existing) {
-                return { success: false, error: `No. Permohonan "${data.noPermohonan}" sudah digunakan.` }
-            }
-        }
-
-        const tingkatan = await prisma.tingkatan.findUnique({
-            where: { id: data.tingkatanId, deletedAt: null }
-        })
-
-        if (!tingkatan) {
-            return { success: false, error: "Tingkatan tidak ditemukan atau sudah dihapus." }
-        }
-
-        const result = await prisma.pelaksanaan.create({
-            data: {
-                noPermohonan: data.noPermohonan || null,
-                tingkatanId: data.tingkatanId,
-                jenisKegiatan: data.jenisKegiatan,
-                tipePelaksanaan: data.tipePelaksanaan,
-                lokasi: data.lokasi || null,
-                penyelenggara: data.penyelenggara,
-                jenisSertifikasi: data.jenisSertifikasi,
-                status: data.status ?? null,
-                uploadedAt: data.uploadedAt || null,
-                catatan: data.catatan || null
-            }
-        })
-
+        const result = await prisma.$transaction(async (tx) => {
+            const input = await validatePelaksanaanInput(tx, data)
+            return tx.pelaksanaan.create({ data: { ...input, sesi: { create: validateSesi(data.sesi) } } })
+        }, { isolationLevel: "Serializable" })
         revalidatePath("/permohonan")
-        return { success: true, data: result }
+        revalidatePath("/master/training")
+        revalidatePath("/pendaftaran")
+        return { success: true as const, data: result }
     } catch (err) {
-        console.error("Gagal membuat pelaksanaan:", err)
-        return { success: false, error: "Gagal membuat pelaksanaan." }
+        return { success: false as const, error: err instanceof Error ? err.message : "Gagal membuat permohonan." }
     }
 }
 
-export async function updatePelaksanaan(id: string, data: {
-    noPermohonan?: string | null
-    tingkatanId: string
-    jenisKegiatan: JenisKegiatan
-    tipePelaksanaan: TipePelaksanaan
-    lokasi?: string | null
-    penyelenggara: Penyelenggara
-    jenisSertifikasi: JenisSertifikasi
-    status?: StatusTemanK3 | null
-    uploadedAt?: Date | null
-    catatan?: string | null
-}) {
+export async function updatePelaksanaan(id: string, data: PelaksanaanInput) {
     try {
-        if (data.noPermohonan) {
-            const existing = await prisma.pelaksanaan.findFirst({
-                where: {
-                    noPermohonan: data.noPermohonan,
-                    NOT: { id }
-                }
-            })
-            if (existing) {
-                return { success: false, error: `No. Permohonan "${data.noPermohonan}" sudah digunakan.` }
+        const result = await prisma.$transaction(async (tx) => {
+            const input = await validatePelaksanaanInput(tx, data, id)
+            const existing = await tx.pelaksanaan.findUnique({ where: { id, deletedAt: null } })
+            if (!existing) throw new Error("Permohonan tidak ditemukan atau sudah dihapus.")
+            if (data.sesi) {
+                const sesi = validateSesi(data.sesi)
+                await tx.sesiPelaksanaan.deleteMany({ where: { pelaksanaanId: id } })
+                if (sesi.length) await tx.sesiPelaksanaan.createMany({ data: sesi.map((item) => ({ ...item, pelaksanaanId: id })) })
             }
-        }
-
-        const result = await prisma.pelaksanaan.update({
-            where: { id, deletedAt: null },
-            data: {
-                noPermohonan: data.noPermohonan || null,
-                tingkatanId: data.tingkatanId,
-                jenisKegiatan: data.jenisKegiatan,
-                tipePelaksanaan: data.tipePelaksanaan,
-                lokasi: data.lokasi || null,
-                penyelenggara: data.penyelenggara,
-                jenisSertifikasi: data.jenisSertifikasi,
-                status: data.status ?? null,
-                uploadedAt: data.uploadedAt || null,
-                catatan: data.catatan || null
-            }
-        })
-
+            return tx.pelaksanaan.update({ where: { id }, data: { ...input,
+                ...(input.jenisSertifikasi !== JenisSertifikasi.KEMNAKER ? { status: null, uploadedAt: null } : {}) } })
+        }, { isolationLevel: "Serializable" })
         revalidatePath("/permohonan")
-        revalidatePath(`/permohonan/${id}`)
-        return { success: true, data: result }
+        revalidatePath("/permohonan/" + id)
+        revalidatePath("/master/training")
+        revalidatePath("/pendaftaran", "layout")
+        return { success: true as const, data: result }
     } catch (err) {
-        console.error("Gagal mengubah pelaksanaan:", err)
-        return { success: false, error: "Gagal mengubah pelaksanaan." }
+        return { success: false as const, error: err instanceof Error ? err.message : "Gagal mengubah permohonan." }
     }
 }
 

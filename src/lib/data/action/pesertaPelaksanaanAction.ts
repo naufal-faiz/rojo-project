@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
-import { Prisma } from "@/lib/generated/prisma/client"
+import { tambahKePelaksanaan } from "./pendaftaranPesertaTransaction"
 import { normalisasiNama } from "@/lib/normalisasi"
 
 function revalidatePesertaPelaksanaan(pelaksanaanId: string) {
@@ -12,13 +12,16 @@ function revalidatePesertaPelaksanaan(pelaksanaanId: string) {
 }
 
 // Pencarian peserta untuk modal tambah peserta (dipanggil dari client component).
-export async function searchPesertaPendaftaran(pelaksanaanId: string, search?: string) {
+export async function searchPesertaPendaftaran(pelaksanaanId: string, search?: string, pendaftaranId?: string | null) {
     try {
         const keyword = search?.trim()
+        const tujuan = pendaftaranId ? await prisma.pendaftaranPerusahaan.findFirst({ where: { id: pendaftaranId, pelaksanaanId, deletedAt: null, perusahaan: { deletedAt: null } } }) : null
+        if (pendaftaranId && !tujuan) return []
 
         const data = await prisma.peserta.findMany({
             where: {
                 deletedAt: null,
+                ...(tujuan ? { AND: [{ OR: [{ perusahaanCabangId: null }, { cabang: { perusahaanId: tujuan.perusahaanId, deletedAt: null } }] }] } : {}),
                 ...(keyword ? {
                     OR: [
                         { nama: { contains: keyword, mode: "insensitive" as const } },
@@ -40,7 +43,8 @@ export async function searchPesertaPendaftaran(pelaksanaanId: string, search?: s
         return data.map((peserta) => ({
             id: peserta.id,
             nama: peserta.nama,
-            perusahaan: peserta.cabang?.perusahaan?.nama ?? null,
+            perusahaan: tujuan ? null : peserta.cabang?.perusahaan?.nama ?? null,
+            tanpaPerusahaan: peserta.perusahaanCabangId === null,
             terdaftar: peserta.pesertaPelaksanaan.some((row) => row.deletedAt === null),
             pernahDihapus: peserta.pesertaPelaksanaan.some((row) => row.deletedAt !== null)
         }))
@@ -51,10 +55,12 @@ export async function searchPesertaPendaftaran(pelaksanaanId: string, search?: s
 }
 
 // Pratinjau tempel banyak nama: cocok dengan master, baru, atau ditolak.
-export async function previewTempelPeserta(pelaksanaanId: string, namaList: string[]) {
+export async function previewTempelPeserta(pelaksanaanId: string, namaList: string[], pendaftaranId?: string | null) {
     try {
+        const tujuan = pendaftaranId ? await prisma.pendaftaranPerusahaan.findFirst({ where: { id: pendaftaranId, pelaksanaanId, deletedAt: null, perusahaan: { deletedAt: null } } }) : null
+        if (pendaftaranId && !tujuan) return { cocok: [], baru: [], ditolak: [] }
         const semuaPeserta = await prisma.peserta.findMany({
-            where: { deletedAt: null },
+            where: { deletedAt: null, ...(tujuan ? { OR: [{ perusahaanCabangId: null }, { cabang: { perusahaanId: tujuan.perusahaanId, deletedAt: null } }] } : {}) },
             include: {
                 cabang: { include: { perusahaan: true } },
                 pesertaPelaksanaan: {
@@ -120,59 +126,12 @@ export async function previewTempelPeserta(pelaksanaanId: string, namaList: stri
     }
 }
 
-// Inti penambahan peserta: baris lama yang soft delete direstore, sisanya dibuat.
-async function tambahKePelaksanaan(
-    tx: Prisma.TransactionClient,
-    pelaksanaanId: string,
-    pendaftaranPerusahaanId: string | null,
-    pesertaIds: string[]
-) {
-    const existingRows = await tx.pesertaPelaksanaan.findMany({
-        where: { pelaksanaanId, pesertaId: { in: pesertaIds } },
-        include: {
-            peserta: true,
-            pendaftaranPerusahaan: { include: { perusahaan: true } }
-        }
-    })
-
-    const aktif = existingRows.filter((row) => row.deletedAt === null)
-    if (aktif.length > 0) {
-        const detail = aktif
-            .map((row) => `${row.peserta.nama} (${row.pendaftaranPerusahaan?.perusahaan?.nama ?? "mandiri"})`)
-            .join(", ")
-
-        throw new Error(`Peserta berikut sudah terdaftar di permohonan ini: ${detail}.`)
-    }
-
-    const existingMap = new Map(existingRows.map((row) => [row.pesertaId, row]))
-    let dibuat = 0
-    let direstore = 0
-
-    for (const pesertaId of pesertaIds) {
-        const existing = existingMap.get(pesertaId)
-
-        if (existing) {
-            await tx.pesertaPelaksanaan.update({
-                where: { id: existing.id },
-                data: { deletedAt: null, pendaftaranPerusahaanId }
-            })
-            direstore++
-        } else {
-            await tx.pesertaPelaksanaan.create({
-                data: { pesertaId, pelaksanaanId, pendaftaranPerusahaanId }
-            })
-            dibuat++
-        }
-    }
-
-    return { dibuat, direstore }
-}
-
 // Menambah peserta ke pendaftaran perusahaan atau sebagai peserta mandiri.
 export async function addPesertaPendaftaran(data: {
     pelaksanaanId: string
     pendaftaranPerusahaanId: string | null
     pesertaIds: string[]
+    cabangId?: string | null
 }) {
     try {
         const pesertaIds = Array.from(new Set(data.pesertaIds)).filter(Boolean)
@@ -181,51 +140,14 @@ export async function addPesertaPendaftaran(data: {
             return { success: false as const, error: "Pilih minimal satu peserta." }
         }
 
-        const pelaksanaan = await prisma.pelaksanaan.findUnique({
-            where: { id: data.pelaksanaanId, deletedAt: null }
-        })
-
-        if (!pelaksanaan) {
-            return { success: false as const, error: "Permohonan tidak ditemukan atau sudah dihapus." }
-        }
-
-        let pendaftaran = null
-        if (data.pendaftaranPerusahaanId) {
-            pendaftaran = await prisma.pendaftaranPerusahaan.findUnique({
-                where: { id: data.pendaftaranPerusahaanId, deletedAt: null },
-                include: { perusahaan: true }
-            })
-
-            if (!pendaftaran || pendaftaran.pelaksanaanId !== data.pelaksanaanId) {
-                return { success: false as const, error: "Pendaftaran perusahaan tidak ditemukan atau sudah dihapus." }
-            }
-        }
-
-        const pesertaList = await prisma.peserta.findMany({
-            where: { id: { in: pesertaIds }, deletedAt: null },
-            include: { cabang: { include: { perusahaan: true } } }
-        })
-
-        if (pesertaList.length !== pesertaIds.length) {
-            return { success: false as const, error: "Ada peserta yang tidak ditemukan atau sudah dihapus." }
-        }
-
-        // Peringatan (bukan blokir) bila perusahaan peserta berbeda dengan pendaftarannya.
-        const peringatan = pendaftaran
-            ? pesertaList
-                .filter((peserta) => {
-                    const perusahaanPeserta = peserta.cabang?.perusahaan?.id ?? null
-                    return perusahaanPeserta !== null && perusahaanPeserta !== pendaftaran.perusahaanId
-                })
-                .map((peserta) => peserta.nama)
-            : []
-
         const hasil = await prisma.$transaction((tx) =>
-            tambahKePelaksanaan(tx, data.pelaksanaanId, data.pendaftaranPerusahaanId, pesertaIds)
+            tambahKePelaksanaan(tx, data.pelaksanaanId, data.pendaftaranPerusahaanId, pesertaIds, data.cabangId),
+            { isolationLevel: "Serializable" }
         )
-
+        revalidatePath("/master/perusahaan", "layout")
+        revalidatePath("/master/peserta")
         revalidatePesertaPelaksanaan(data.pelaksanaanId)
-        return { success: true as const, ...hasil, peringatan }
+        return { success: true as const, ...hasil, peringatan: [] as string[] }
     } catch (err) {
         const pesan = err instanceof Error ? err.message : "Gagal menambah peserta pendaftaran."
         console.error("Gagal menambah peserta pendaftaran:", err)

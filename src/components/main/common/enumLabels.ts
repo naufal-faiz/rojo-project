@@ -4,6 +4,11 @@ import {
   Penyelenggara,
   TipePelaksanaan,
 } from "@/lib/generated/prisma/enums";
+import { KELAS_UMUM } from "@/lib/tingkatan";
+
+export function labelTingkatan(tingkatan: { kelas: string; training: { nama: string } }) {
+  return tingkatan.kelas === KELAS_UMUM ? tingkatan.training.nama : `${tingkatan.training.nama} - ${tingkatan.kelas}`;
+}
 
 /** Label Bahasa Indonesia untuk enum JenisKegiatan. */
 export const jenisKegiatanLabels: Record<JenisKegiatan, string> = {

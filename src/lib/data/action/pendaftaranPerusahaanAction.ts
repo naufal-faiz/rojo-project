@@ -18,81 +18,30 @@ export async function createPendaftaran(data: {
     picId?: string | null
 }) {
     try {
-        const pelaksanaan = await prisma.pelaksanaan.findUnique({
-            where: { id: data.pelaksanaanId, deletedAt: null }
-        })
-
-        if (!pelaksanaan) {
-            return { success: false as const, error: "Permohonan tidak ditemukan atau sudah dihapus." }
-        }
-
-        const perusahaan = await prisma.perusahaan.findUnique({
-            where: { id: data.perusahaanId, deletedAt: null }
-        })
-
-        if (!perusahaan) {
-            return { success: false as const, error: "Perusahaan tidak ditemukan atau sudah dihapus." }
-        }
-
-        if (data.picId) {
-            const link = await prisma.perusahaanPic.findFirst({
-                where: {
-                    perusahaanId: data.perusahaanId,
-                    picId: data.picId,
-                    pic: { deletedAt: null }
-                }
-            })
-
-            if (!link) {
-                return { success: false as const, error: "PIC yang dipilih tidak terhubung dengan perusahaan ini." }
+        const hasil = await prisma.$transaction(async (tx) => {
+            const pelaksanaan = await tx.pelaksanaan.findUnique({ where: { id: data.pelaksanaanId, deletedAt: null } })
+            const perusahaan = await tx.perusahaan.findUnique({ where: { id: data.perusahaanId, deletedAt: null } })
+            if (!pelaksanaan || !perusahaan) throw new Error("Permohonan atau perusahaan tidak ditemukan atau sudah dihapus.")
+            if (data.picId) {
+                const link = await tx.perusahaanPic.findFirst({ where: { perusahaanId: data.perusahaanId, picId: data.picId, pic: { deletedAt: null } } })
+                if (!link) throw new Error("PIC yang dipilih tidak terhubung dengan perusahaan ini.")
             }
-        }
-
-        const existing = await prisma.pendaftaranPerusahaan.findUnique({
-            where: {
-                perusahaanId_pelaksanaanId: {
-                    perusahaanId: data.perusahaanId,
-                    pelaksanaanId: data.pelaksanaanId
-                }
+            const existing = await tx.pendaftaranPerusahaan.findUnique({ where: { perusahaanId_pelaksanaanId: { perusahaanId: data.perusahaanId, pelaksanaanId: data.pelaksanaanId } } })
+            if (existing?.deletedAt === null) throw new Error("Perusahaan sudah terdaftar di permohonan ini.")
+            if (pelaksanaan.jenisKegiatan === JenisKegiatan.INHOUSE && await tx.pendaftaranPerusahaan.count({ where: { pelaksanaanId: data.pelaksanaanId, deletedAt: null } })) {
+                throw new Error("Kegiatan INHOUSE hanya boleh memiliki satu pendaftaran perusahaan.")
             }
-        })
-
-        if (existing && existing.deletedAt === null) {
-            return { success: false as const, error: `${perusahaan.nama} sudah terdaftar di permohonan ini.` }
-        }
-
-        if (pelaksanaan.jenisKegiatan === JenisKegiatan.INHOUSE) {
-            const jumlahAktif = await prisma.pendaftaranPerusahaan.count({
-                where: { pelaksanaanId: data.pelaksanaanId, deletedAt: null }
-            })
-
-            if (jumlahAktif >= 1) {
-                return { success: false as const, error: "Kegiatan INHOUSE hanya boleh memiliki satu pendaftaran perusahaan." }
-            }
-        }
-
-        const result = await prisma.$transaction(async (tx) => {
-            if (existing) {
-                return tx.pendaftaranPerusahaan.update({
-                    where: { id: existing.id },
-                    data: { deletedAt: null, picId: data.picId || null }
-                })
-            }
-
-            return tx.pendaftaranPerusahaan.create({
-                data: {
-                    pelaksanaanId: data.pelaksanaanId,
-                    perusahaanId: data.perusahaanId,
-                    picId: data.picId || null
-                }
-            })
-        })
+            const result = existing
+                ? await tx.pendaftaranPerusahaan.update({ where: { id: existing.id }, data: { deletedAt: null, picId: data.picId || null } })
+                : await tx.pendaftaranPerusahaan.create({ data: { pelaksanaanId: data.pelaksanaanId, perusahaanId: data.perusahaanId, picId: data.picId || null } })
+            return { data: result, restored: Boolean(existing), message: existing ? "Pendaftaran perusahaan dipulihkan." : "Pendaftaran perusahaan ditambahkan." }
+        }, { isolationLevel: "Serializable" })
 
         revalidatePendaftaran(data.pelaksanaanId)
-        return { success: true as const, data: result, restored: Boolean(existing) }
+        return { success: true as const, ...hasil }
     } catch (err) {
         console.error("Gagal membuat pendaftaran perusahaan:", err)
-        return { success: false as const, error: "Gagal membuat pendaftaran perusahaan." }
+        return { success: false as const, error: err instanceof Error ? err.message : "Gagal membuat pendaftaran perusahaan." }
     }
 }
 
