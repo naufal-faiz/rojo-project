@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import Button from "@/components/ui/button/Button";
 import AlertModal from "@/components/main/Modal/AlertModal";
-import PesertaFormModal from "@/components/main/peserta/PesertaFormModal";
+import PesertaFormModal from "./PesertaFormModal";
 import { useModal } from "@/hooks/useModal";
 import {
   addPesertaPendaftaran,

@@ -10,7 +10,7 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 | R1 | Implementasi selesai; lint, tipe, build lulus | R1 selesai: aturan pendaftaran dan kegiatan aktif |
 | R2 | Implementasi selesai; lint, tipe, build, uji terisolasi lulus; uji browser admin belum diverifikasi | 25e10af + commit penutup R2 |
 | R3 | Implementasi selesai; lint, tipe, build, uji terisolasi dan pemeriksaan browser baca saja lulus | R3 selesai: detail perusahaan dan pengelolaan inline |
-| R4 | Belum dikerjakan | - |
+| R4 | Implementasi selesai; lint, tipe, build lulus | R4 selesai: daftar, panel inline, dan detail peserta |
 | R5 | Belum dikerjakan | - |
 | R6 | Belum dikerjakan | - |
 | R7 | Belum dikerjakan | - |
@@ -24,11 +24,11 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 | U-02 | Selesai | Peserta dan PIC ditambah inline di detail. |
 | U-03 | Selesai | Header dan grid informasi:cabang 60:40, PIC:peserta 30:70. |
 | U-04 | Selesai | Cabang, PIC, peserta inline; peserta ditautkan ke cabang perusahaan aktif. |
-| U-05 | Sebagian | R2–R3 memakai form dan konfirmasi inline; modul lain menunggu fase terkait. |
-| U-06 | Sebagian | Tombol aksi R2–R3 memakai ikon dari icons/index; modul lain menunggu fase terkait. |
+| U-05 | Sebagian | R2–R4 memakai form dan konfirmasi inline; modul lain menunggu fase terkait. |
+| U-06 | Sebagian | Tombol aksi R2–R4 memakai ikon dari icons/index; modul lain menunggu fase terkait. |
 | U-07 | Selesai | Pembersihan R0. |
-| U-08 | Sebagian | R2–R3 memakai pencarian, filter dan paginasi server; modul lain menunggu fase terkait. |
-| U-09 | Sebagian | R3 memakai SearchableSelect server untuk PIC dan peserta (maksimal 10); modul lain menyusul. |
+| U-08 | Sebagian | R2–R4 memakai pencarian, filter dan paginasi server; modul lain menunggu fase terkait. |
+| U-09 | Sebagian | R3–R4 memakai SearchableSelect server (seluruh hasil maksimal 10); modul lain menyusul. |
 | U-10 | Tidak dikerjakan | Menunggu fase terkait. |
 | U-11 | Tidak dikerjakan | Menunggu fase terkait. |
 | U-12 | Tidak dikerjakan | Menunggu fase terkait. |
@@ -89,6 +89,9 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 - **A-25** Jalur M: `pemetaan_perusahaan.csv` dan `pemetaan_alat.csv` dibaca ulang sebagai input bila ada di `data/import-report/`, sehingga pemilik bisa mengoreksi pemetaan lalu menjalankan dry-run lagi.
 - **A-26** Jalur M: kolom Excel dideteksi lewat alias header pada 10 baris pertama (nama kolom asli belum diketahui saat kode ditulis). Header yang tidak cocok dilaporkan lewat baris yang tidak terbaca.
 - **A-27** Penutup: pemecahan file panjang (utang #1) murni ekstraksi kolom/hook tanpa mengubah perilaku; `perusahaanAction.ts` dipecah menjadi `perusahaanAction.ts` + `cabangAction.ts` + `picAction.ts`; `PelaksanaanList`/`PesertaList` memakai file `*Columns.tsx`; `CabangManager`/`PicManager`/`PelaksanaanFormModal` memakai hook `use*`.
+- **A-36** R4: `PesertaFormModal` dipindah ke `components/main/pendaftaran/` karena satu-satunya pemakai yang tersisa adalah `PesertaBulkModal` (dihapus di R6). Modul Peserta kini sepenuhnya memakai panel inline; tidak ada perubahan perilaku pada alur pendaftaran. Dampak jika salah: R6 perlu memperbarui impor atau menghapus file ini bersama `PesertaBulkModal`.
+- **A-37** R4: pencarian daftar peserta dibatasi ke nama (PRD 5.12). Filter perusahaan memakai `SearchableSelect` dengan pencarian server, dan pilihan "Tanpa perusahaan" saling menimpa dengan filter perusahaan (memilih salah satu mengosongkan yang lain). Dampak jika salah: admin yang terbiasa mencari lewat nama perusahaan harus memakai dropdown filter.
+- **A-38** R4: penghapusan peserta tetap hanya tersedia di daftar; halaman detail hanya memuat kartu informasi (ubah inline) dan riwayat kegiatan sesuai PRD 5.5. Dampak jika salah: admin perlu kembali ke daftar untuk menghapus.
 
 ## Deviasi dari PRD
 
@@ -243,4 +246,23 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 4. Tambah peserta dengan default HQ atau cabang lain. Nama sama setelah normalisasi ditolak dengan tautan. Hubungkan master tanpa perusahaan; peserta langsung muncul pada perusahaan dan cabang yang dipilih.
 5. Ubah peserta inline; hapus peserta yang punya pendaftaran aktif ditolak. Detail peserta menuju route yang sudah ada.
 6. Uji pencarian/filter URL, kembali browser, cabang lebih dari lima, peserta lebih dari sepuluh, tampilan desktop dan dark mode.
-- Berhenti setelah commit R3 sesuai cakupan pengguna. R4 belum dimulai.
+- Berhenti setelah commit R3 sesuai cakupan pengguna. R4 dikerjakan pada commit terpisah.
+
+### R4 — Peserta
+- Daftar memakai pencarian nama, filter perusahaan (`SearchableSelect`, pencarian server maksimal 10), filter "Tanpa perusahaan", paginasi server, `RowActions` (Detail ke `/master/peserta/[id]`, Ubah inline, Hapus dengan `InlineConfirm`).
+- Panel tambah inline: nama, perusahaan opsional lewat `SearchableSelect`, cabang bergantung perusahaan dengan default HQ; tombol "Simpan" dan "Simpan & tambah lagi" (fokus kembali ke nama).
+- Detail `/master/peserta/[id]`: header dengan tombol kembali dan Ubah, kartu informasi dapat diubah inline, kartu riwayat kegiatan memakai label tingkatan yang menyembunyikan kelas internal "Umum".
+- Pencarian/filter tersimpan di URL (`search`, `perusahaan`, `filter=tanpaPerusahaan`, `page`); notifikasi memakai `FlashAlert`, konfirmasi hapus `InlineConfirm`.
+- `PesertaFormModal` dan kolom "data terhapus" lama dihapus dari modul Peserta; modal dipindah ke folder pendaftaran (A-36).
+- Validasi: `npm run lint`, `npx tsc --noEmit --incremental false`, dan `npm run build` lulus. Gerbang pola antarmuka folder `src/components/main/peserta` dan `src/app/(dashboard)` kosong untuk pencarian `AlertModal|ConfirmDialog|AlertDialog`, `useModal|ui/modal|FormModal`, dan `<svg`; tidak ada `window.location.reload`.
+- Batas validasi: uji browser dengan data nyata belum dijalankan (belum tersedia sesi login pada sesi kerja ini).
+
+### Langkah uji manual R4
+1. Buka `/master/peserta`. Daftar menampilkan kolom Nama, Perusahaan (tanpa perusahaan tampil "-"), Cabang, dan tiga ikon aksi.
+2. Cari nama peserta; pilih filter perusahaan lewat dropdown (ketik untuk menyaring); pilih "Tanpa perusahaan" untuk melihat peserta mandiri. Kedua filter saling mengganti; parameter URL berubah dan paginasi kembali ke halaman 1.
+3. Klik "Tambah Peserta": panel inline terbuka, fokus di nama. Isi nama lalu Enter → tersimpan tanpa pindah halaman.
+4. Pada panel tambah, pilih perusahaan: dropdown cabang muncul dengan default HQ. "Simpan & tambah lagi" mengosongkan nama dan mengembalikan fokus.
+5. Klik Ubah pada satu baris: baris berubah menjadi form; ubah nama/perusahaan/cabang lalu Simpan → kembali ke tampilan baris dengan notifikasi.
+6. Klik Hapus: `InlineConfirm` muncul di baris itu; peserta dengan pendaftaran aktif ditolak dengan pesan; peserta tanpa pendaftaran aktif terhapus dan notifikasi hijau.
+7. Buka Detail dari daftar: kartu informasi dan riwayat tampil. Klik Ubah, ganti data, simpan. Riwayat menampilkan pelatihan (tanpa "Umum"), tanggal, dan status.
+8. Uji tampilan gelap/terang, layar sempit, dan navigasi keyboard pada form inline.

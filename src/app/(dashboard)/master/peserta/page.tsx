@@ -1,5 +1,4 @@
-import { getAllPeserta } from "@/lib/data/get/getPeserta";
-import { prisma } from "@/lib/prisma";
+import { getAllPeserta, getPerusahaanFilterOption } from "@/lib/data/get/getPeserta";
 import PesertaList from "@/components/main/peserta/PesertaList";
 
 export const metadata = {
@@ -10,27 +9,28 @@ export const metadata = {
 export default async function PesertaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; search?: string }>;
+  searchParams: Promise<{ page?: string; search?: string; perusahaan?: string; filter?: string }>;
 }) {
-  const resolvedParams = await searchParams;
-  const page = Number(resolvedParams?.page ?? 1);
-  const search = resolvedParams?.search ?? "";
-
-  const [activeResult, cabangOptions] = await Promise.all([
-    getAllPeserta({ page, limit: 10, search }),
-    prisma.cabang.findMany({
-      where: { deletedAt: null },
-      include: { perusahaan: true },
-      orderBy: { perusahaan: { nama: "asc" } },
+  const params = await searchParams;
+  const page = Number(params.page);
+  const perusahaanId = params.perusahaan;
+  const [result, filterPerusahaan] = await Promise.all([
+    getAllPeserta({
+      page: Number.isSafeInteger(page) && page > 0 ? page : 1,
+      limit: 10,
+      search: params.search,
+      perusahaanId,
+      tanpaPerusahaan: params.filter === "tanpaPerusahaan",
     }),
+    perusahaanId ? getPerusahaanFilterOption(perusahaanId) : Promise.resolve(null),
   ]);
 
   return (
     <div className="p-4 sm:p-6">
       <PesertaList
-        initialData={activeResult.data}
-        cabangOptions={cabangOptions}
-        pagination={activeResult.pagination}
+        initialData={result.data}
+        pagination={result.pagination}
+        filterPerusahaan={filterPerusahaan}
       />
     </div>
   );

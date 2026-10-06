@@ -5,6 +5,8 @@ type GetPesertaOptions = {
     search?: string
     page?: number
     limit?: number
+    perusahaanId?: string
+    tanpaPerusahaan?: boolean
 }
 
 export const getAllPeserta = cache(async (options: GetPesertaOptions = {}) => {
@@ -16,12 +18,9 @@ export const getAllPeserta = cache(async (options: GetPesertaOptions = {}) => {
 
         const where = {
             deletedAt: null,
-            ...(search ? {
-                OR: [
-                    { nama: { contains: search, mode: "insensitive" as const } },
-                    { cabang: { perusahaan: { nama: { contains: search, mode: "insensitive" as const } } } }
-                ]
-            } : {})
+            ...(search ? { nama: { contains: search, mode: "insensitive" as const } } : {}),
+            ...(options.tanpaPerusahaan ? { perusahaanCabangId: null }
+                : options.perusahaanId ? { perusahaanCabangId: options.perusahaanId } : {})
         }
 
         const [data, totalItems] = await Promise.all([
@@ -91,6 +90,20 @@ export const getPesertaById = cache(async (id: string) => {
         })
     } catch (err) {
         console.error("Gagal mengambil detail peserta:", err)
+        return null
+    }
+})
+
+// Opsi terpilih untuk filter perusahaan di daftar Peserta.
+export const getPerusahaanFilterOption = cache(async (id: string) => {
+    try {
+        const perusahaan = await prisma.perusahaan.findFirst({
+            where: { id, deletedAt: null },
+            select: { id: true, nama: true }
+        })
+        return perusahaan ? { id: perusahaan.id, label: perusahaan.nama } : null
+    } catch (err) {
+        console.error("Gagal mengambil perusahaan filter:", err)
         return null
     }
 })
