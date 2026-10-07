@@ -1,4 +1,6 @@
 import React from "react";
+import RowActions from "@/components/main/common/RowActions";
+import { labelTingkatan } from "@/components/main/common/enumLabels";
 import StatusBadge from "@/components/main/common/StatusBadge";
 import { Column } from "@/components/main/common/DataTable";
 import { formatTanggal } from "@/components/main/common/formatTanggal";
@@ -53,7 +55,7 @@ export const getSertifikatColumns = ({
       <input
         type="checkbox"
         aria-label={`Pilih ${row.peserta.nama}`}
-        className="size-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-gray-600"
+        className="size-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-gray-600 dark:text-brand-400 dark:focus:ring-brand-400"
         checked={selectedIds.includes(row.id)}
         onChange={() => onToggle(row.id)}
       />
@@ -80,7 +82,7 @@ export const getSertifikatColumns = ({
     header: "Kegiatan",
     cell: (row) => (
       <span>
-        <span className="block">{`${row.pelaksanaan.tingkatan.training.nama} - ${row.pelaksanaan.tingkatan.kelas}`}</span>
+        <span className="block">{labelTingkatan(row.pelaksanaan.tingkatan)}</span>
         <span className="block text-xs text-gray-400 dark:text-gray-500">
           {row.pelaksanaan.noPermohonan ?? "Tanpa Nomor"}
         </span>
@@ -110,10 +112,6 @@ export const getSertifikatColumns = ({
   },
   {
     header: "Aksi",
-    cell: (row) => (
-      <button onClick={() => onEdit(row)} className="text-xs text-brand-500 hover:underline">
-        Ubah
-      </button>
-    ),
+    cell: (row) => <RowActions onEdit={() => onEdit(row)} />,
   },
 ];

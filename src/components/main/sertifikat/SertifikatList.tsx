@@ -3,17 +3,13 @@ import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import PageHeader from "@/components/main/common/PageHeader";
 import DataTable from "@/components/main/common/DataTable";
-import { Modal } from "@/components/ui/modal";
+import FlashAlert from "@/components/main/common/FlashAlert";
+import useFlash from "@/components/main/common/useFlash";
+import type { SearchOption } from "@/components/main/common/SearchableSelect";
 import SertifikatFilterBar from "./SertifikatFilterBar";
 import SertifikatBulkBar from "./SertifikatBulkBar";
-import SertifikatFormModal from "./SertifikatFormModal";
+import SertifikatForm from "./SertifikatForm";
 import { getSertifikatColumns, SertifikatRow } from "./SertifikatColumns";
-
-interface OpsiKegiatan {
-  id: string;
-  noPermohonan: string | null;
-  tingkatan: { kelas: string; training: { nama: string } };
-}
 
 interface SertifikatListProps {
   /** Data peserta pendaftaran halaman aktif */
@@ -26,18 +22,27 @@ interface SertifikatListProps {
     totalPages: number;
   };
   /** Opsi filter kegiatan */
-  kegiatanOptions: OpsiKegiatan[];
+  selectedKegiatan: SearchOption | null;
 }
 
 const SertifikatList: React.FC<SertifikatListProps> = ({
   initialData,
   pagination,
-  kegiatanOptions,
+  selectedKegiatan,
 }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [editTarget, setEditTarget] = useState<SertifikatRow | null>(null);
+  const flash = useFlash();
+  const scope = searchParams.toString();
+  const [previousScope, setPreviousScope] = useState(scope);
+  if (scope !== previousScope) {
+    setPreviousScope(scope);
+    setSelectedIds([]);
+    setEditTarget(null);
+  }
+  const visibleIds = selectedIds.filter((id) => initialData.some((row) => row.id === id));
 
   const handleToggle = (id: string) => {
     setSelectedIds((prev) =>
@@ -69,16 +74,17 @@ const SertifikatList: React.FC<SertifikatListProps> = ({
         description="Isi hasil peserta dan data sertifikat per kegiatan."
       />
 
-      <SertifikatFilterBar kegiatanOptions={kegiatanOptions} />
+      <FlashAlert flash={flash.flash} onClose={flash.clear} />
+      <SertifikatFilterBar selectedKegiatan={selectedKegiatan} />
 
-      {selectedIds.length > 0 && (
-        <SertifikatBulkBar selectedIds={selectedIds} onClear={() => setSelectedIds([])} />
+      {visibleIds.length > 0 && (
+        <SertifikatBulkBar selectedIds={visibleIds} flash={flash} onClear={() => setSelectedIds([])} />
       )}
 
       <DataTable
         data={initialData}
         columns={getSertifikatColumns({
-          selectedIds,
+          selectedIds: visibleIds,
           onToggle: handleToggle,
           onEdit: setEditTarget,
         })}
@@ -90,13 +96,11 @@ const SertifikatList: React.FC<SertifikatListProps> = ({
         searchValue={searchParams.get("search") ?? ""}
         searchPlaceholder="Cari nama peserta, perusahaan, atau no. sertifikat..."
         emptyText="Belum ada peserta terdaftar."
+        renderExpandedRow={(row) => editTarget?.id === row.id ? (
+          <SertifikatForm key={row.id} data={row} flash={flash} onClose={() => setEditTarget(null)} />
+        ) : null}
       />
 
-      {editTarget && (
-        <Modal isOpen onClose={() => setEditTarget(null)} className="max-w-lg">
-          <SertifikatFormModal data={editTarget} onClose={() => setEditTarget(null)} />
-        </Modal>
-      )}
     </>
   );
 };

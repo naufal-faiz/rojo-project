@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { cache } from "react"
+import { labelTingkatan } from "@/components/main/common/enumLabels"
 import { JenisSertifikasi } from "@/lib/generated/prisma/enums"
 
 // Awal hari ini menurut WIB, dikembalikan sebagai UTC (tanggal @db.Date).
@@ -80,7 +81,7 @@ export const getDashboardData = cache(async () => {
                 peta.set(sesi.pelaksanaanId, {
                     id: sesi.pelaksanaanId,
                     noPermohonan: sesi.pelaksanaan.noPermohonan,
-                    label: `${sesi.pelaksanaan.tingkatan.training.nama} - ${sesi.pelaksanaan.tingkatan.kelas}`,
+                    label: labelTingkatan(sesi.pelaksanaan.tingkatan),
                     tanggal: sesi.tanggal
                 })
 

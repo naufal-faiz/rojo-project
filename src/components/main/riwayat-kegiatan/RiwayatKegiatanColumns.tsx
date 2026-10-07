@@ -1,4 +1,6 @@
 import React from "react";
+import RowActions from "@/components/main/common/RowActions";
+import { labelTingkatan } from "@/components/main/common/enumLabels";
 import { Column } from "@/components/main/common/DataTable";
 import { formatTanggal } from "@/components/main/common/formatTanggal";
 import { JenisSertifikasi, StatusPeserta } from "@/lib/generated/prisma/enums";
@@ -24,11 +26,11 @@ export const getRiwayatKegiatanColumns = (): Column<RiwayatRow>[] => [
   {
     header: "No. Permohonan",
     cell: (row) =>
-      row.noPermohonan ?? <span className="text-gray-400 italic">Tanpa Nomor</span>,
+      row.noPermohonan ?? <span className="text-gray-400 dark:text-gray-500 italic">Tanpa Nomor</span>,
   },
   {
     header: "Pelatihan",
-    cell: (row) => `${row.tingkatan.training.nama} - ${row.tingkatan.kelas}`,
+    cell: (row) => labelTingkatan(row.tingkatan),
   },
   {
     header: "Rentang Tanggal",
@@ -64,6 +66,6 @@ export const getRiwayatKegiatanColumns = (): Column<RiwayatRow>[] => [
   },
   {
     header: "Aksi",
-    cell: () => <span className="text-xs text-brand-500">Lihat</span>,
+    cell: (row) => <RowActions detailHref={`/permohonan/${row.id}`} />,
   },
 ];

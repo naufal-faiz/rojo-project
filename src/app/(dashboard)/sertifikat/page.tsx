@@ -1,6 +1,6 @@
 import {
   getAllSertifikat,
-  getOpsiKegiatanSertifikat,
+  getKegiatanSertifikatOption,
   FilterStatusHasil,
 } from "@/lib/data/get/getSertifikat";
 import SertifikatList from "@/components/main/sertifikat/SertifikatList";
@@ -36,7 +36,7 @@ export default async function SertifikatPage({
       ? "BELUM"
       : Object.values(StatusPeserta).find((status) => status === resolvedParams?.status);
 
-  const [result, kegiatanOptions] = await Promise.all([
+  const [result, selectedKegiatan] = await Promise.all([
     getAllSertifikat({
       page,
       limit: 10,
@@ -45,7 +45,7 @@ export default async function SertifikatPage({
       jenisSertifikasi: filterJenisSertifikasi,
       status: filterStatus,
     }),
-    getOpsiKegiatanSertifikat(),
+    pelaksanaanId ? getKegiatanSertifikatOption(pelaksanaanId) : null,
   ]);
 
   return (
@@ -53,7 +53,7 @@ export default async function SertifikatPage({
       <SertifikatList
         initialData={result.data}
         pagination={result.pagination}
-        kegiatanOptions={kegiatanOptions}
+        selectedKegiatan={selectedKegiatan}
       />
     </div>
   );

@@ -13,7 +13,7 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 | R4 | Implementasi selesai; lint, tipe, build lulus | R4 selesai: daftar, panel inline, dan detail peserta |
 | R5 | Implementasi selesai; lint, tipe, build, dan gerbang pola lulus | R5 selesai: halaman buat/ubah permohonan dan detail bergrid (`8cbb0ef`) |
 | R6 | Implementasi selesai; lint, tipe, build, dan gerbang pola lulus | R6 selesai: pendaftaran tanpa modal |
-| R7 | Belum dikerjakan | - |
+| R7 | Implementasi selesai; lint, tipe, build dan enam uji terisolasi lulus | R7 selesai: sertifikat inline dan riwayat kegiatan |
 | R8 | Belum dikerjakan | - |
 
 ## Checklist revisi
@@ -321,3 +321,19 @@ Dokumen ini dirawat per fase. Format mengikuti `PRD.md` bagian 12.
 6. Tab **Peserta Mandiri**: "Tambah Peserta Mandiri" memakai panel yang sama. Mode master menampilkan perusahaan sebagai subjudul; peserta berperusahaan yang didaftarkan mandiri tidak berubah perusahaannya. Peserta baru dibuat tanpa perusahaan.
 7. Hapus peserta yang ber-`noSertifikat` → konfirmasi memuat peringatan nomor sertifikat. Duplikat: daftarkan peserta yang sama dua kali → ditolak dengan menyebut tempat pendaftarannya.
 8. Uji tampilan gelap/terang, layar sempit, dan navigasi keyboard pada panel inline.
+
+### R7 — Sertifikat, Riwayat Kegiatan, Dashboard
+- Form Sertifikat kini inline di bawah baris, dengan `RowActions`, satu `FlashAlert` milik halaman, dan peringatan nomor ganda yang bertahan sampai ditutup. Field tetap opsional, SKP hanya KEMNAKER, field resmi disembunyikan untuk INTERNAL, status kosong tetap null.
+- Ubah status massal memakai notifikasi halaman tanpa refresh tambahan. Pilihan baris dibatasi halaman aktif dan dibersihkan ketika URL filter/paginasi berubah agar data tersembunyi tidak ikut diubah.
+- Filter Sertifikat/Riwayat memakai `FilterBar`; kegiatan Sertifikat memakai `SearchableSelect`, maksimal sepuluh hasil server, label pilihan dipulihkan dari URL. Tidak ada filter umur kegiatan pada Sertifikat.
+- Riwayat memakai komplemen `whereKegiatanAktif()` sehingga sesi terakhir lebih dari tujuh hari WIB masuk riwayat; setiap baris dan ikon detail menuju permohonan. Label kelas internal disembunyikan di Sertifikat, Riwayat, dan Dashboard.
+- **A-40** Riwayat default memakai batas tujuh hari yang sama dengan daftar aktif, sehingga kedua daftar saling melengkapi. Ini mengikuti PRD 5.11 dan keputusan sementara bagian 10.
+- Validasi R7: lint, TypeScript tanpa incremental, build produksi lulus; enam uji `node --test tests/sertifikat.test.mjs` lulus tanpa menulis database. Tiga migrasi tetap up to date. Peringatan konvensi middleware Next.js masih ada. Pemeriksaan browser dilanjutkan pada R8 setelah timeout otomatisasi.
+
+### Langkah uji manual R7
+1. Buka Sertifikat, cari peserta/perusahaan/nomor; filter kegiatan lama melalui pencarian, jenis sertifikasi dan status. URL berubah dan paginasi kembali ke satu.
+2. Klik Ubah: form tampil di bawah baris. Uji KEMNAKER (ada SKP), BNSP (tanpa SKP), INTERNAL (tanpa field resmi). Batal menutup tanpa menyimpan.
+3. Simpan dengan status kosong: hasil tetap belum ada hasil. Nomor ganda pada jenis yang sama tetap tersimpan dengan peringatan yang dapat ditutup.
+4. Centang peserta dan terapkan status massal, termasuk kosong. Pindah halaman/filter: pilihan lama tidak terbawa.
+5. Riwayat hanya menampilkan kegiatan yang berakhir lebih dari tujuh hari WIB; kegiatan tanpa sesi tetap di daftar aktif. Filter tahun/penyelenggara/jenis dan tautan detail bekerja.
+6. Dashboard tetap menampilkan angka dan tautan kegiatan; label tidak menampilkan kelas internal Umum. Invoice tetap placeholder.

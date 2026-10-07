@@ -30,8 +30,11 @@ function keTeks(nilai?: string | null): string | null {
 // Mengubah hasil dan data sertifikat satu peserta. Semua field opsional.
 export async function updateSertifikat(id: string, data: SertifikatFormData) {
     try {
+        if (data.status != null && !Object.values(StatusPeserta).includes(data.status)) {
+            return { success: false as const, error: "Status hasil tidak valid." }
+        }
         const peserta = await prisma.pesertaPelaksanaan.findUnique({
-            where: { id, deletedAt: null },
+            where: { id, deletedAt: null, peserta: { deletedAt: null }, pelaksanaan: { deletedAt: null } },
             include: { pelaksanaan: true }
         })
 
@@ -54,7 +57,8 @@ export async function updateSertifikat(id: string, data: SertifikatFormData) {
                     id: { not: id },
                     deletedAt: null,
                     noSertifikat,
-                    pelaksanaan: { jenisSertifikasi }
+                    peserta: { deletedAt: null },
+                    pelaksanaan: { jenisSertifikasi, deletedAt: null }
                 },
                 include: { peserta: true, pelaksanaan: { include: { tingkatan: { include: { training: true } } } } }
             })
@@ -65,7 +69,7 @@ export async function updateSertifikat(id: string, data: SertifikatFormData) {
         }
 
         const result = await prisma.pesertaPelaksanaan.update({
-            where: { id },
+            where: { id, deletedAt: null, peserta: { deletedAt: null }, pelaksanaan: { deletedAt: null } },
             data: {
                 status: data.status ?? null,
                 noRegistrasi: internal ? null : keTeks(data.noRegistrasi),
@@ -80,6 +84,7 @@ export async function updateSertifikat(id: string, data: SertifikatFormData) {
         revalidatePath("/sertifikat")
         revalidatePath(`/master/peserta/${peserta.pesertaId}`)
         revalidatePath(`/pendaftaran/${peserta.pelaksanaanId}`)
+        revalidatePath(`/permohonan/${peserta.pelaksanaanId}`)
         return { success: true as const, data: result, peringatan }
     } catch (err) {
         console.error("Gagal mengubah sertifikat:", err)
@@ -90,13 +95,16 @@ export async function updateSertifikat(id: string, data: SertifikatFormData) {
 // Ubah status hasil peserta secara massal dalam satu transaksi.
 export async function updateStatusMassal(ids: string[], status: StatusPeserta | null) {
     try {
+        if (status != null && !Object.values(StatusPeserta).includes(status)) {
+            return { success: false as const, error: "Status hasil tidak valid." }
+        }
         if (ids.length === 0) {
             return { success: false as const, error: "Pilih minimal satu peserta." }
         }
 
         const hasil = await prisma.$transaction(async (tx) => {
             const result = await tx.pesertaPelaksanaan.updateMany({
-                where: { id: { in: ids }, deletedAt: null },
+                where: { id: { in: ids }, deletedAt: null, peserta: { deletedAt: null }, pelaksanaan: { deletedAt: null } },
                 data: { status: status ?? null }
             })
 
@@ -104,6 +112,9 @@ export async function updateStatusMassal(ids: string[], status: StatusPeserta | 
         })
 
         revalidatePath("/sertifikat")
+        revalidatePath("/permohonan/[id]", "page")
+        revalidatePath("/pendaftaran/[pelaksanaanId]", "page")
+        revalidatePath("/master/peserta/[id]", "page")
         return { success: true as const, jumlah: hasil }
     } catch (err) {
         console.error("Gagal mengubah status massal:", err)

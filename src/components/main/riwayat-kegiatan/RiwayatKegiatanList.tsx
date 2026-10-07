@@ -49,7 +49,7 @@ const RiwayatKegiatanList: React.FC<RiwayatKegiatanListProps> = ({
     <>
       <PageHeader
         title="Riwayat Kegiatan"
-        description="Daftar permohonan yang seluruh sesinya sudah selesai."
+        description="Kegiatan dengan sesi terakhir lebih dari tujuh hari yang lalu."
       />
 
       <RiwayatKegiatanFilterBar tahunOptions={tahunOptions} />

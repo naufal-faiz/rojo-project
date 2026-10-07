@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { cache } from "react"
+import { whereKegiatanAktif } from "./whereKegiatanAktif"
 import { JenisKegiatan, JenisSertifikasi, Penyelenggara } from "@/lib/generated/prisma/enums"
 
 type GetRiwayatOptions = {
@@ -12,24 +13,16 @@ type GetRiwayatOptions = {
     jenisKegiatan?: JenisKegiatan
 }
 
-function awalHariIniWib(): Date {
-    const sekarang = new Date()
-    const wib = new Date(sekarang.getTime() + 7 * 60 * 60 * 1000)
-    return new Date(Date.UTC(wib.getUTCFullYear(), wib.getUTCMonth(), wib.getUTCDate()))
-}
-
-// Daftar permohonan yang seluruh sesinya sudah lewat.
+// Komplemen daftar aktif: sesi terakhir lebih dari tujuh hari yang lalu (WIB).
 export const getRiwayatKegiatan = cache(async (options: GetRiwayatOptions = {}) => {
     try {
-        const normalizedPage = Math.max(1, options.page ?? 1)
+        const normalizedPage = Number.isSafeInteger(options.page) && (options.page ?? 0) > 0 ? options.page! : 1
         const normalizedLimit = Math.max(1, options.limit ?? 10)
         const skip = (normalizedPage - 1) * normalizedLimit
         const search = options.search?.trim()
-        const hariIni = awalHariIniWib()
 
         const syarat: object[] = [
-            { sesi: { some: {} } },
-            { sesi: { every: { tanggal: { lt: hariIni } } } }
+            { NOT: whereKegiatanAktif() }
         ]
 
         if (options.tahun) {
@@ -59,7 +52,7 @@ export const getRiwayatKegiatan = cache(async (options: GetRiwayatOptions = {}) 
             })
         }
 
-        const where = { deletedAt: null, AND: syarat }
+        const where = { deletedAt: null, tingkatan: { deletedAt: null, training: { deletedAt: null } }, AND: syarat }
 
         const [data, totalItems] = await Promise.all([
             prisma.pelaksanaan.findMany({

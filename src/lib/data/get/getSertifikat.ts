@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { cache } from "react"
+import { labelTingkatan } from "@/components/main/common/enumLabels"
 import { JenisSertifikasi, StatusPeserta } from "@/lib/generated/prisma/enums"
 
 export type FilterStatusHasil = StatusPeserta | "BELUM"
@@ -16,16 +17,18 @@ type GetSertifikatOptions = {
 // Daftar peserta pelaksanaan aktif beserta data sertifikatnya.
 export const getAllSertifikat = cache(async (options: GetSertifikatOptions = {}) => {
     try {
-        const normalizedPage = Math.max(1, options.page ?? 1)
+        const normalizedPage = Number.isSafeInteger(options.page) && (options.page ?? 0) > 0 ? options.page! : 1
         const normalizedLimit = Math.max(1, options.limit ?? 10)
         const skip = (normalizedPage - 1) * normalizedLimit
         const search = options.search?.trim()
 
         const where = {
             deletedAt: null,
+            peserta: { deletedAt: null },
             ...(options.status === "BELUM" ? { status: null } : options.status ? { status: options.status } : {}),
             pelaksanaan: {
                 deletedAt: null,
+                tingkatan: { deletedAt: null, training: { deletedAt: null } },
                 ...(options.pelaksanaanId ? { id: options.pelaksanaanId } : {}),
                 ...(options.jenisSertifikasi ? { jenisSertifikasi: options.jenisSertifikasi } : {})
             },
@@ -45,7 +48,7 @@ export const getAllSertifikat = cache(async (options: GetSertifikatOptions = {})
                 where,
                 include: {
                     peserta: {
-                        include: { cabang: { include: { perusahaan: true } } }
+                        include: { cabang: { where: { deletedAt: null, perusahaan: { deletedAt: null } }, include: { perusahaan: true } } }
                     },
                     pelaksanaan: {
                         include: {
@@ -54,7 +57,8 @@ export const getAllSertifikat = cache(async (options: GetSertifikatOptions = {})
                         }
                     },
                     pendaftaranPerusahaan: {
-                        include: { perusahaan: true, pic: true }
+                        where: { deletedAt: null, perusahaan: { deletedAt: null } },
+                        include: { perusahaan: true, pic: { where: { deletedAt: null } } }
                     }
                 },
                 orderBy: { createdAt: "desc" },
@@ -84,17 +88,16 @@ export const getAllSertifikat = cache(async (options: GetSertifikatOptions = {})
     }
 })
 
-// Opsi filter kegiatan: permohonan aktif beserta label pelatihannya.
-export const getOpsiKegiatanSertifikat = cache(async () => {
+// Pulihkan label satu kegiatan terpilih tanpa memuat seluruh tabel.
+export const getKegiatanSertifikatOption = cache(async (id: string) => {
     try {
-        return await prisma.pelaksanaan.findMany({
-            where: { deletedAt: null },
+        const row = await prisma.pelaksanaan.findUnique({
+            where: { id, deletedAt: null, tingkatan: { deletedAt: null, training: { deletedAt: null } } },
             include: { tingkatan: { include: { training: true } } },
-            orderBy: { createdAt: "desc" },
-            take: 200
         })
+        return row ? { id: row.id, label: labelTingkatan(row.tingkatan), description: row.noPermohonan ?? "Tanpa nomor" } : null
     } catch (err) {
         console.error("Gagal mengambil opsi kegiatan sertifikat:", err)
-        return []
+        return null
     }
 })
