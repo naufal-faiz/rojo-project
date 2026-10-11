@@ -44,18 +44,5 @@ next-env.d.ts
 # prisma
 /src/lib/generated/prisma
 
-# AI / Agents / Claude
-AGENTS.md
-CLAUDE.md
-GEMINI.md
-skills-lock.json
-.claude/
-.claude*
-claude.json
-.agents/
-*.agent.md
-.cursor/
-.gemini/
-
 # Data Master
 *.xlsx

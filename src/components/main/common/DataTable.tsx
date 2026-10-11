@@ -93,7 +93,7 @@ function DataTable<T extends { id: string }>({
                 <TableCell
                   key={i}
                   isHeader
-                  className={`px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400 ${col.className ?? ""}`}
+                  className={`px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400 ${col.className ?? ""}`}
                 >
                   {col.header}
                 </TableCell>

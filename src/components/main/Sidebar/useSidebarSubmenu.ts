@@ -14,31 +14,15 @@ export function useSidebarSubmenu() {
 
   const isActive = useCallback((path: string) => path === pathname, [pathname]);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
+  // Buka submenu yang cocok dengan halaman aktif hanya saat pindah halaman. Jangan menutup submenu yang dibuka manual.
   useEffect(() => {
-    let submenuMatched = false;
-    const sections: Array<{ type: "main" | "others"; items: typeof navigationData }> = [
-      { type: "main", items: navigationData },
-      { type: "others", items: othersItems },
-    ];
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    sections.forEach(({ type, items }) => {
+    const sections = [{ type: "main" as const, items: navigationData }, { type: "others" as const, items: othersItems }];
+    sections.forEach(({ type, items }) =>
       items.forEach((nav, index) => {
-        if (nav.subItems) {
-          nav.subItems.forEach((subItem) => {
-            if (isActive(subItem.path)) {
-              submenuMatched = true;
-            }
-          });
-        }
-      });
-    });
-
-    if (!submenuMatched && openSubmenu !== null) {
-      setOpenSubmenu(null);
-    }
-  }, [pathname, isActive, openSubmenu]);
+        if (nav.subItems?.some((sub) => isActive(sub.path))) setOpenSubmenu({ type, index });
+      })
+    );
+  }, [pathname, isActive]);
 
   useEffect(() => {
     if (openSubmenu !== null) {

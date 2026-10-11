@@ -10,7 +10,7 @@ const SidebarLogo: React.FC = () => {
   const isFullView = isExpanded || isHovered || isMobileOpen;
 
   return (
-    <div className="py-3 flex justify-start lg:py-8">
+    <div className="flex h-14 items-center justify-start lg:-mx-3 lg:h-[57px] lg:border-b lg:border-gray-200 lg:px-3 dark:lg:border-gray-800">
       <Link href="/admin" className="hidden lg:block">
         {isFullView ? (
           <>
@@ -18,23 +18,23 @@ const SidebarLogo: React.FC = () => {
               className="dark:hidden"
               src="/images/logo/logo-banner.png"
               alt="Logo"
-              width={200}
-              height={40}
+              width={168}
+              height={34}
             />
             <Image
               className="hidden dark:block"
               src="/images/logo/logo-banner-dark.png"
               alt="Logo"
-              width={200}
-              height={40}
+              width={168}
+              height={34}
             />
           </>
         ) : (
           <Image
             src="/images/logo/logo-image.png"
             alt="Logo"
-            width={50}
-            height={50}
+            width={36}
+            height={36}
           />
         )}
       </Link>

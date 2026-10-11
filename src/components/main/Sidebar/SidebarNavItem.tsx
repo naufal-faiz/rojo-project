@@ -91,11 +91,6 @@ const SidebarNavigationData: React.FC<SidebarNavigationDataProps> = ({
                     className={`menu-dropdown-item ${active ? "menu-dropdown-item-active" : "menu-dropdown-item-inactive"}`}
                   >
                     {subItem.name}
-                    {(subItem.new || subItem.pro) && (
-                      <span className={`ml-auto ${active ? "menu-dropdown-badge-active" : "menu-dropdown-badge-inactive"} menu-dropdown-badge`}>
-                        {subItem.new ? "new" : "pro"}
-                      </span>
-                    )}
                   </Link>
                 </li>
               );

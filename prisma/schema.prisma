@@ -1,8 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
+// SKEMA BARU (draft). Ganti nama jadi schema.prisma saat siap migrasi.
+// Dihapus dari skema lama: Pic, PerusahaanPic, PendaftaranPerusahaan, StatusTemanK3, TipePic, uploadedAt.
 generator client {
   provider = "prisma-client"
   output   = "../src/lib/generated/prisma"
@@ -13,15 +10,9 @@ datasource db {
 }
 
 enum TipeCabang {
-  HQ // alamat/kantor pusat perusahaan itu sendiri
+  HQ
   CABANG
   DEPOT
-}
-
-enum TipePic {
-  INTERNAL // karyawan/HSE perusahaan klien
-  DINAS // pihak dinas pemerintah
-  MITRA // staf PJK3 mitra
 }
 
 enum TipePelaksanaan {
@@ -31,35 +22,48 @@ enum TipePelaksanaan {
 }
 
 enum JenisKegiatan {
-  PUBLIK // peserta dari banyak perusahaan dan/atau mandiri
-  INHOUSE // diselenggarakan khusus untuk satu perusahaan klien
+  PUBLIK
+  INHOUSE
 }
 
 enum JenisSertifikasi {
   KEMNAKER
   BNSP
-  INTERNAL // di luar sertifikat resmi (mis. food handler)
+  INTERNAL
 }
 
-// Enum butuh migration kalau ada penyelenggara baru (keputusan: dibiarkan enum dulu).
 enum Penyelenggara {
-  WINA_KARYA_MULIA // Rojo Safety sendiri
+  WINA_KARYA_MULIA
   DELTA_INDONESIA
-  LIMA_PRIMA_SOLUSINDO // PJK3 LPS
+  LIMA_PRIMA_SOLUSINDO
   ARTA_KARYA_AREFAA
   LIK
   ITC
 }
 
-// Status administratif permohonan ke TemanK3 (level pelaksanaan)
-enum StatusTemanK3 {
-  SUDAH_UPLOAD
-  FU_LPS
-  CANCEL
+enum JenisKelamin {
+  L
+  P
 }
 
-// Status hasil peserta per pelaksanaan
-enum StatusPeserta {
+// Disimpan hanya yang tidak bisa dihitung dari tanggal sesi.
+// Belum mulai / berjalan / selesai dihitung dari SesiPelaksanaan.
+enum StatusPelaksanaan {
+  AKTIF
+  DITUNDA
+  DIBATALKAN
+}
+
+// Alur pendaftaran: DRAFT -> SIAP -> (DIKEMBALIKAN -> SIAP) -> DIPAKAI
+enum StatusPendaftaran {
+  DRAFT
+  SIAP
+  DIKEMBALIKAN
+  DIPAKAI
+}
+
+// Hasil peserta setelah pelatihan
+enum StatusHasil {
   LULUS
   GAGAL
   REMEDIAL
@@ -68,16 +72,19 @@ enum StatusPeserta {
   CANCEL
 }
 
-// ---------------------------------------------------------
-// MASTER TRAINING
-// ---------------------------------------------------------
+enum JenisDokumen {
+  KTP
+  IJAZAH
+  PAS_FOTO
+  SURAT_KERJA
+  PAKTA_INTEGRITAS
+  SERTIFIKAT
+}
 
 model Training {
-  id   String @id @default(uuid()) @db.Uuid
-  nama String
-
-  tingkatan Tingkatan[]
-
+  id        String    @id @default(uuid()) @db.Uuid
+  nama      String
+  kelas     Kelas[]
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
@@ -85,36 +92,26 @@ model Training {
   @@map("training")
 }
 
-model Tingkatan {
-  id         String   @id @default(uuid()) @db.Uuid
-  trainingId String   @map("training_id") @db.Uuid
-  training   Training @relation(fields: [trainingId], references: [id], onDelete: Restrict)
-
-  kelas String // contoh: "Kelas 1", "Damkar C"
-
+// Sebelumnya Tingkatan.
+model Kelas {
+  id          String        @id @default(uuid()) @db.Uuid
+  trainingId  String        @map("training_id") @db.Uuid
+  training    Training      @relation(fields: [trainingId], references: [id], onDelete: Restrict)
+  nama        String // contoh: "Kelas 1", "Damkar C"
   pelaksanaan Pelaksanaan[]
-
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-  deletedAt DateTime? @map("deleted_at")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+  deletedAt   DateTime?     @map("deleted_at")
 
   @@index([trainingId])
-  @@map("tingkatan")
+  @@map("kelas")
 }
 
-// ---------------------------------------------------------
-// PERUSAHAAN & CABANG
-// ---------------------------------------------------------
-
+// Tanpa UI master. Dibuat/dicari inline dari form pendaftaran.
 model Perusahaan {
-  id          String  @id @default(uuid()) @db.Uuid
-  nama        String
-  alamatLegal String? @map("alamat_legal")
-
-  cabang        Cabang[]
-  perusahaanPic PerusahaanPic[]
-  pendaftaran   PendaftaranPerusahaan[]
-
+  id        String    @id @default(uuid()) @db.Uuid
+  nama      String
+  cabang    Cabang[]
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
@@ -122,117 +119,97 @@ model Perusahaan {
   @@map("perusahaan")
 }
 
-// Setiap perusahaan wajib punya minimal 1 Cabang bertipe HQ.
+// Setiap perusahaan punya 1 Cabang bertipe HQ (default, labelnya tidak ditampilkan).
+// Depot/cabang tampil sebagai "PT A - Banjar".
 model Cabang {
-  id           String     @id @default(uuid()) @db.Uuid
-  perusahaanId String     @map("perusahaan_id") @db.Uuid
-  perusahaan   Perusahaan @relation(fields: [perusahaanId], references: [id], onDelete: Restrict)
-
-  nama   String
-  tipe   TipeCabang
-  alamat String?
-
-  peserta Peserta[]
-
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-  deletedAt DateTime? @map("deleted_at")
+  id           String               @id @default(uuid()) @db.Uuid
+  perusahaanId String               @map("perusahaan_id") @db.Uuid
+  perusahaan   Perusahaan           @relation(fields: [perusahaanId], references: [id], onDelete: Restrict)
+  nama         String // HQ: nama perusahaan; depot: "Banjar"
+  tipe         TipeCabang
+  alamat       String?
+  peserta      Peserta[]
+  pendaftaran  PesertaPelaksanaan[]
+  createdAt    DateTime             @default(now()) @map("created_at")
+  updatedAt    DateTime             @updatedAt @map("updated_at")
+  deletedAt    DateTime?            @map("deleted_at")
 
   @@index([perusahaanId])
   @@map("cabang")
 }
 
+// Master peserta. Kunci identitas = NIK.
 model Peserta {
-  id                 String @id @default(uuid()) @db.Uuid
-  nama               String
-  // Nullable: peserta yang belum bekerja / tidak terdaftar di perusahaan (UI tampil "-").
-  perusahaanCabangId String? @map("perusahaan_cabang_id") @db.Uuid
-  cabang             Cabang? @relation(fields: [perusahaanCabangId], references: [id], onDelete: Restrict)
+  id           String               @id @default(uuid()) @db.Uuid
+  nik          String               @unique
+  nama         String
+  tempatLahir  String               @map("tempat_lahir")
+  tanggalLahir DateTime             @map("tanggal_lahir") @db.Date
+  jenisKelamin JenisKelamin         @map("jenis_kelamin")
+  alamat       String?
+  noHp         String?              @map("no_hp")
+  email        String?
+  pendidikan   String?
+  jabatan      String?
+  cabangId     String?              @map("cabang_id") @db.Uuid // perusahaan terbaru
+  cabang       Cabang?              @relation(fields: [cabangId], references: [id], onDelete: Restrict)
+  dokumen      Dokumen[] // KTP, ijazah, pas foto, surat kerja (dipakai ulang)
+  pendaftaran  PesertaPelaksanaan[]
+  createdAt    DateTime             @default(now()) @map("created_at")
+  updatedAt    DateTime             @updatedAt @map("updated_at")
+  deletedAt    DateTime?            @map("deleted_at")
 
-  pesertaPelaksanaan PesertaPelaksanaan[]
-
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-  deletedAt DateTime? @map("deleted_at")
-
-  @@index([perusahaanCabangId])
+  @@index([cabangId])
   @@map("peserta")
 }
 
-// ---------------------------------------------------------
-// PIC
-// ---------------------------------------------------------
+// Satu tabel untuk semua file. Bucket privat; yang disimpan hanya path (UUID, tanpa NIK/nama).
+// KTP/IJAZAH/PAS_FOTO/SURAT_KERJA -> pesertaId. PAKTA_INTEGRITAS/SERTIFIKAT -> pendaftaranId.
+model Dokumen {
+  id             String              @id @default(uuid()) @db.Uuid
+  jenis          JenisDokumen
+  pesertaId      String?             @map("peserta_id") @db.Uuid
+  peserta        Peserta?            @relation(fields: [pesertaId], references: [id], onDelete: Restrict)
+  pendaftaranId  String?             @map("pendaftaran_id") @db.Uuid
+  pendaftaran    PesertaPelaksanaan? @relation(fields: [pendaftaranId], references: [id], onDelete: Restrict)
+  path           String
+  namaFile       String              @map("nama_file")
+  mime           String
+  ukuran         Int
+  // Pengganti yang belum dikonfirmasi. File lama baru dihapus dari bucket setelah konfirmasi.
+  pending        Boolean             @default(false)
+  menggantikanId String?             @map("menggantikan_id") @db.Uuid
+  createdAt      DateTime            @default(now()) @map("created_at")
+  deletedAt      DateTime?           @map("deleted_at")
 
-model Pic {
-  id     String  @id @default(uuid()) @db.Uuid
-  nama   String
-  noTelp String? @map("no_telp")
-  tipe   TipePic
-
-  perusahaanPic PerusahaanPic[]
-  pendaftaran   PendaftaranPerusahaan[]
-
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-  deletedAt DateTime? @map("deleted_at")
-
-  @@map("pic")
+  @@index([pesertaId])
+  @@index([pendaftaranId])
+  @@map("dokumen")
 }
 
-// Tabel penghubung (many-to-many). Sengaja hard delete: hanya relasi,
-// riwayat PIC per kegiatan tetap tersimpan di PendaftaranPerusahaan.picId.
-model PerusahaanPic {
-  id           String     @id @default(uuid()) @db.Uuid
-  perusahaanId String     @map("perusahaan_id") @db.Uuid
-  perusahaan   Perusahaan @relation(fields: [perusahaanId], references: [id], onDelete: Restrict)
-  picId        String     @map("pic_id") @db.Uuid
-  pic          Pic        @relation(fields: [picId], references: [id], onDelete: Restrict)
-
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@unique([perusahaanId, picId])
-  @@index([picId])
-  @@map("perusahaan_pic")
-}
-
-// ---------------------------------------------------------
-// PELAKSANAAN
-// ---------------------------------------------------------
-
+// Permohonan. Dibuat Aurel, pesertanya dipilih dari antrean.
 model Pelaksanaan {
-  id String @id @default(uuid()) @db.Uuid
-
-  // Nullable (kasus DELTA/LPS: Rojo tidak pegang nomornya).
-  // @unique di Postgres mengizinkan banyak NULL, jadi aman.
-  noPermohonan String? @unique @map("no_permohonan")
-
-  tingkatanId String    @map("tingkatan_id") @db.Uuid
-  tingkatan   Tingkatan @relation(fields: [tingkatanId], references: [id], onDelete: Restrict)
-
-  jenisKegiatan    JenisKegiatan    @map("jenis_kegiatan")
-  tipePelaksanaan  TipePelaksanaan  @map("tipe_pelaksanaan")
+  id               String               @id @default(uuid()) @db.Uuid
+  noPermohonan     String?              @unique @map("no_permohonan")
+  kelasId          String               @map("kelas_id") @db.Uuid
+  kelas            Kelas                @relation(fields: [kelasId], references: [id], onDelete: Restrict)
+  jenisKegiatan    JenisKegiatan        @map("jenis_kegiatan")
+  tipePelaksanaan  TipePelaksanaan      @map("tipe_pelaksanaan")
   lokasi           String?
-  penyelenggara    Penyelenggara
-  jenisSertifikasi JenisSertifikasi @map("jenis_sertifikasi")
+  penyelenggara    Penyelenggara        @default(WINA_KARYA_MULIA)
+  jenisSertifikasi JenisSertifikasi     @map("jenis_sertifikasi")
+  status           StatusPelaksanaan    @default(AKTIF)
+  catatan          String?
+  sesi             SesiPelaksanaan[]
+  peserta          PesertaPelaksanaan[]
+  createdAt        DateTime             @default(now()) @map("created_at")
+  updatedAt        DateTime             @updatedAt @map("updated_at")
+  deletedAt        DateTime?            @map("deleted_at")
 
-  status     StatusTemanK3?
-  uploadedAt DateTime?     @map("uploaded_at")
-
-  catatan String?
-
-  sesi               SesiPelaksanaan[]
-  pendaftaran        PendaftaranPerusahaan[]
-  pesertaPelaksanaan PesertaPelaksanaan[]
-
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-  deletedAt DateTime? @map("deleted_at")
-
-  @@index([tingkatanId])
+  @@index([kelasId])
   @@map("pelaksanaan")
 }
 
-// Satu baris per hari aktual. Hard delete (ikut parent, tidak berdiri sendiri).
 model SesiPelaksanaan {
   id            String      @id @default(uuid()) @db.Uuid
   pelaksanaanId String      @map("pelaksanaan_id") @db.Uuid
@@ -243,71 +220,36 @@ model SesiPelaksanaan {
   @@map("sesi_pelaksanaan")
 }
 
-// ---------------------------------------------------------
-// PENDAFTARAN PERUSAHAAN (batch per perusahaan per pelaksanaan)
-// ---------------------------------------------------------
-
-model PendaftaranPerusahaan {
-  id            String      @id @default(uuid()) @db.Uuid
-  perusahaanId  String      @map("perusahaan_id") @db.Uuid
-  perusahaan    Perusahaan  @relation(fields: [perusahaanId], references: [id], onDelete: Restrict)
-  pelaksanaanId String      @map("pelaksanaan_id") @db.Uuid
-  pelaksanaan   Pelaksanaan @relation(fields: [pelaksanaanId], references: [id], onDelete: Restrict)
-  picId         String?      @map("pic_id") @db.Uuid
-  pic           Pic?         @relation(fields: [picId], references: [id], onDelete: Restrict)
-
-  pesertaPelaksanaan PesertaPelaksanaan[]
-
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-  deletedAt DateTime? @map("deleted_at")
-
-  // Setelah soft delete, baris lama tetap memegang constraint ini:
-  // pendaftaran ulang = RESTORE baris lama, bukan membuat baris baru.
-  @@unique([perusahaanId, pelaksanaanId])
-  // Target FK komposit dari PesertaPelaksanaan (menjaga konsistensi pelaksanaanId).
-  @@unique([id, pelaksanaanId])
-  @@index([pelaksanaanId])
-  @@index([picId])
-  @@map("pendaftaran_perusahaan")
-}
-
-// ---------------------------------------------------------
-// PESERTA_PELAKSANAAN (pendaftaran + hasil sertifikasi)
-// ---------------------------------------------------------
-
+// Pendaftaran peserta. pelaksanaanId kosong = masih di antrean (tidak ada tabel antrean terpisah).
+// Satu pendaftaran hanya untuk satu permohonan; jika permohonan batal, kembali ke antrean.
+// Tambahkan lewat SQL migration (Prisma tidak mendukung partial unique):
+//   CREATE UNIQUE INDEX uq_antrean_aktif ON peserta_pelaksanaan (peserta_id)
+//   WHERE pelaksanaan_id IS NULL AND deleted_at IS NULL;
 model PesertaPelaksanaan {
-  id            String      @id @default(uuid()) @db.Uuid
-  pesertaId     String      @map("peserta_id") @db.Uuid
-  peserta       Peserta     @relation(fields: [pesertaId], references: [id], onDelete: Restrict)
-  pelaksanaanId String      @map("pelaksanaan_id") @db.Uuid
-  pelaksanaan   Pelaksanaan @relation(fields: [pelaksanaanId], references: [id], onDelete: Restrict)
+  id                      String            @id @default(uuid()) @db.Uuid
+  pesertaId               String            @map("peserta_id") @db.Uuid
+  peserta                 Peserta           @relation(fields: [pesertaId], references: [id], onDelete: Restrict)
+  pelaksanaanId           String?           @map("pelaksanaan_id") @db.Uuid
+  pelaksanaan             Pelaksanaan?      @relation(fields: [pelaksanaanId], references: [id], onDelete: Restrict)
+  // Perusahaan saat mendaftar (riwayat tetap benar jika peserta pindah kerja).
+  cabangId                String?           @map("cabang_id") @db.Uuid
+  cabang                  Cabang?           @relation(fields: [cabangId], references: [id], onDelete: Restrict)
+  statusPendaftaran       StatusPendaftaran @default(DRAFT) @map("status_pendaftaran")
+  catatanKembali          String?           @map("catatan_kembali")
+  hasil                   StatusHasil?
+  noRegistrasi            String?           @map("no_registrasi")
+  noSertifikat            String?           @map("no_sertifikat")
+  masaBerlaku             DateTime?         @map("masa_berlaku") @db.Date
+  noSkp                   String?           @map("no_skp") // hanya KEMNAKER
+  tanggalTerimaSertifikat DateTime?         @map("tanggal_terima_sertifikat") @db.Date
+  catatan                 String?
+  dokumen                 Dokumen[] // pakta integritas + scan sertifikat
+  createdAt               DateTime          @default(now()) @map("created_at")
+  updatedAt               DateTime          @updatedAt @map("updated_at")
+  deletedAt               DateTime?         @map("deleted_at")
 
-  // null = peserta mandiri; terisi = didaftarkan perusahaan.
-  // FK komposit (pendaftaranPerusahaanId, pelaksanaanId): jika pendaftaranPerusahaanId
-  // terisi, DB memastikan pelaksanaanId sama dengan milik pendaftaran tsb. Jika null
-  // (mandiri), Postgres melewati pengecekan (MATCH SIMPLE).
-  // onDelete: Restrict eksplisit agar tidak berubah diam-diam jadi "mandiri" (SetNull).
-  pendaftaranPerusahaanId String?                @map("pendaftaran_perusahaan_id") @db.Uuid
-  pendaftaranPerusahaan   PendaftaranPerusahaan? @relation(fields: [pendaftaranPerusahaanId, pelaksanaanId], references: [id, pelaksanaanId], onDelete: Restrict)
-
-  status                  StatusPeserta?
-  noRegistrasi            String?        @map("no_registrasi")
-  noSertifikat            String?        @map("no_sertifikat")
-  masaBerlaku             DateTime?      @map("masa_berlaku") @db.Date
-  noSkp                   String?        @map("no_skp") // hanya relevan untuk KEMNAKER, disembunyikan di UI selain itu
-  tanggalTerimaSertifikat DateTime?      @map("tanggal_terima_sertifikat") @db.Date
-
-  catatan String?
-
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-  deletedAt DateTime? @map("deleted_at")
-
-  // Mencegah peserta yang sama terdaftar dua kali di satu pelaksanaan,
-  // baik lewat perusahaan maupun mandiri (karena itu pelaksanaanId tetap disimpan langsung).
   @@unique([pesertaId, pelaksanaanId])
   @@index([pelaksanaanId])
-  @@index([pendaftaranPerusahaanId])
+  @@index([statusPendaftaran])
   @@map("peserta_pelaksanaan")
 }

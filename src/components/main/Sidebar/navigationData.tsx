@@ -1,81 +1,30 @@
-import {
-  CalenderIcon,
-  GridIcon,
-  ListIcon,
-  PageIcon,
-  TimeIcon,
-  UserCircleIcon,
-  VideoIcon,
-  ShootingStarIcon,
-  Certificate,
-  Application,
-  DocsIcon,
-  UserIcon,
-  Enterprise,
-  Gear,
-  SafetyVest,
-  GroupIcon,
-} from "@/icons/index";
+import { GridIcon, TimeIcon, UserCircleIcon, Application, SafetyVest, GroupIcon } from "@/icons/index";
 
 export type NavigationData = {
   name: string;
   icon: React.ReactNode;
   path?: string;
-  subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
+  subItems?: { name: string; path: string }[];
 };
 
-const dashboardNavigation: NavigationData[] = [
-  {
-    icon: <GridIcon />,
-    name: "Dashboard",
-    path: "/",
-  },
-];
+const dashboardNavigation: NavigationData[] = [{ icon: <GridIcon />, name: "Dashboard", path: "/" }];
 
 const navigationData: NavigationData[] = [
   {
     name: "Permohonan",
-    icon: <Application />,
-    path: "/permohonan",
-  },
-  {
-    name: "Pendaftaran",
     icon: <UserCircleIcon />,
-    path: "/pendaftaran",
-  },
-  {
-    name: "Invoice",
-    icon: <DocsIcon />,
-    path: "/invoice"
-  },
-  {
-    name: "Sertifikat",
-    icon: <Certificate />,
-    path: "/sertifikat"
+    subItems: [
+      { name: "Pendaftaran", path: "/pendaftaran" },
+      { name: "Antrean", path: "/antrean" },
+      { name: "Daftar Permohonan", path: "/permohonan" },
+    ],
   },
 ];
 
 const othersItems: NavigationData[] = [
-  {
-    name: "Pelatihan",
-    icon: <SafetyVest />,
-    path: "/master/training",
-  },
-  {
-    name: "Peserta",
-    icon: <GroupIcon />,
-    path: "/master/peserta",
-  },
-  {
-    name: "Perusahaan",
-    icon: <Enterprise />,
-    path: "/master/perusahaan",
-  },
-  {
-    name: "Riwayat Kegiatan",
-    icon: <TimeIcon />,
-    path: "/master/riwayat-kegiatan",
-  },
+  { name: "Pelatihan", icon: <SafetyVest />, path: "/master/training" },
+  { name: "Peserta", icon: <GroupIcon />, path: "/master/peserta" },
+  { name: "Riwayat Kegiatan", icon: <TimeIcon />, path: "/master/riwayat-kegiatan" },
 ];
 
 export { dashboardNavigation, navigationData, othersItems };

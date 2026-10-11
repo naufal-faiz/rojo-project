@@ -15,9 +15,9 @@ interface PageHeaderProps {
 
 const PageHeader: React.FC<PageHeaderProps> = ({ title, description, primaryAction }) => {
   return (
-    <div className="flex flex-col gap-4 mb-6 md:flex-row md:items-center md:justify-between">
+    <div className="flex flex-col gap-4 mb-4 md:flex-row md:items-center md:justify-between">
       <div>
-        <h1 className="text-title-md font-semibold text-gray-800 dark:text-white/90">
+        <h1 className="text-xl font-semibold text-gray-800 dark:text-white/90">
           {title}
         </h1>
         {description && (

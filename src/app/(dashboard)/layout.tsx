@@ -5,6 +5,8 @@ import AppHeader from "@/layout/AppHeader";
 import AppSidebar from "@/layout/AppSidebar";
 import Backdrop from "@/layout/Backdrop";
 import React from "react";
+import { ToastProvider } from "@/lib/context/ToastContext";
+import { StoreProvider } from "@/lib/mock/store";
 
 export default function AdminLayout({
     children,
@@ -17,10 +19,11 @@ export default function AdminLayout({
     const mainContentMargin = isMobileOpen
         ? "ml-0"
         : isExpanded || isHovered
-            ? "lg:ml-[290px]"
-            : "lg:ml-[90px]";
+            ? "lg:ml-[256px]"
+            : "lg:ml-[72px]";
 
     return (
+        <ToastProvider><StoreProvider>
         <div className="min-h-screen xl:flex bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
             {/* Sidebar and Backdrop */}
             <AppSidebar />
@@ -31,10 +34,11 @@ export default function AdminLayout({
                 {/* Header */}
                 <AppHeader />
                 {/* Page Content */}
-                <main className="flex-1 p-4 mx-auto w-full max-w-(--breakpoint-2xl) md:p-6">
+                <main className="flex-1 p-4 mx-auto w-full max-w-(--breakpoint-2xl) md:p-5">
                     {children}
                 </main>
             </div>
         </div>
+        </StoreProvider></ToastProvider>
     );
 }
