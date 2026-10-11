@@ -43,6 +43,22 @@
     "src/components/form/TextAreaInput.tsx",
     "src/components/form/ToggleSwitch.tsx",
     "src/components/form/date-picker.tsx",
-    "src/components/form/form-elements/**"
+    "src/components/form/form-elements/**",
+    "src/components/main/perusahaan/**",
+    "src/components/main/peserta/**",
+    "src/components/main/training/**",
+    "src/components/main/permohonan/PelaksanaanList.tsx",
+    "src/components/main/permohonan/PelaksanaanFormModal.tsx",
+    "src/components/main/permohonan/SesiManager.tsx",
+    "src/components/main/permohonan/StatusTemanK3Cell.tsx",
+    "src/components/main/permohonan/statusTemanK3.ts",
+    "src/lib/data/action/perusahaanAction.ts",
+    "src/lib/data/action/pesertaAction.ts",
+    "src/lib/data/action/trainingAction.ts",
+    "src/lib/data/action/pelaksanaanAction.ts",
+    "src/lib/data/get/getPerusahaan.ts",
+    "src/lib/data/get/getPeserta.ts",
+    "src/lib/data/get/getTraining.ts",
+    "src/lib/data/get/getPelaksanaan.ts"
   ]
 }
