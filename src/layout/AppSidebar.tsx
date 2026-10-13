@@ -33,7 +33,7 @@ const AppSidebar: React.FC = () => {
 
       <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
         <nav className="mb-6">
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 mt-6">
               <SidebarNavList
                 items={dashboardNavigation}
                 menuType="main"

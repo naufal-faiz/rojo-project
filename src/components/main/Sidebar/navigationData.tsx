@@ -1,4 +1,4 @@
-import { GridIcon, TimeIcon, UserCircleIcon, Application, SafetyVest, GroupIcon } from "@/icons/index";
+import { GridIcon, TimeIcon, UserCircleIcon, Application, SafetyHelmet, GroupIcon } from "@/icons/index";
 
 export type NavigationData = {
   name: string;
@@ -22,7 +22,7 @@ const navigationData: NavigationData[] = [
 ];
 
 const othersItems: NavigationData[] = [
-  { name: "Pelatihan", icon: <SafetyVest />, path: "/master/training" },
+  { name: "Pelatihan", icon: <SafetyHelmet />, path: "/master/training" },
   { name: "Peserta", icon: <GroupIcon />, path: "/master/peserta" },
   { name: "Riwayat Kegiatan", icon: <TimeIcon />, path: "/master/riwayat-kegiatan" },
 ];

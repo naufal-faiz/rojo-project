@@ -58,6 +58,12 @@ import IconSun from "./icon-sun.svg";
 import Certificate from "./certificate.svg"
 import Application from "./application.svg"
 import SafetyVest from "./safety-vest.svg"
+import SafetyHelmet from "./safety-helmet.svg"
+import FolderDownload from "./folder-download.svg"
+import Undo from "./undo.svg"
+import FileEdit from "./file-edit.svg"
+import Manage from "./manage.svg"
+import FileCheck from "./file-check.svg"
 
 export {
   DownloadIcon,
@@ -120,4 +126,10 @@ export {
   Application,
   Gear,
   SafetyVest,
+  SafetyHelmet,
+  FolderDownload,
+  Undo,
+  FileEdit,
+  Manage,
+  FileCheck,
 };
