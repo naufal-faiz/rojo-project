@@ -8,6 +8,8 @@ import Label from "@/components/form/Label";
 import PageHeader from "@/components/main/common/PageHeader";
 import DataTable from "@/components/main/common/DataTable";
 import ConfirmDialog from "@/components/main/common/ConfirmDialog";
+import ActionButton from "@/components/main/common/ActionButton";
+import { Edit, PlusIcon, TrashBinIcon } from "@/icons";
 import { useToast } from "@/lib/context/ToastContext";
 import { useStore, Training } from "@/lib/mock/store";
 
@@ -44,13 +46,13 @@ export default function MasterTraining() {
   const coba = (t: Training) => kelasDari(t).some((k) => dipakai(t.nama, k.nama)) ? notify("error", "Tidak bisa dihapus", "Ada kelas yang dipakai oleh permohonan.") : setHapus(t);
   return (
     <>
-      <PageHeader title="Pelatihan" description="Jenis pelatihan beserta kelasnya. Anggi dan Aurel bisa menambah" primaryAction={{ label: "Tambah pelatihan", onClick: () => buka("baru") }} />
+      <PageHeader title="Pelatihan" description="Jenis pelatihan beserta kelasnya. Anggi dan Aurel bisa menambah" primaryAction={{ label: "Tambah pelatihan", onClick: () => buka("baru"), icon: <PlusIcon className="size-4" /> }} />
       <DataTable<Training> data={filtered.slice((page - 1) * LIMIT, page * LIMIT)} totalItems={filtered.length} totalPages={Math.max(1, Math.ceil(filtered.length / LIMIT))} currentPage={page}
         onPageChange={setPage} onSearch={(x) => { setQ(x); setPage(1); }} searchPlaceholder="Cari pelatihan atau kelas..."
         columns={[
           { header: "Pelatihan", cell: (t) => <span className="text-sm font-medium text-gray-800 dark:text-white/90">{t.nama}</span> },
           { header: "Kelas", cell: (t) => <div className="flex flex-wrap gap-1">{kelasDari(t).length ? kelasDari(t).map((k) => <Badge key={k.id} size="sm" color="light">{k.nama}</Badge>) : <span className="text-xs text-gray-400">Belum ada kelas</span>}</div> },
-          { header: "Aksi", cell: (t) => (<div className="flex gap-3"><button className="text-xs font-medium text-brand-500 hover:underline" onClick={() => buka(t)}>Edit</button><button className="text-xs font-medium text-error-500 hover:underline" onClick={() => coba(t)}>Hapus</button></div>) },
+          { header: "Aksi", cell: (t) => (<div className="flex flex-wrap gap-2"><ActionButton icon={<Edit />} onClick={() => buka(t)}>Edit</ActionButton><ActionButton tone="error" icon={<TrashBinIcon />} onClick={() => coba(t)}>Hapus</ActionButton></div>) },
         ]} />
       {edit && (
         <Modal isOpen onClose={() => setEdit(null)} className="max-w-[480px] p-5">

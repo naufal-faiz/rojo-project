@@ -4,10 +4,11 @@ import { useRouter } from "next/navigation";
 import { Buat } from "@/components/main/permohonan/PermohonanView";
 import { Modal } from "@/components/ui/modal";
 import Button from "@/components/ui/button/Button";
-import Badge from "@/components/ui/badge/Badge";
 import PageHeader from "@/components/main/common/PageHeader";
 import DataTable from "@/components/main/common/DataTable";
+import ActionButton from "@/components/main/common/ActionButton";
 import DokumenChips from "./DokumenChips";
+import { PlusIcon, Undo, Zip } from "@/icons";
 import { useToast } from "@/lib/context/ToastContext";
 import { useStore, Pendaftaran, label } from "@/lib/mock/store";
 
@@ -36,7 +37,7 @@ export default function AntreanView() {
   const tabCls = (t: Tab) => `border-b-2 px-3 py-2 text-sm font-medium ${tab === t ? "border-brand-500 text-brand-500" : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400"}`;
   return (
     <>
-      <PageHeader title="Antrean" description="Pendaftaran yang sudah siap dan belum masuk permohonan" primaryAction={{ label: "Buat permohonan", onClick: () => setBuat(true) }} />
+      <PageHeader title="Antrean" description="Pendaftaran yang sudah siap dan belum masuk permohonan" primaryAction={{ label: "Buat permohonan", onClick: () => setBuat(true), icon: <PlusIcon className="size-4" /> }} />
       <div className="mb-3 flex gap-1 border-b border-gray-200 dark:border-white/10">
         {(["SIAP", "DIKEMBALIKAN"] as Tab[]).map((t) => (
           <button key={t} className={tabCls(t)} onClick={() => { setTab(t); setPage(1); }}>{t === "SIAP" ? "Siap" : "Dikembalikan"} ({count(t)})</button>
@@ -52,9 +53,9 @@ export default function AntreanView() {
           { header: "Dokumen", cell: (r) => <DokumenChips dok={r.dok} /> },
           ...(tab === "DIKEMBALIKAN" ? [{ header: "Catatan", cell: (r: Pendaftaran) => <span className="text-sm text-error-600">{r.catatan}</span> }] : []),
           { header: "Aksi", cell: (r) => (
-            <div className="flex gap-3">
-              <button className="text-xs font-medium text-brand-500 hover:underline" onClick={() => notify("info", "Unduh ZIP", `ZIP ${r.nama}.zip aktif setelah terhubung ke Supabase Storage.`)}>Unduh ZIP</button>
-              {tab === "SIAP" && <button className="text-xs font-medium text-error-500 hover:underline" onClick={() => setTarget(r)}>Kembalikan</button>}
+            <div className="flex flex-wrap gap-2">
+              <ActionButton tone="info" icon={<Zip />} onClick={() => notify("info", "Unduh ZIP", `ZIP ${r.nama}.zip aktif setelah terhubung ke Supabase Storage.`)}>Unduh</ActionButton>
+              {tab === "SIAP" && <ActionButton tone="warning" icon={<Undo />} onClick={() => setTarget(r)}>Kembalikan</ActionButton>}
             </div>) },
         ]}
       />

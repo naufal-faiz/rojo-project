@@ -1,4 +1,4 @@
-import { FC, ReactNode } from "react";
+import { Children, FC, ReactNode } from "react";
 import { twMerge } from "tailwind-merge";
 
 interface LabelProps {
@@ -19,7 +19,9 @@ const Label: FC<LabelProps> = ({ htmlFor, children, className }) => {
         className
       )}
     >
-      {children}
+      {Children.map(children, (child) => typeof child === "string"
+        ? child.split("*").map((part, index) => <span key={index}>{index > 0 && <span className="text-error-600 dark:text-error-400" aria-label="wajib diisi">*</span>}{part}</span>)
+        : child)}
     </label>
   );
 };

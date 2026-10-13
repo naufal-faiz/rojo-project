@@ -1,5 +1,53 @@
 @import 'tailwindcss';
 
+/* Compact laptop tables; keep modal content and touch layouts at their usual size. */
+@media (min-width: 1024px) {
+  .compact-data-table .text-sm:not(.modal *) {
+    font-size: 13px;
+    line-height: 18px;
+  }
+  .compact-data-table :is(.text-xs, .text-theme-xs):not(.modal *) {
+    font-size: 11px;
+    line-height: 15px;
+  }
+  .compact-data-table .table-action-button:not(.modal *) {
+    height: 29px;
+    padding-inline: 8px;
+    gap: 5px;
+  }
+  .compact-data-table .table-action-button:not(.modal *) :is(span, svg) {
+    width: 14px;
+    height: 14px;
+  }
+  .compact-data-table :is(input, button.h-10):not(.modal *) {
+    height: 32px;
+  }
+  .compact-data-table button.w-10:not(.modal *) {
+    width: 32px;
+    padding: 4px;
+  }
+}
+
+@keyframes toast-enter {
+  from { transform: translateX(calc(100% + 1rem)); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes toast-exit {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(calc(100% + 1rem)); opacity: 0; }
+}
+@keyframes toast-countdown {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+.toast-item { animation: toast-enter 250ms ease-out both; }
+.toast-leaving { animation: toast-exit 250ms ease-in both; }
+.toast-progress { animation: toast-countdown 5s linear forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .toast-item, .toast-leaving { animation: none; }
+  .toast-leaving { opacity: 0; }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme {

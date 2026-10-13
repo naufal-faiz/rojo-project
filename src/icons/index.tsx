@@ -59,11 +59,13 @@ import Certificate from "./certificate.svg"
 import Application from "./application.svg"
 import SafetyVest from "./safety-vest.svg"
 import SafetyHelmet from "./safety-helmet.svg"
-import FolderDownload from "./folder-download.svg"
 import Undo from "./undo.svg"
 import FileEdit from "./file-edit.svg"
+import FileUpload from "./file-upload.svg"
 import Manage from "./manage.svg"
 import FileCheck from "./file-check.svg"
+import Zip from "./zip.svg"
+import Edit from "./edit.svg"
 
 export {
   DownloadIcon,
@@ -127,9 +129,11 @@ export {
   Gear,
   SafetyVest,
   SafetyHelmet,
-  FolderDownload,
   Undo,
   FileEdit,
+  FileUpload,
   Manage,
   FileCheck,
+  Zip,
+  Edit
 };

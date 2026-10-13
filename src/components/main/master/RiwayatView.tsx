@@ -3,10 +3,13 @@ import React, { useState } from "react";
 import { Modal } from "@/components/ui/modal";
 import Badge from "@/components/ui/badge/Badge";
 import Input from "@/components/form/input/InputField";
+import DatePickerInput from "@/components/main/common/DatePickerInput";
 import PageHeader from "@/components/main/common/PageHeader";
 import DataTable from "@/components/main/common/DataTable";
 import ConfirmDialog from "@/components/main/common/ConfirmDialog";
+import ActionButton, { actionButtonClass } from "@/components/main/common/ActionButton";
 import DokumenChips from "@/components/main/pendaftaran/DokumenChips";
+import { EyeIcon, FileEdit, FileUpload } from "@/icons";
 import { cekFile } from "@/components/main/permohonan/PermohonanView";
 import { useToast } from "@/lib/context/ToastContext";
 import { useStore, Permohonan, Pendaftaran, Dok, HASIL, formatSesi, statusJadwal, label } from "@/lib/mock/store";
@@ -37,7 +40,7 @@ export default function RiwayatView() {
           { header: "Lulus", cell: (x) => <span className="text-sm">{dari(x.id).filter((r) => r.hasil === "LULUS").length}</span> },
           { header: "Scan sertifikat", cell: (x) => { const l = dari(x.id).filter((r) => r.hasil === "LULUS"); const s = l.filter((r) => r.sertifikat).length; return l.length ? <Badge size="sm" color={s === l.length ? "success" : "warning"}>{s}/{l.length}</Badge> : <span className="text-xs text-gray-400">-</span>; } },
           { header: "Status", cell: (x) => { const s = statusJadwal(x); return <Badge size="sm" color={s.c}>{s.t}</Badge>; } },
-          { header: "Aksi", cell: (x) => <button className="text-xs font-medium text-brand-500 hover:underline" onClick={() => setAktif(x.id)}>Detail</button> },
+          { header: "Aksi", cell: (x) => <ActionButton icon={<EyeIcon />} onClick={() => setAktif(x.id)}>Detail</ActionButton> },
         ]} />
       {p && (
         <Modal isOpen onClose={() => setAktif(null)} className="max-w-[940px] p-5">
@@ -53,10 +56,14 @@ export default function RiwayatView() {
                 {r.hasil === "LULUS" ? (
                   <>
                     <Input value={r.noSertifikat ?? ""} onChange={(e) => update(r.id, { noSertifikat: e.target.value })} placeholder="Nomor" />
-                    <Input type="date" value={r.masaBerlaku ?? ""} onChange={(e) => update(r.id, { masaBerlaku: e.target.value })} />
+                    <DatePickerInput value={r.masaBerlaku ?? ""} onChange={(v) => update(r.id, { masaBerlaku: v })} />
                     <div className="flex items-center gap-2">
                       {r.sertifikat && <DokumenChips dok={{ SURAT_KERJA: r.sertifikat }} tampil={["SURAT_KERJA"]} nama={{ SURAT_KERJA: "Sertifikat" }} />}
-                      <label className="cursor-pointer text-xs font-medium text-brand-500">{r.sertifikat ? "Ganti" : "Upload"}<input type="file" accept=".png,.jpg,.jpeg,.pdf" className="hidden" onChange={(e) => { unggah(r, e.target.files?.[0]); e.target.value = ""; }} /></label>
+                      <label className={`${actionButtonClass(r.sertifikat ? "warning" : "success")} cursor-pointer`}>
+                        <span className="flex size-4 items-center justify-center [&_svg]:size-4">{r.sertifikat ? <FileEdit /> : <FileUpload />}</span>
+                        {r.sertifikat ? "Ganti" : "Upload"}
+                        <input type="file" accept=".png,.jpg,.jpeg,.pdf" className="hidden" onChange={(e) => { unggah(r, e.target.files?.[0]); e.target.value = ""; }} />
+                      </label>
                     </div>
                   </>
                 ) : <span className="col-span-3 text-xs text-gray-400">-</span>}

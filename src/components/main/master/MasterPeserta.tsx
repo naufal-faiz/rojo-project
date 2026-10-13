@@ -6,9 +6,12 @@ import Badge from "@/components/ui/badge/Badge";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Select from "@/components/form/Select";
+import DatePickerInput from "@/components/main/common/DatePickerInput";
 import PageHeader from "@/components/main/common/PageHeader";
 import DataTable from "@/components/main/common/DataTable";
 import ConfirmDialog from "@/components/main/common/ConfirmDialog";
+import ActionButton from "@/components/main/common/ActionButton";
+import { EyeIcon, PlusIcon, TrashBinIcon } from "@/icons";
 import { useToast } from "@/lib/context/ToastContext";
 import { useStore, Pendaftaran, HASIL, formatSesi, label } from "@/lib/mock/store";
 
@@ -24,7 +27,7 @@ function Detail({ m: mm, onClose }: { m: Pendaftaran | null; onClose: () => void
   const [f, setF] = useState<Pendaftaran>(m);
   const riwayat = rows.filter((r) => r.nik === m.nik && r.permohonanId);
   const T = (k: keyof Pendaftaran, l: string, type?: string, span = "") => (
-    <div className={span}><Label className={lbl}>{l}</Label><Input type={type} value={String(f[k] ?? "")} onChange={(e) => setF((s) => ({ ...s, [k]: e.target.value }))} /></div>
+    <div className={span}><Label className={lbl}>{l}</Label>{type === "date" ? <DatePickerInput value={String(f[k] ?? "")} onChange={(v) => setF((s) => ({ ...s, [k]: v }))} /> : <Input type={type} value={String(f[k] ?? "")} onChange={(e) => setF((s) => ({ ...s, [k]: e.target.value }))} />}</div>
   );
   const simpan = () => {
     if (baruMode && !/^\d{16}$/.test(f.nik)) return notify("error", "NIK tidak valid", "NIK harus 16 digit angka.");
@@ -76,7 +79,7 @@ export default function MasterPeserta() {
   const coba = (m: Pendaftaran) => rows.some((r) => r.nik === m.nik && r.permohonanId) ? notify("error", "Tidak bisa dihapus", "Peserta tercatat di permohonan. Keluarkan dulu dari permohonan.") : setHapus(m);
   return (
     <>
-      <PageHeader title="Peserta" description="Master peserta. Dokumen diunggah saat pendaftaran" primaryAction={{ label: "Tambah peserta", onClick: () => setTambah(true) }} />
+      <PageHeader title="Peserta" description="Master peserta. Dokumen diunggah saat pendaftaran" primaryAction={{ label: "Tambah peserta", onClick: () => setTambah(true), icon: <PlusIcon className="size-4" /> }} />
       <DataTable<Pendaftaran> data={filtered.slice((page - 1) * LIMIT, page * LIMIT)} totalItems={filtered.length} totalPages={Math.max(1, Math.ceil(filtered.length / LIMIT))} currentPage={page}
         onPageChange={setPage} onSearch={(x) => { setQ(x); setPage(1); }} searchPlaceholder="Cari nama, NIK, perusahaan..."
         columns={[
@@ -84,7 +87,7 @@ export default function MasterPeserta() {
           { header: "Tempat, tgl lahir", cell: (m) => <span className="text-sm text-gray-700 dark:text-gray-300">{m.tempatLahir}, {m.tglLahir}</span> },
           { header: "Perusahaan", cell: (m) => <span className="text-sm text-gray-700 dark:text-gray-300">{label(m)}</span> },
           { header: "Pelatihan", cell: (m) => <span className="text-sm">{rows.filter((r) => r.nik === m.nik && r.permohonanId).length}x</span> },
-          { header: "Aksi", cell: (m) => (<div className="flex gap-3"><button className="text-xs font-medium text-brand-500 hover:underline" onClick={() => setEdit(m)}>Detail</button><button className="text-xs font-medium text-error-500 hover:underline" onClick={() => coba(m)}>Hapus</button></div>) },
+          { header: "Aksi", cell: (m) => (<div className="flex flex-wrap gap-2"><ActionButton icon={<EyeIcon />} onClick={() => setEdit(m)}>Detail</ActionButton><ActionButton tone="error" icon={<TrashBinIcon />} onClick={() => coba(m)}>Hapus</ActionButton></div>) },
         ]} />
       {edit && <Detail m={edit} onClose={() => setEdit(null)} />}
       {tambah && <Detail m={null} onClose={() => setTambah(false)} />}

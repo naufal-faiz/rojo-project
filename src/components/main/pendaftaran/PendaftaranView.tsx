@@ -6,10 +6,14 @@ import Badge from "@/components/ui/badge/Badge";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Select from "@/components/form/Select";
+import SearchSelect from "@/components/form/SearchSelect";
+import DatePickerInput from "@/components/main/common/DatePickerInput";
 import PageHeader from "@/components/main/common/PageHeader";
 import DataTable from "@/components/main/common/DataTable";
 import ConfirmDialog from "@/components/main/common/ConfirmDialog";
+import ActionButton from "@/components/main/common/ActionButton";
 import DokumenChips from "./DokumenChips";
+import { CheckLineIcon, Edit, PlusIcon, TrashBinIcon } from "@/icons";
 import { useToast } from "@/lib/context/ToastContext";
 import { useStore, JENIS, Jenis, Dok, Pendaftaran, Status, label, kurang } from "@/lib/mock/store";
 
@@ -34,7 +38,16 @@ function Form({ initial, onClose }: { initial: Pendaftaran | null; onClose: () =
   const set = <K extends keyof Pendaftaran>(k: K, v: Pendaftaran[K]) => setF((s) => ({ ...s, [k]: v }));
 
   const master = useMemo(() => { const m = new Map<string, Pendaftaran>(); rows.forEach((r) => m.set(r.nik, r)); return [...m.values()]; }, [rows]);
-  const perusahaan = useMemo(() => [...new Set(rows.map((r) => r.perusahaan))], [rows]);
+  const perusahaan = useMemo(() => {
+    const map = new Map<string, Pendaftaran>();
+    rows.forEach((r) => { if (r.perusahaan && !map.has(label(r))) map.set(label(r), r); });
+    return [...map.values()];
+  }, [rows]);
+  const pilihPerusahaan = (value: string) => {
+    const match = perusahaan.find((r) => label(r) === value);
+    setF((s) => ({ ...s, perusahaan: match?.perusahaan ?? value, depot: match?.depot ?? "", alamatUsaha: match?.alamatUsaha ?? "" }));
+    setIsDepot(!!match?.depot);
+  };
   const q = f.nama.toLowerCase();
   const saran = !initial && !ulang && q.length >= 2 ? master.filter((m) => m.nama.toLowerCase().includes(q) || m.nik.includes(q)).slice(0, 5) : [];
   const nikDup = !initial && !ulang && f.nik.length === 16 && master.some((m) => m.nik === f.nik);
@@ -91,7 +104,7 @@ function Form({ initial, onClose }: { initial: Pendaftaran | null; onClose: () =
           <div><Label className={lbl}>NIK *</Label><Input value={f.nik} onChange={(e) => set("nik", e.target.value.replace(/\D/g, "").slice(0, 16))} error={nikDup} hint={nikDup ? "NIK sudah ada di master, pilih dari saran nama." : undefined} /></div>
           <div><Label className={lbl}>Jenis kelamin *</Label><Select key={`${initial?.id}-${ulang}`} options={[{ value: "L", label: "Laki-laki" }, { value: "P", label: "Perempuan" }]} placeholder="Pilih" defaultValue={f.jk} onChange={(v) => set("jk", v as "L" | "P")} /></div>
           <div><Label className={lbl}>Tempat lahir *</Label><Input value={f.tempatLahir} onChange={(e) => set("tempatLahir", e.target.value)} /></div>
-          <div><Label className={lbl}>Tanggal lahir *</Label><Input type="date" value={f.tglLahir} onChange={(e) => set("tglLahir", e.target.value)} /></div>
+          <div><Label className={lbl}>Tanggal lahir *</Label><DatePickerInput value={f.tglLahir} onChange={(v) => set("tglLahir", v)} /></div>
           <div><Label className={lbl}>Pendidikan</Label><Input value={f.pendidikan} onChange={(e) => set("pendidikan", e.target.value)} /></div>
           <div><Label className={lbl}>Jabatan</Label><Input value={f.jabatan} onChange={(e) => set("jabatan", e.target.value)} /></div>
           <div><Label className={lbl}>No. HP</Label><Input value={f.hp} onChange={(e) => set("hp", e.target.value)} /></div>
@@ -99,25 +112,24 @@ function Form({ initial, onClose }: { initial: Pendaftaran | null; onClose: () =
           <div className="col-span-2 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-gray-100 pt-2.5 dark:border-white/5">
             <div>
               <Label className={lbl}>Perusahaan</Label>
-              <Input list="dl-perusahaan" value={f.perusahaan} onChange={(e) => set("perusahaan", e.target.value)} placeholder="Cari atau ketik baru" />
-              <datalist id="dl-perusahaan">{perusahaan.map((p) => <option key={p} value={p} />)}</datalist>
+              <SearchSelect options={perusahaan.map((r) => ({ value: label(r), label: label(r), description: r.alamatUsaha || "Alamat belum tercatat" }))} value={f.perusahaan ? label(f) : ""} onChange={pilihPerusahaan} placeholder="Cari perusahaan / cabang" allowCustom />
             </div>
             <label className="flex items-end gap-2 pb-2 text-sm text-gray-700 dark:text-gray-300">
-              <input type="checkbox" className="h-4 w-4 accent-brand-500" checked={isDepot} onChange={(e) => setIsDepot(e.target.checked)} />Dari depot / cabang
+              <input type="checkbox" className="h-4 w-4 accent-brand-500" checked={isDepot} onChange={(e) => { setIsDepot(e.target.checked); setF((s) => ({ ...s, depot: "", alamatUsaha: e.target.checked ? "" : perusahaan.find((r) => r.perusahaan === s.perusahaan && !r.depot)?.alamatUsaha ?? "" })); }} />Dari depot / cabang
             </label>
-            {isDepot && <div><Label className={lbl}>Nama depot / cabang</Label><Input value={f.depot} onChange={(e) => set("depot", e.target.value)} placeholder="Contoh: Banjar" /></div>}
+            {isDepot && <div><Label className={lbl}>Nama depot / cabang</Label><Input value={f.depot} onChange={(e) => setF((s) => ({ ...s, depot: e.target.value, alamatUsaha: perusahaan.find((r) => r.perusahaan === s.perusahaan && r.depot.toLowerCase() === e.target.value.toLowerCase())?.alamatUsaha ?? "" }))} placeholder="Contoh: Banjar" /></div>}
             <div className={isDepot ? "" : "col-span-2"}><Label className={lbl}>{isDepot ? "Alamat depot" : "Alamat perusahaan"}</Label><Input value={f.alamatUsaha} onChange={(e) => set("alamatUsaha", e.target.value)} /></div>
           </div>
         </div>
         <div className="rounded-xl border border-gray-200 p-3 dark:border-white/10">
-          <p className="mb-2 text-xs font-medium text-gray-700 dark:text-gray-300">Dokumen (png, jpg, pdf · maks 3 MB)</p>
+          <p className="mb-2 rounded-lg border border-blue-light-200 bg-blue-light-50 px-2 py-1.5 text-xs font-medium text-blue-light-700 dark:border-blue-light-500/30 dark:bg-blue-light-500/15 dark:text-blue-light-300">Dokumen (png, jpg, jpeg, pdf · maks 3 MB)</p>
           <ul className="flex flex-col divide-y divide-gray-100 dark:divide-white/5">
             {JENIS.map((j) => {
               const p = pending[j.key]; const cur = p ?? f.dok[j.key];
               return (
                 <li key={j.key} className="flex items-center justify-between gap-2 py-1.5">
                   <div className="min-w-0">
-                    <p className="text-sm text-gray-800 dark:text-white/90">{j.label}{j.key === "PAKTA" && <span className="ml-1 text-xs text-gray-400">selalu baru</span>}</p>
+                    <p className="text-sm text-gray-800 dark:text-white/90">{j.label}{j.key === "PAKTA" && <span className="ml-1 inline-block rounded border border-warning-200 bg-warning-50 px-1.5 py-0.5 text-xs font-medium text-warning-700 dark:border-warning-500/30 dark:bg-warning-500/15 dark:text-warning-300">Selalu baru</span>}</p>
                     <p className="truncate text-xs text-gray-500">{cur ? `${p ? "Pengganti: " : ""}${cur.nama}` : "Belum ada"}</p>
                     {p && <button type="button" className="text-xs text-brand-500" onClick={() => { URL.revokeObjectURL(p.url); setPending((s) => { const n = { ...s }; delete n[j.key]; return n; }); }}>Batalkan penggantian</button>}
                   </div>
@@ -141,7 +153,7 @@ function Form({ initial, onClose }: { initial: Pendaftaran | null; onClose: () =
 
 export default function PendaftaranView() {
   const { rows: semua, update, remove } = useStore();
-  const rows = semua.filter((r) => !r.masterOnly);
+  const rows = semua.filter((r) => !r.masterOnly && r.status !== "DIPAKAI");
   const { notify } = useToast();
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
@@ -155,10 +167,9 @@ export default function PendaftaranView() {
     if (k.length) notify("error", "Belum bisa ditandai lengkap", `Kurang: ${k.join(", ")}.`);
     else setLengkapId(r.id);
   };
-  const act = "text-xs font-medium text-brand-500 hover:underline";
   return (
     <>
-      <PageHeader title="Pendaftaran" description="Data dan dokumen peserta sebelum masuk permohonan" primaryAction={{ label: "Daftarkan peserta", onClick: () => setEdit("baru") }} />
+      <PageHeader title="Pendaftaran" description="Data dan dokumen peserta sebelum masuk permohonan" primaryAction={{ label: "Daftarkan peserta", onClick: () => setEdit("baru"), icon: <PlusIcon className="size-4" /> }} />
       <DataTable<Pendaftaran>
         data={data} totalItems={filtered.length} totalPages={Math.max(1, Math.ceil(filtered.length / LIMIT))} currentPage={page}
         onPageChange={setPage} onSearch={(v) => { setQ(v); setPage(1); }} searchPlaceholder="Cari nama, NIK, perusahaan..."
@@ -168,10 +179,10 @@ export default function PendaftaranView() {
           { header: "Dokumen", cell: (r) => <DokumenChips dok={r.dok} /> },
           { header: "Status", cell: (r) => <Badge size="sm" color={statusUi[r.status].c}>{statusUi[r.status].t}</Badge> },
           { header: "Aksi", cell: (r) => (
-            <div className="flex gap-3">
-              {r.status !== "DIPAKAI" && <button className={act} onClick={() => setEdit(r)}>Edit</button>}
-              {(r.status === "DRAFT" || r.status === "DIKEMBALIKAN") && <button className={act} onClick={() => tandai(r)}>Tandai lengkap</button>}
-              {r.status !== "DIPAKAI" && <button className="text-xs font-medium text-error-500 hover:underline" onClick={() => setHapusId(r.id)}>Hapus</button>}
+            <div className="flex flex-wrap gap-2">
+              {r.status !== "DIPAKAI" && <ActionButton tone="info" icon={<Edit />} onClick={() => setEdit(r)}>Edit</ActionButton>}
+              {r.status !== "DIPAKAI" && <ActionButton tone="error" icon={<TrashBinIcon />} onClick={() => setHapusId(r.id)}>Hapus</ActionButton>}
+              {(r.status === "DRAFT" || r.status === "DIKEMBALIKAN") && <ActionButton tone="success" icon={<CheckLineIcon />} onClick={() => tandai(r)}>Lengkap</ActionButton>}
             </div>) },
         ]}
       />

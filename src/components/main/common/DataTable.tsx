@@ -69,9 +69,9 @@ function DataTable<T extends { id: string }>({
   };
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+    <div className="compact-data-table overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
       {/* Toolbar pencarian */}
-      <div className="flex items-center justify-between gap-4 p-4 border-b border-gray-100 dark:border-white/[0.05]">
+      <div className="flex items-center justify-between gap-4 p-4 lg:gap-3 lg:p-3.5 border-b border-gray-100 dark:border-white/[0.05]">
         <div className="w-full max-w-sm">
           <Input
             placeholder={searchPlaceholder}
@@ -93,7 +93,7 @@ function DataTable<T extends { id: string }>({
                 <TableCell
                   key={i}
                   isHeader
-                  className={`px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400 ${col.className ?? ""}`}
+                  className={`px-4 py-2 lg:px-3.5 lg:py-1.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400 ${col.className ?? ""}`}
                 >
                   {col.header}
                 </TableCell>
@@ -128,7 +128,7 @@ function DataTable<T extends { id: string }>({
                   {columns.map((col, i) => (
                     <TableCell
                       key={i}
-                      className={`px-4 py-3 text-sm text-gray-700 dark:text-gray-300 ${col.className ?? ""}`}
+                      className={`px-4 py-3 lg:px-3.5 lg:py-2.5 text-sm text-gray-700 dark:text-gray-300 ${col.className ?? ""}`}
                     >
                       {col.cell
                         ? col.cell(row)
@@ -146,7 +146,7 @@ function DataTable<T extends { id: string }>({
 
       {/* Paginasi */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-end px-4 py-3 border-t border-gray-100 dark:border-white/[0.05]">
+        <div className="flex items-center justify-end px-4 py-3 lg:px-3.5 lg:py-2.5 border-t border-gray-100 dark:border-white/[0.05]">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
