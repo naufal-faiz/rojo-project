@@ -12,9 +12,9 @@ export const JENIS: { key: Jenis; label: string }[] = [
 export type Dok = { nama: string; url: string; mime: string };
 export type Status = "DRAFT" | "SIAP" | "DIKEMBALIKAN" | "DIPAKAI";
 export type Pendaftaran = {
-  id: string; nik: string; nama: string; tempatLahir: string; tglLahir: string; jk: "" | "L" | "P";
-  pendidikan: string; jabatan: string; hp: string; alamat: string;
-  perusahaan: string; depot: string; alamatUsaha: string;
+  id: string; nik: string; nama: string; tempatLahir: string; tglLahir: string;
+  hp: string; alamat: string;
+  perusahaan: string; depot: string; alamatUsaha: string | null;
   dok: Partial<Record<Jenis, Dok>>; status: Status; catatan: string;
   permohonanId?: string; hasil?: Hasil; sertifikat?: Dok; noSertifikat?: string; masaBerlaku?: string; masterOnly?: boolean;
 };
@@ -22,22 +22,22 @@ export type Pendaftaran = {
 export const label = (p: Pendaftaran) => (p.perusahaan ? p.perusahaan + (p.depot ? ` - ${p.depot}` : "") : "-");
 export const kurang = (p: Pendaftaran) => [
   ...(/^\d{16}$/.test(p.nik) ? [] : ["NIK"]),
-  ...(p.nama && p.tempatLahir && p.tglLahir && p.jk ? [] : ["data diri"]),
+  ...(p.nama && p.tempatLahir && p.tglLahir ? [] : ["data diri"]),
   ...JENIS.filter((j) => !p.dok[j.key]).map((j) => j.label),
 ];
 
 const d = (n: string): Dok => ({ nama: n, url: "/images/logo/logo-image.png", mime: "image/png" });
 const all = { KTP: d("ktp.png"), IJAZAH: d("ijazah.png"), PAS_FOTO: d("foto.png"), SURAT_KERJA: d("surat.png"), PAKTA: d("pakta.png") };
-const base = { pendidikan: "SMA", jabatan: "Operator", hp: "", alamat: "", catatan: "" };
+const base = { hp: "", alamat: "", catatan: "" };
 const seed: Pendaftaran[] = [
-  { ...base, id: "1", nik: "3201010101900001", nama: "Budi Santoso", tempatLahir: "Bekasi", tglLahir: "1990-01-01", jk: "L", perusahaan: "PT Maju Jaya", depot: "Banjar", alamatUsaha: "Jl. Raya Banjar No. 5", dok: all, status: "SIAP" },
-  { ...base, id: "2", nik: "3201010202920002", nama: "Siti Aminah", tempatLahir: "Bogor", tglLahir: "1992-02-02", jk: "P", perusahaan: "PT Maju Jaya", depot: "", alamatUsaha: "Jl. Industri No. 1", dok: { ...all, PAKTA: undefined }, status: "DRAFT" },
-  { ...base, id: "3", nik: "3201010303880003", nama: "Andi Pratama", tempatLahir: "Depok", tglLahir: "1988-03-03", jk: "L", perusahaan: "PT Sinar Baja", depot: "", alamatUsaha: "Jl. Baja No. 9", dok: all, status: "DIKEMBALIKAN", catatan: "Foto KTP buram, mohon upload ulang" },
-  { ...base, id: "4", nik: "3201010404950004", nama: "Rina Marlina", tempatLahir: "Cirebon", tglLahir: "1995-04-04", jk: "P", perusahaan: "PT Sinar Baja", depot: "Cikarang", alamatUsaha: "Kawasan Jababeka", dok: { KTP: all.KTP, IJAZAH: all.IJAZAH }, status: "DRAFT" },
-  { ...base, id: "5", nik: "3201010505850005", nama: "Dedi Kurniawan", tempatLahir: "Garut", tglLahir: "1985-05-05", jk: "L", perusahaan: "CV Karya Mandiri", depot: "", alamatUsaha: "Jl. Karya No. 3", dok: all, status: "SIAP" },
-  { ...base, id: "6", nik: "3201010606870006", nama: "Hendra Wijaya", tempatLahir: "Bandung", tglLahir: "1987-06-06", jk: "L", perusahaan: "PT Sinar Baja", depot: "", alamatUsaha: "Jl. Baja No. 9", dok: all, status: "DIPAKAI", permohonanId: "p0", hasil: "LULUS", noSertifikat: "KEM-2026-0412", masaBerlaku: "2029-09-02", sertifikat: d("sertifikat.png") },
-  { ...base, id: "7", nik: "3201010707910007", nama: "Lia Permata", tempatLahir: "Bekasi", tglLahir: "1991-07-07", jk: "P", perusahaan: "CV Karya Mandiri", depot: "", alamatUsaha: "Jl. Karya No. 3", dok: all, status: "DIPAKAI", permohonanId: "p0", hasil: "LULUS" },
-  { ...base, id: "8", nik: "3201010808830008", nama: "Maman Surya", tempatLahir: "Cianjur", tglLahir: "1983-08-08", jk: "L", perusahaan: "PT Maju Jaya", depot: "Banjar", alamatUsaha: "Jl. Raya Banjar No. 5", dok: all, status: "DIPAKAI", permohonanId: "p0", hasil: "GAGAL" },
+  { ...base, id: "1", nik: "3201010101900001", nama: "Budi Santoso", tempatLahir: "Bekasi", tglLahir: "1990-01-01", perusahaan: "PT Maju Jaya", depot: "Banjar", alamatUsaha: "Jl. Raya Banjar No. 5", dok: all, status: "SIAP" },
+  { ...base, id: "2", nik: "3201010202920002", nama: "Siti Aminah", tempatLahir: "Bogor", tglLahir: "1992-02-02", perusahaan: "PT Maju Jaya", depot: "", alamatUsaha: "Jl. Industri No. 1", dok: { ...all, PAKTA: undefined }, status: "DRAFT" },
+  { ...base, id: "3", nik: "3201010303880003", nama: "Andi Pratama", tempatLahir: "Depok", tglLahir: "1988-03-03", perusahaan: "PT Sinar Baja", depot: "", alamatUsaha: "Jl. Baja No. 9", dok: all, status: "DIKEMBALIKAN", catatan: "Foto KTP buram, mohon upload ulang" },
+  { ...base, id: "4", nik: "3201010404950004", nama: "Rina Marlina", tempatLahir: "Cirebon", tglLahir: "1995-04-04", perusahaan: "PT Sinar Baja", depot: "Cikarang", alamatUsaha: "Kawasan Jababeka", dok: { KTP: all.KTP, IJAZAH: all.IJAZAH }, status: "DRAFT" },
+  { ...base, id: "5", nik: "3201010505850005", nama: "Dedi Kurniawan", tempatLahir: "Garut", tglLahir: "1985-05-05", perusahaan: "CV Karya Mandiri", depot: "", alamatUsaha: "Jl. Karya No. 3", dok: all, status: "SIAP" },
+  { ...base, id: "6", nik: "3201010606870006", nama: "Hendra Wijaya", tempatLahir: "Bandung", tglLahir: "1987-06-06", perusahaan: "PT Sinar Baja", depot: "", alamatUsaha: "Jl. Baja No. 9", dok: all, status: "DIPAKAI", permohonanId: "p0", hasil: "LULUS", noSertifikat: "KEM-2026-0412", masaBerlaku: "2029-09-02", sertifikat: d("sertifikat.png") },
+  { ...base, id: "7", nik: "3201010707910007", nama: "Lia Permata", tempatLahir: "Bekasi", tglLahir: "1991-07-07", perusahaan: "CV Karya Mandiri", depot: "", alamatUsaha: "Jl. Karya No. 3", dok: all, status: "DIPAKAI", permohonanId: "p0", hasil: "LULUS" },
+  { ...base, id: "8", nik: "3201010808830008", nama: "Maman Surya", tempatLahir: "Cianjur", tglLahir: "1983-08-08", perusahaan: "PT Maju Jaya", depot: "Banjar", alamatUsaha: "Jl. Raya Banjar No. 5", dok: all, status: "DIPAKAI", permohonanId: "p0", hasil: "GAGAL" },
 ];
 
 export type Hasil = "LULUS" | "GAGAL" | "REMEDIAL" | "IKUT_BATCH_SELANJUTNYA" | "TAKEOUT" | "CANCEL";

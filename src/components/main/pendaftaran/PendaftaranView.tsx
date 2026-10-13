@@ -5,7 +5,6 @@ import Button from "@/components/ui/button/Button";
 import Badge from "@/components/ui/badge/Badge";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
-import Select from "@/components/form/Select";
 import SearchSelect from "@/components/form/SearchSelect";
 import DatePickerInput from "@/components/main/common/DatePickerInput";
 import PageHeader from "@/components/main/common/PageHeader";
@@ -25,7 +24,7 @@ export const statusUi: Record<Status, { c: "warning" | "success" | "error" | "in
   DIKEMBALIKAN: { c: "error", t: "Dikembalikan" },
   DIPAKAI: { c: "info", t: "Dipakai" },
 };
-const kosong: Pendaftaran = { id: "", nik: "", nama: "", tempatLahir: "", tglLahir: "", jk: "", pendidikan: "", jabatan: "", hp: "", alamat: "", perusahaan: "", depot: "", alamatUsaha: "", dok: {}, status: "DRAFT", catatan: "" };
+const kosong: Pendaftaran = { id: "", nik: "", nama: "", tempatLahir: "", tglLahir: "", hp: "", alamat: "", perusahaan: "", depot: "", alamatUsaha: null, dok: {}, status: "DRAFT", catatan: "" };
 
 function Form({ initial, onClose }: { initial: Pendaftaran | null; onClose: () => void }) {
   const { rows, add, update } = useStore();
@@ -67,13 +66,13 @@ function Form({ initial, onClose }: { initial: Pendaftaran | null; onClose: () =
   };
   const simpan = () => {
     if (!/^\d{16}$/.test(f.nik)) return notify("error", "NIK tidak valid", "NIK harus 16 digit angka.");
-    if (!f.nama || !f.tempatLahir || !f.tglLahir || !f.jk) return notify("error", "Data belum lengkap", "Nama, tempat dan tanggal lahir, serta jenis kelamin wajib diisi.");
+    if (!f.nama || !f.tempatLahir || !f.tglLahir) return notify("error", "Data belum lengkap", "Nama, tempat dan tanggal lahir wajib diisi.");
     if (Object.keys(pending).length) setGanti(true); else final();
   };
   const final = () => {
     // File lama baru dilepas setelah konfirmasi (di produksi: hapus objek di bucket pada titik ini).
     (Object.keys(pending) as Jenis[]).forEach((k) => { const u = f.dok[k]?.url; if (u?.startsWith("blob:")) URL.revokeObjectURL(u); });
-    const data = { ...f, dok: { ...f.dok, ...pending }, depot: isDepot ? f.depot : "" };
+    const data = { ...f, dok: { ...f.dok, ...pending }, depot: isDepot ? f.depot : "", alamatUsaha: f.alamatUsaha?.trim() || null };
     if (initial) update(initial.id, data); else add(data);
     notify("success", "Berhasil", initial ? "Pendaftaran diperbarui." : "Peserta didaftarkan.");
     onClose();
@@ -102,23 +101,21 @@ function Form({ initial, onClose }: { initial: Pendaftaran | null; onClose: () =
             {ulang && !initial && <p className="mt-1 text-xs text-warning-600">Data dan dokumen diambil dari master. Crosscheck ulang kelayakannya; pakta integritas wajib diupload baru.</p>}
           </div>
           <div><Label className={lbl}>NIK *</Label><Input value={f.nik} onChange={(e) => set("nik", e.target.value.replace(/\D/g, "").slice(0, 16))} error={nikDup} hint={nikDup ? "NIK sudah ada di master, pilih dari saran nama." : undefined} /></div>
-          <div><Label className={lbl}>Jenis kelamin *</Label><Select key={`${initial?.id}-${ulang}`} options={[{ value: "L", label: "Laki-laki" }, { value: "P", label: "Perempuan" }]} placeholder="Pilih" defaultValue={f.jk} onChange={(v) => set("jk", v as "L" | "P")} /></div>
+          <div><Label className={lbl}>No. HP</Label><Input value={f.hp} onChange={(e) => set("hp", e.target.value)} /></div>
           <div><Label className={lbl}>Tempat lahir *</Label><Input value={f.tempatLahir} onChange={(e) => set("tempatLahir", e.target.value)} /></div>
           <div><Label className={lbl}>Tanggal lahir *</Label><DatePickerInput value={f.tglLahir} onChange={(v) => set("tglLahir", v)} /></div>
-          <div><Label className={lbl}>Pendidikan</Label><Input value={f.pendidikan} onChange={(e) => set("pendidikan", e.target.value)} /></div>
-          <div><Label className={lbl}>Jabatan</Label><Input value={f.jabatan} onChange={(e) => set("jabatan", e.target.value)} /></div>
-          <div><Label className={lbl}>No. HP</Label><Input value={f.hp} onChange={(e) => set("hp", e.target.value)} /></div>
-          <div><Label className={lbl}>Alamat</Label><Input value={f.alamat} onChange={(e) => set("alamat", e.target.value)} /></div>
-          <div className="col-span-2 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-gray-100 pt-2.5 dark:border-white/5">
-            <div>
-              <Label className={lbl}>Perusahaan</Label>
+          <div>
+              <Label className={lbl}>Nama perusahaan</Label>
               <SearchSelect options={perusahaan.map((r) => ({ value: label(r), label: label(r), description: r.alamatUsaha || "Alamat belum tercatat" }))} value={f.perusahaan ? label(f) : ""} onChange={pilihPerusahaan} placeholder="Cari perusahaan / cabang" allowCustom />
-            </div>
-            <label className="flex items-end gap-2 pb-2 text-sm text-gray-700 dark:text-gray-300">
+          </div>
+          <div><Label className={lbl}>Alamat peserta</Label><Input value={f.alamat} onChange={(e) => set("alamat", e.target.value)} placeholder="Alamat tempat tinggal peserta" /></div>
+          <div className="col-span-2 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-gray-100 pt-2.5 dark:border-white/5">
+            <p className="col-span-2 text-xs font-medium text-gray-500 dark:text-gray-400">Lokasi perusahaan tempat peserta bekerja</p>
+            <label className="col-span-2 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <input type="checkbox" className="h-4 w-4 accent-brand-500" checked={isDepot} onChange={(e) => { setIsDepot(e.target.checked); setF((s) => ({ ...s, depot: "", alamatUsaha: e.target.checked ? "" : perusahaan.find((r) => r.perusahaan === s.perusahaan && !r.depot)?.alamatUsaha ?? "" })); }} />Dari depot / cabang
             </label>
             {isDepot && <div><Label className={lbl}>Nama depot / cabang</Label><Input value={f.depot} onChange={(e) => setF((s) => ({ ...s, depot: e.target.value, alamatUsaha: perusahaan.find((r) => r.perusahaan === s.perusahaan && r.depot.toLowerCase() === e.target.value.toLowerCase())?.alamatUsaha ?? "" }))} placeholder="Contoh: Banjar" /></div>}
-            <div className={isDepot ? "" : "col-span-2"}><Label className={lbl}>{isDepot ? "Alamat depot" : "Alamat perusahaan"}</Label><Input value={f.alamatUsaha} onChange={(e) => set("alamatUsaha", e.target.value)} /></div>
+            <div className={isDepot ? "" : "col-span-2"}><Label className={lbl}>{isDepot ? "Alamat depot / cabang (opsional)" : "Alamat perusahaan (opsional)"}</Label><Input value={f.alamatUsaha ?? ""} onChange={(e) => set("alamatUsaha", e.target.value)} placeholder="Boleh dikosongkan" /></div>
           </div>
         </div>
         <div className="rounded-xl border border-gray-200 p-3 dark:border-white/10">

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Button from "@/components/ui/button/Button";
-import { CalenderIcon, ChevronLeftIcon, ArrowRightIcon } from "@/icons/index";
+import { Calendar, ChevronLeftIcon, ArrowRightIcon } from "@/icons/index";
 
 const DAY_NAMES = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
 const MONTH_NAMES = [
@@ -118,7 +118,7 @@ const DatePickerInput: React.FC<DatePickerInputProps> = ({
         <span className={value ? "" : "text-gray-400 dark:text-gray-500"}>
           {value ? formatDisplay(value) : placeholder}
         </span>
-        <CalenderIcon className="size-5 text-gray-500 dark:text-gray-400 shrink-0" />
+        <Calendar className="size-5 text-gray-500 dark:text-gray-400 shrink-0" />
       </button>
 
       {open && createPortal(

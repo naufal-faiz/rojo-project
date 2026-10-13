@@ -55,9 +55,9 @@ export function Buat({ onClose, onSaved }: { onClose: () => void; onSaved?: (id:
         <div><Label className={lbl}>Pelatihan *</Label><SearchSelect options={opt(training.map((t) => t.nama))} value={f.training} placeholder="Cari pelatihan" onChange={(v) => setF((s) => ({ ...s, training: v, kelas: "" }))} /></div>
         <div><Label className={lbl}>Kelas *</Label><Select key={f.training} options={opt(kelasList.filter((k) => training.find((t) => t.id === k.trainingId)?.nama === f.training).map((k) => k.nama))} placeholder="Pilih" onChange={(v) => set("kelas", v)} /></div>
         <div><Label className={lbl}>No. permohonan</Label><Input value={f.no} onChange={(e) => set("no", e.target.value)} placeholder="Kosongkan jika tidak ada" /></div>
-        <div><Label className={lbl}>Jenis kegiatan</Label><Select options={opt(["PUBLIK", "INHOUSE"])} defaultValue={f.jenis} onChange={(v) => set("jenis", v)} /></div>
-        <div><Label className={lbl}>Tipe</Label><Select options={opt(["OFFLINE", "ONLINE", "BLENDED"])} defaultValue={f.tipe} onChange={(v) => set("tipe", v)} /></div>
-        <div><Label className={lbl}>Sertifikasi</Label><Select options={opt(["KEMNAKER", "BNSP", "INTERNAL"])} defaultValue={f.sertifikasi} onChange={(v) => set("sertifikasi", v)} /></div>
+        <div><Label className={lbl}>Jenis kegiatan</Label><Select options={opt(["Publik", "Inhouse"])} defaultValue={f.jenis} onChange={(v) => set("jenis", v)} /></div>
+        <div><Label className={lbl}>Tipe</Label><Select options={opt(["Offline", "Blended"])} defaultValue={f.tipe} onChange={(v) => set("tipe", v)} /></div>
+        <div><Label className={lbl}>Sertifikasi</Label><Select options={[{ value: "KEMNAKER", label: "Kemnaker" }, { value: "BNSP", label: "BNSP" }, { value: "LAIN_LAIN", label: "Lain-lain" }]} defaultValue={f.sertifikasi} onChange={(v) => set("sertifikasi", v)} /></div>
         <div><Label className={lbl}>Penyelenggara</Label><Select options={[{ value: "WINA_KARYA_MULIA", label: "PT Wina Karya Mulia" }, { value: "DELTA_INDONESIA", label: "Delta Indonesia" }, { value: "LIMA_PRIMA_SOLUSINDO", label: "Lima Prima Solusindo" }]} defaultValue={f.penyelenggara} onChange={(v) => set("penyelenggara", v)} /></div>
         <div className="col-span-2"><Label className={lbl}>Lokasi</Label><Input value={f.lokasi} onChange={(e) => set("lokasi", e.target.value)} /></div>
         <div className="col-span-3">

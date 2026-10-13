@@ -32,7 +32,6 @@ import PaperPlaneIcon from "./paper-plane.svg";
 import LockIcon from "./lock.svg";
 import EnvelopeIcon from "./envelope.svg";
 import UserIcon from "./user-line.svg";
-import CalenderIcon from "./calender-line.svg";
 import EyeIcon from "./eye.svg";
 import EyeCloseIcon from "./eye-close.svg";
 import TimeIcon from "./time.svg";
@@ -66,6 +65,7 @@ import Manage from "./manage.svg"
 import FileCheck from "./file-check.svg"
 import Zip from "./zip.svg"
 import Edit from "./edit.svg"
+import Calendar from "./calendar.svg"
 
 export {
   DownloadIcon,
@@ -104,7 +104,6 @@ export {
   EnvelopeIcon,
   LockIcon,
   UserIcon,
-  CalenderIcon,
   EyeIcon,
   EyeCloseIcon,
   TimeIcon,
@@ -135,5 +134,6 @@ export {
   Manage,
   FileCheck,
   Zip,
-  Edit
+  Edit,
+  Calendar
 };

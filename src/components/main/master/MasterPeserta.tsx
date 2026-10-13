@@ -5,7 +5,7 @@ import Button from "@/components/ui/button/Button";
 import Badge from "@/components/ui/badge/Badge";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
-import Select from "@/components/form/Select";
+import SearchSelect from "@/components/form/SearchSelect";
 import DatePickerInput from "@/components/main/common/DatePickerInput";
 import PageHeader from "@/components/main/common/PageHeader";
 import DataTable from "@/components/main/common/DataTable";
@@ -16,7 +16,7 @@ import { useToast } from "@/lib/context/ToastContext";
 import { useStore, Pendaftaran, HASIL, formatSesi, label } from "@/lib/mock/store";
 
 const LIMIT = 12;
-const baru: Pendaftaran = { id: "", nik: "", nama: "", tempatLahir: "", tglLahir: "", jk: "", pendidikan: "", jabatan: "", hp: "", alamat: "", perusahaan: "", depot: "", alamatUsaha: "", dok: {}, status: "DRAFT", catatan: "", masterOnly: true };
+const baru: Pendaftaran = { id: "", nik: "", nama: "", tempatLahir: "", tglLahir: "", hp: "", alamat: "", perusahaan: "", depot: "", alamatUsaha: null, dok: {}, status: "DRAFT", catatan: "", masterOnly: true };
 const lbl = "mb-1 text-xs";
 
 function Detail({ m: mm, onClose }: { m: Pendaftaran | null; onClose: () => void }) {
@@ -25,6 +25,15 @@ function Detail({ m: mm, onClose }: { m: Pendaftaran | null; onClose: () => void
   const { rows, permohonan, setRows, add } = useStore();
   const { notify } = useToast();
   const [f, setF] = useState<Pendaftaran>(m);
+  const perusahaan = useMemo(() => {
+    const map = new Map<string, Pendaftaran>();
+    rows.forEach((r) => { if (r.perusahaan && !map.has(label(r))) map.set(label(r), r); });
+    return [...map.values()];
+  }, [rows]);
+  const pilihPerusahaan = (value: string) => {
+    const match = perusahaan.find((r) => label(r) === value);
+    setF((s) => ({ ...s, perusahaan: match?.perusahaan ?? value, depot: match?.depot ?? "", alamatUsaha: match?.alamatUsaha ?? null }));
+  };
   const riwayat = rows.filter((r) => r.nik === m.nik && r.permohonanId);
   const T = (k: keyof Pendaftaran, l: string, type?: string, span = "") => (
     <div className={span}><Label className={lbl}>{l}</Label>{type === "date" ? <DatePickerInput value={String(f[k] ?? "")} onChange={(v) => setF((s) => ({ ...s, [k]: v }))} /> : <Input type={type} value={String(f[k] ?? "")} onChange={(e) => setF((s) => ({ ...s, [k]: e.target.value }))} />}</div>
@@ -32,10 +41,11 @@ function Detail({ m: mm, onClose }: { m: Pendaftaran | null; onClose: () => void
   const simpan = () => {
     if (baruMode && !/^\d{16}$/.test(f.nik)) return notify("error", "NIK tidak valid", "NIK harus 16 digit angka.");
     if (baruMode && rows.some((r) => r.nik === f.nik)) return notify("error", "NIK sudah terdaftar", "Peserta ini sudah ada di master.");
-    if (!f.nama || !f.tempatLahir || !f.tglLahir || !f.jk) return notify("error", "Data belum lengkap", "Nama, tempat dan tanggal lahir, serta jenis kelamin wajib diisi.");
-    if (baruMode) { add({ ...f, masterOnly: true }); notify("success", "Berhasil", "Peserta ditambahkan ke master."); return onClose(); }
-    const { nama, tempatLahir, tglLahir, jk, pendidikan, jabatan, hp, alamat, perusahaan, depot, alamatUsaha } = f;
-    setRows((r) => r.map((x) => (x.nik === m.nik ? { ...x, nama, tempatLahir, tglLahir, jk, pendidikan, jabatan, hp, alamat, perusahaan, depot, alamatUsaha } : x)));
+    if (!f.nama || !f.tempatLahir || !f.tglLahir) return notify("error", "Data belum lengkap", "Nama, tempat dan tanggal lahir wajib diisi.");
+    const alamatUsaha = f.alamatUsaha?.trim() || null;
+    if (baruMode) { add({ ...f, alamatUsaha, masterOnly: true }); notify("success", "Berhasil", "Peserta ditambahkan ke master."); return onClose(); }
+    const { nama, tempatLahir, tglLahir, hp, alamat, perusahaan, depot } = f;
+    setRows((r) => r.map((x) => (x.nik === m.nik ? { ...x, nama, tempatLahir, tglLahir, hp, alamat, perusahaan, depot, alamatUsaha } : x)));
     notify("success", "Berhasil", "Data peserta diperbarui."); onClose();
   };
   return (
@@ -43,12 +53,17 @@ function Detail({ m: mm, onClose }: { m: Pendaftaran | null; onClose: () => void
       <h3 className="mb-3 pr-10 text-base font-semibold text-gray-800 dark:text-white/90">{baruMode ? "Tambah peserta" : `Data peserta · ${m.nik}`}</h3>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_260px]">
         <div className="grid grid-cols-2 gap-x-3 gap-y-2.5">
-          {baruMode && <div className="col-span-2"><Label className={lbl}>NIK *</Label><Input value={f.nik} onChange={(e) => setF((s) => ({ ...s, nik: e.target.value.replace(/\D/g, "").slice(0, 16) }))} /></div>}
           {T("nama", "Nama *", undefined, "col-span-2")}
+          <div><Label className={lbl}>NIK *</Label><Input value={f.nik} disabled={!baruMode} onChange={(e) => setF((s) => ({ ...s, nik: e.target.value.replace(/\D/g, "").slice(0, 16) }))} /></div>
+          {T("hp", "No. HP")}
           {T("tempatLahir", "Tempat lahir *")}{T("tglLahir", "Tanggal lahir *", "date")}
-          <div><Label className={lbl}>Jenis kelamin *</Label><Select options={[{ value: "L", label: "Laki-laki" }, { value: "P", label: "Perempuan" }]} defaultValue={f.jk} onChange={(v) => setF((s) => ({ ...s, jk: v as "L" | "P" }))} /></div>
-          {T("pendidikan", "Pendidikan")}{T("jabatan", "Jabatan")}{T("hp", "No. HP")}{T("alamat", "Alamat", undefined, "col-span-2")}
-          <div><Label className={lbl}>Perusahaan</Label><Input list="dl-prs" value={f.perusahaan} onChange={(e) => setF((s) => ({ ...s, perusahaan: e.target.value }))} /><datalist id="dl-prs">{[...new Set(rows.map((r) => r.perusahaan))].map((x) => <option key={x} value={x} />)}</datalist></div>{T("depot", "Depot / cabang (kosong = HQ)")}{T("alamatUsaha", "Alamat perusahaan / depot", undefined, "col-span-2")}
+          <div><Label className={lbl}>Nama perusahaan</Label><SearchSelect options={perusahaan.map((r) => ({ value: label(r), label: label(r), description: r.alamatUsaha || "Alamat belum tercatat" }))} value={f.perusahaan ? label(f) : ""} onChange={pilihPerusahaan} placeholder="Cari perusahaan / cabang" allowCustom /></div>
+          {T("alamat", "Alamat peserta")}
+          <div className="col-span-2 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-gray-100 pt-2.5 dark:border-white/5">
+            <p className="col-span-2 text-xs font-medium text-gray-500 dark:text-gray-400">Lokasi perusahaan tempat peserta bekerja</p>
+            <div className="col-span-2"><Label className={lbl}>Nama depot / cabang (opsional)</Label><Input value={f.depot} placeholder="Kosongkan untuk kantor pusat" onChange={(e) => setF((s) => ({ ...s, depot: e.target.value, alamatUsaha: perusahaan.find((r) => r.perusahaan === s.perusahaan && r.depot.toLowerCase() === e.target.value.toLowerCase())?.alamatUsaha ?? null }))} /></div>
+            <div className="col-span-2"><Label className={lbl}>{f.depot ? "Alamat depot / cabang (opsional)" : "Alamat perusahaan (opsional)"}</Label><Input value={f.alamatUsaha ?? ""} placeholder="Boleh dikosongkan" onChange={(e) => setF((s) => ({ ...s, alamatUsaha: e.target.value }))} /></div>
+          </div>
         </div>
         <div>
           <p className="mb-1 text-xs font-medium text-gray-700 dark:text-gray-300">Riwayat pelatihan</p>
