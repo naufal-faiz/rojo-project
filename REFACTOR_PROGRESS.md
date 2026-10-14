@@ -4,7 +4,7 @@
 
 Status awal: tertahan oleh gerbang lint merah bawaan. Pengguna telah mengizinkan
 perbaikan prasyarat pada 2026-10-14. Hasil perbaikan dicatat di bagian akhir.
-Fase 0 belum lengkap (checklist manual menyeluruh masih tersisa); fase 1 belum dimulai.
+Baseline fungsional dilanjutkan pada 2026-10-14; hasil dan batas cakupan ada di bawah.
 
 - Sumber: branch `v2`, commit `98fa308` (Revisi kebutuhan form).
 - Branch kerja: `refactor/v2-structure`, dibuat dari `v2`.
@@ -201,4 +201,71 @@ akhir. Hasil pengujian sesi sebelumnya tidak dianggap sebagai pengujian baseline
 - Submenu buka/tutup terukur 136px/0px; sidebar ciut/buka kembali berhasil;
   dropdown pengguna terbuka dengan menu yang sama. Log browser error/warning kosong.
 - Checklist fitur lain, termasuk upload, belum diuji ulang pada pekerjaan perbaikan ini.
+
+## Lanjutan baseline — 2026-10-14
+
+- Otorisasi pengguna: selesaikan kebutuhan awal lalu lanjut refactor utama.
+- Dashboard: 2 belum lengkap, 2 siap, 1 dikembalikan, 0 berjalan.
+- Pelatihan: tambah Uji Baseline + Kelas Uji, edit nama, cari, hapus via konfirmasi lulus.
+  Hapus Forklift terpakai ditolak dengan alert.
+- Master peserta: tambah data sintetis, kalender tahun 1990, simpan dengan perusahaan kosong,
+  cari, detail, edit nama, hapus via konfirmasi lulus.
+- Pendaftaran: pencarian Budi, tambah peserta baru, tambah dari master, pakta tidak disalin,
+  upload pakta PNG, edit/ganti KTP PDF dengan konfirmasi, lengkap ke SIAP, hapus via modal lulus.
+- Antrean: tab SIAP/DIKEMBALIKAN, kembalikan Dedi dengan catatan, catatan muncul pada tab
+  Dikembalikan; tombol Buat permohonan membuka form.
+- Permohonan: cari Forklift, pilih kelas, rentang 2–5 Oktober 2026 dengan lewati akhir pekan
+  menghasilkan 2 dan 5 Oktober; sesi satuan 20 Oktober dan penyimpanan UJI-BASELINE lulus.
+- Kelola: Budi dipilih dari antrean, jumlah peserta bertambah; keluarkan lewat konfirmasi
+  mengembalikannya ke antrean. Pembatalan mengubah status ke Dibatalkan.
+- Riwayat: detail Damkar, upload sertifikat Lia, lightbox gambar Hendra, ganti sertifikat
+  PDF dengan konfirmasi lulus. Format sesi seed tetap 2-5 Desember 2026.
+- Tema gelap/terang dan regresi sidebar/header/dropdown lulus. Log error/warning browser kosong.
+- Batas verifikasi: navigasi PDF blob diblokir kebijakan browser otomatis; tidak dicoba
+  lewat jalan lain. Paging >12 data dan durasi toast secara stopwatch belum diverifikasi.
+  Uji di atas tidak boleh disebut checklist lengkap tanpa batasan ini.
+- Data uji hanya di memori preview dan hilang saat reload; tidak ada koneksi database.
+- Temuan bawaan (tidak diperbaiki): dua pendaftaran NIK yang sama dapat dibuat dari master.
+- D1 mengikuti rekomendasi dokumen dan arahan lanjut pengguna: arsipkan lalu hapus 1b.
+  Kelompok pertama dibatasi file tidak terjangkau; kode halaman aktif dipertahankan identik
+  dan dibandingkan hash untuk menutup risiko perubahan perilaku pada pembersihan ini.
+
+## Fase 1b — Modul lama
+
+- Tag arsip: archive/pre-cleanup pada f1fa716.
+- Analisis ulang AST TypeScript: 142 file, 64 terjangkau, 78 kandidat tidak terjangkau.
+- Hapus 16 file modul lama berikut; tidak ada file baru/pemecahan, tidak mengubah UI aktif.
+- `src/components/main/common/AlertDialog.tsx`
+- `src/components/main/permohonan/PelaksanaanFormModal.tsx`
+- `src/components/main/permohonan/PelaksanaanList.tsx`
+- `src/components/main/permohonan/SesiManager.tsx`
+- `src/components/main/perusahaan/CabangManager.tsx`
+- `src/components/main/perusahaan/DeletedPerusahaanList.tsx`
+- `src/components/main/perusahaan/PerusahaanFormModal.tsx`
+- `src/components/main/perusahaan/PerusahaanList.tsx`
+- `src/components/main/perusahaan/PicManager.tsx`
+- `src/components/main/perusahaan/PicSelectionModal.tsx`
+- `src/components/main/peserta/PesertaFormModal.tsx`
+- `src/components/main/peserta/PesertaList.tsx`
+- `src/components/main/training/DeletedTrainingList.tsx`
+- `src/components/main/training/TingkatanManager.tsx`
+- `src/components/main/training/TrainingFormModal.tsx`
+- `src/components/main/training/TrainingList.tsx`
+- StatusBadge dan StatusTemanK3 tetap disimpan sesuai rencana.
+- Prisma, Supabase, authAction, public dan konfigurasi tidak berubah.
+- Sebelum: 16 file / 3.504 baris fisik sumber → sesudah: 0 file pada kelompok ini.
+  Angka baris adalah diff penghapusan, bukan pengukuran komponen hasil Prettier.
+- Gerbang: lint lulus tanpa warning, tsc lulus, build lulus (11 halaman statis),
+  git diff --check lulus. check:size belum tersedia sampai fase 7.
+- Analisis setelah: 126 file TS/TSX tersisa; 64 terjangkau; 62 kandidat tidak terjangkau.
+  Hash SHA-256 seluruh 64 file terjangkau identik dengan sebelum penghapusan.
+- Uji setelah build: dashboard 2/2/1/0, pendaftaran 5, antrean 2 siap/1 dikembalikan,
+  master peserta 8, pelatihan 3, riwayat Damkar 3 peserta/2 lulus/1 dari 2 scan.
+  Modal pendaftaran dan detail riwayat terbuka; tabel permohonan dan format sesi sama.
+  Log error/warning browser kosong.
+- Tidak ada kode runtime, dependency, konfigurasi, schema, atau aset yang diubah.
+- File PDF sementara untuk uji telah dihapus. Reload mengembalikan data seed.
+- Berikutnya: kelompok 1a (demo template), kemudian 1c (arsip lapisan data).
+  Pembersihan berikutnya harus mengulang analisis keterjangkauan dan gerbang.
+- Cakupan tetap satu kelompok per tugas sesuai aturan 1.2; fase 2–7 belum dimulai.
 
