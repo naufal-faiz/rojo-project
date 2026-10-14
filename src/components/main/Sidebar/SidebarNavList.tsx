@@ -9,7 +9,7 @@ interface SidebarNavListProps {
   menuType: "main" | "others";
   openSubmenu: { type: "main" | "others"; index: number } | null;
   subMenuHeight: Record<string, number>;
-  subMenuRefs: React.RefObject<Record<string, HTMLDivElement | null>>;
+  registerSubMenuRef: (key: string, el: HTMLDivElement | null) => void;
   onSubmenuToggle: (index: number, menuType: "main" | "others") => void;
   isActive: (path: string) => boolean;
 }
@@ -19,15 +19,14 @@ const SidebarNavList: React.FC<SidebarNavListProps> = ({
   menuType,
   openSubmenu,
   subMenuHeight,
-  subMenuRefs,
+  registerSubMenuRef,
   onSubmenuToggle,
   isActive,
 }) => {
   return (
     <ul className="flex flex-col gap-4">
       {items.map((nav, index) => {
-        const isSubmenuOpen =
-          openSubmenu?.type === menuType && openSubmenu?.index === index;
+        const isSubmenuOpen = openSubmenu?.type === menuType && openSubmenu?.index === index;
         const subMenuKey = `${menuType}-${index}`;
 
         return (
@@ -38,7 +37,7 @@ const SidebarNavList: React.FC<SidebarNavListProps> = ({
             menuType={menuType}
             isSubmenuOpen={isSubmenuOpen}
             subMenuHeight={subMenuHeight[subMenuKey] || 0}
-            subMenuRefs={subMenuRefs}
+            registerSubMenuRef={registerSubMenuRef}
             onSubmenuToggle={onSubmenuToggle}
             isActive={isActive}
           />

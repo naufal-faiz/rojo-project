@@ -6,14 +6,13 @@ import { ChevronDownIcon } from "@/icons/index";
 import { useSidebar } from "@/lib/context/SidebarContext";
 import { NavigationData } from "./navigationData";
 
-// eslint-disable-next-line react-hooks/immutability, react-compiler/react-compiler
 interface SidebarNavigationDataProps {
   nav: NavigationData;
   index: number;
   menuType: "main" | "others";
   isSubmenuOpen: boolean;
   subMenuHeight: number;
-  subMenuRefs: React.RefObject<Record<string, HTMLDivElement | null>>;
+  registerSubMenuRef: (key: string, el: HTMLDivElement | null) => void;
   onSubmenuToggle: (index: number, menuType: "main" | "others") => void;
   isActive: (path: string) => boolean;
 }
@@ -24,7 +23,7 @@ const SidebarNavigationData: React.FC<SidebarNavigationDataProps> = ({
   menuType,
   isSubmenuOpen,
   subMenuHeight,
-  subMenuRefs,
+  registerSubMenuRef,
   onSubmenuToggle,
   isActive,
 }) => {
@@ -32,11 +31,12 @@ const SidebarNavigationData: React.FC<SidebarNavigationDataProps> = ({
   const isFullView = isExpanded || isHovered || isMobileOpen;
   const subMenuKey = `${menuType}-${index}`;
 
-  const setSubMenuRef = useCallback((el: HTMLDivElement | null) => {
-    if (subMenuRefs.current && el) {
-      subMenuRefs.current[subMenuKey] = el;
-    }
-  }, [subMenuKey, subMenuRefs]);
+  const setSubMenuRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      registerSubMenuRef(subMenuKey, el);
+    },
+    [subMenuKey, registerSubMenuRef],
+  );
 
   return (
     <li>
@@ -67,7 +67,9 @@ const SidebarNavigationData: React.FC<SidebarNavigationDataProps> = ({
               isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
             }`}
           >
-            <span className={isActive(nav.path) ? "menu-item-icon-active" : "menu-item-icon-inactive"}>
+            <span
+              className={isActive(nav.path) ? "menu-item-icon-active" : "menu-item-icon-inactive"}
+            >
               {nav.icon}
             </span>
             {isFullView && <span className="menu-item-text">{nav.name}</span>}

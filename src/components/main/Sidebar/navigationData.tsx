@@ -1,4 +1,4 @@
-import { GridIcon, TimeIcon, UserCircleIcon, Application, SafetyHelmet, GroupIcon } from "@/icons/index";
+import { GridIcon, TimeIcon, UserCircleIcon, SafetyHelmet, GroupIcon } from "@/icons/index";
 
 export type NavigationData = {
   name: string;
@@ -7,7 +7,9 @@ export type NavigationData = {
   subItems?: { name: string; path: string }[];
 };
 
-const dashboardNavigation: NavigationData[] = [{ icon: <GridIcon />, name: "Dashboard", path: "/" }];
+const dashboardNavigation: NavigationData[] = [
+  { icon: <GridIcon />, name: "Dashboard", path: "/" },
+];
 
 const navigationData: NavigationData[] = [
   {

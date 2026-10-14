@@ -3,20 +3,19 @@
 import React from "react";
 import { useSidebar } from "@/lib/context/SidebarContext";
 import { HorizontaLDots } from "@/icons/index";
-import { dashboardNavigation ,navigationData, othersItems } from "../components/main/Sidebar/navigationData";
+import {
+  dashboardNavigation,
+  navigationData,
+  othersItems,
+} from "../components/main/Sidebar/navigationData";
 import { useSidebarSubmenu } from "../components/main/Sidebar/useSidebarSubmenu";
 import SidebarNavList from "../components/main/Sidebar/SidebarNavList";
 import SidebarLogo from "../components/main/Sidebar/SidebarLogo";
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
-  const {
-    openSubmenu,
-    subMenuHeight,
-    subMenuRefs,
-    handleSubmenuToggle,
-    isActive,
-  } = useSidebarSubmenu();
+  const { openSubmenu, subMenuHeight, registerSubMenuRef, handleSubmenuToggle, isActive } =
+    useSidebarSubmenu();
 
   const isFullView = isExpanded || isHovered || isMobileOpen;
 
@@ -34,22 +33,22 @@ const AppSidebar: React.FC = () => {
       <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
         <nav className="mb-6">
           <div className="flex flex-col gap-3 mt-6">
-              <SidebarNavList
-                items={dashboardNavigation}
-                menuType="main"
-                openSubmenu={openSubmenu}
-                subMenuHeight={subMenuHeight}
-                subMenuRefs={subMenuRefs}
-                onSubmenuToggle={handleSubmenuToggle}
-                isActive={isActive}
-              />
+            <SidebarNavList
+              items={dashboardNavigation}
+              menuType="main"
+              openSubmenu={openSubmenu}
+              subMenuHeight={subMenuHeight}
+              registerSubMenuRef={registerSubMenuRef}
+              onSubmenuToggle={handleSubmenuToggle}
+              isActive={isActive}
+            />
             <div>
               <SidebarNavList
                 items={navigationData}
                 menuType="main"
                 openSubmenu={openSubmenu}
                 subMenuHeight={subMenuHeight}
-                subMenuRefs={subMenuRefs}
+                registerSubMenuRef={registerSubMenuRef}
                 onSubmenuToggle={handleSubmenuToggle}
                 isActive={isActive}
               />
@@ -57,8 +56,9 @@ const AppSidebar: React.FC = () => {
 
             <div>
               <h2
-                className={`mb-2 text-xs uppercase flex leading-[20px] text-gray-400 ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
-                  }`}
+                className={`mb-2 text-xs uppercase flex leading-[20px] text-gray-400 ${
+                  !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
+                }`}
               >
                 {isFullView ? "Master Data" : <HorizontaLDots />}
               </h2>
@@ -67,7 +67,7 @@ const AppSidebar: React.FC = () => {
                 menuType="others"
                 openSubmenu={openSubmenu}
                 subMenuHeight={subMenuHeight}
-                subMenuRefs={subMenuRefs}
+                registerSubMenuRef={registerSubMenuRef}
                 onSubmenuToggle={handleSubmenuToggle}
                 isActive={isActive}
               />

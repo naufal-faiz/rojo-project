@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { navigationData, othersItems } from "./navigationData";
@@ -12,15 +11,22 @@ export function useSidebarSubmenu() {
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  const registerSubMenuRef = useCallback((key: string, el: HTMLDivElement | null) => {
+    subMenuRefs.current[key] = el;
+  }, []);
+
   const isActive = useCallback((path: string) => path === pathname, [pathname]);
 
   // Buka submenu yang cocok dengan halaman aktif hanya saat pindah halaman. Jangan menutup submenu yang dibuka manual.
   useEffect(() => {
-    const sections = [{ type: "main" as const, items: navigationData }, { type: "others" as const, items: othersItems }];
+    const sections = [
+      { type: "main" as const, items: navigationData },
+      { type: "others" as const, items: othersItems },
+    ];
     sections.forEach(({ type, items }) =>
       items.forEach((nav, index) => {
         if (nav.subItems?.some((sub) => isActive(sub.path))) setOpenSubmenu({ type, index });
-      })
+      }),
     );
   }, [pathname, isActive]);
 
@@ -38,16 +44,14 @@ export function useSidebarSubmenu() {
 
   const handleSubmenuToggle = (index: number, menuType: "main" | "others") => {
     setOpenSubmenu((prev) =>
-      prev && prev.type === menuType && prev.index === index
-        ? null
-        : { type: menuType, index }
+      prev && prev.type === menuType && prev.index === index ? null : { type: menuType, index },
     );
   };
 
   return {
     openSubmenu,
     subMenuHeight,
-    subMenuRefs,
+    registerSubMenuRef,
     handleSubmenuToggle,
     isActive,
   };
