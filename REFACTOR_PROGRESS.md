@@ -269,3 +269,83 @@ akhir. Hasil pengujian sesi sebelumnya tidak dianggap sebagai pengujian baseline
   Pembersihan berikutnya harus mengulang analisis keterjangkauan dan gerbang.
 - Cakupan tetap satu kelompok per tugas sesuai aturan 1.2; fase 2–7 belum dimulai.
 
+## Fase 1a — Demo template (2026-10-14)
+
+- Arahan lanjut pengguna menerapkan D1 untuk kelompok demo template.
+- Sebelum penghapusan: 126 file TS/TSX, 64 terjangkau, 62 kandidat tidak terjangkau.
+- Hasil: 48 file demo beserta pembantu template yang hanya dipakai kelompok ini dihapus.
+  ComponentCard, useModal, dan ui/dropdown duplikat termasuk pembantu demo; pemeriksaan AST
+  memastikan tidak ada pengimpor dari luar 48 file tersebut.
+- Tag archive/pre-cleanup tetap dipertahankan; git diff terhadap tag untuk semua target kosong.
+- Tidak menghapus konfigurasi, public, schema, authAction, Prisma, Supabase, StatusBadge,
+  atau StatusTemanK3. Tidak ada pemecahan/formatting kode aktif pada kelompok penghapusan ini.
+- Target yang diperiksa ulang sebelum penghapusan:
+- `src/components/form/CheckboxComponents.tsx`
+- `src/components/form/DefaultInputs.tsx`
+- `src/components/form/DropZone.tsx`
+- `src/components/form/FileInputExample.tsx`
+- `src/components/form/Form.tsx`
+- `src/components/form/InputGroup.tsx`
+- `src/components/form/InputStates.tsx`
+- `src/components/form/MultiSelect.tsx`
+- `src/components/form/RadioButtons.tsx`
+- `src/components/form/SelectInputs.tsx`
+- `src/components/form/TextAreaInput.tsx`
+- `src/components/form/ToggleSwitch.tsx`
+- `src/components/form/date-picker.tsx`
+- `src/components/form/form-elements/CheckboxComponents.tsx`
+- `src/components/form/form-elements/DefaultInputs.tsx`
+- `src/components/form/form-elements/DropZone.tsx`
+- `src/components/form/form-elements/FileInputExample.tsx`
+- `src/components/form/form-elements/InputGroup.tsx`
+- `src/components/form/form-elements/InputStates.tsx`
+- `src/components/form/form-elements/RadioButtons.tsx`
+- `src/components/form/form-elements/SelectInputs.tsx`
+- `src/components/form/form-elements/TextAreaInput.tsx`
+- `src/components/form/form-elements/ToggleSwitch.tsx`
+- `src/components/form/group-input/PhoneInput.tsx`
+- `src/components/form/input/FileInput.tsx`
+- `src/components/form/input/Radio.tsx`
+- `src/components/form/input/RadioSm.tsx`
+- `src/components/form/input/TextArea.tsx`
+- `src/components/form/switch/Switch.tsx`
+- `src/components/main/Modal/AlertModal.tsx`
+- `src/components/main/Modal/DefaultModal.tsx`
+- `src/components/main/Modal/FormInModal.tsx`
+- `src/components/main/Modal/FullScreenModal.tsx`
+- `src/components/main/Modal/ModalBasedAlerts.tsx`
+- `src/components/main/Modal/VerticallyCenteredModal.tsx`
+- `src/components/main/common/ComponentCard.tsx`
+- `src/components/main/tables/BasicTableOne.tsx`
+- `src/components/ui/Alert.tsx`
+- `src/components/ui/avatar/Avatar.tsx`
+- `src/components/ui/avatar/AvatarText.tsx`
+- `src/components/ui/dropdown/Dropdown.tsx`
+- `src/components/ui/dropdown/DropdownItem.tsx`
+- `src/components/ui/images/ResponsiveImage.tsx`
+- `src/components/ui/images/ThreeColumnImageGrid.tsx`
+- `src/components/ui/images/TwoColumnImageGrid.tsx`
+- `src/hooks/useModal.ts`
+- `src/lib/data/action/exampleAction.ts`
+- `src/lib/data/get/exampleGet.ts`
+- Finalisasi: 2026-10-15, branch `refactor/v2-structure` (turunan `v2`).
+- Sesudah: 78 file TS/TSX; 64 terjangkau; 14 tidak terjangkau dipertahankan untuk fase berikutnya
+  atau karena dilindungi. Semua 64 file aktif identik berdasarkan SHA256 sebelum/sesudah.
+- Sebelum: 48 file target, 3.455 baris fisik → Sesudah: 0 file target. Tidak ada file kode baru.
+  Angka baris ini hitungan mentah penghapusan, bukan metrik sesudah format Prettier.
+- Gerbang final: `npm run lint` lulus; `npx tsc --noEmit` lulus; `npm run build` lulus (11 halaman).
+  `check:size` belum tersedia dan dijadwalkan fase 7; tidak ada hasil pecahan pada fase 1a.
+- Analisis impor: tidak ada pengimpor aktif ke file yang dihapus dan tidak ada impor TS lokal
+  yang tidak terselesaikan. Penghapusan tidak menambah siklus, SVG, atau impor lintas fitur.
+- Uji manual sesudah (smoke, bukan seluruh regresi CRUD): dashboard tetap 2/2/1/0;
+  pendaftaran membuka form, validasi NIK kosong, batal, dan konfirmasi hapus; daftar permohonan
+  tetap Damkar/Forklift; antrean SIAP 2 dan DIKEMBALIKAN 1; pelatihan 3; master peserta 8;
+  riwayat Damkar 3 peserta/2 lulus, modal detail dan lightbox sertifikat tampil.
+  Dropdown pengguna dapat dibuka. Konsol browser pada smoke terakhir tanpa error/warning.
+- Batas verifikasi: pembukaan PDF sebelumnya diblokir keamanan browser; paging >12 dan durasi
+  toast dengan stopwatch belum diverifikasi. Tidak diklaim lulus seluruh checklist manual.
+- Temuan: tidak ada regresi teramati pada smoke. Temuan baseline tetap dicatat dan tidak
+  diperbaiki dalam commit penghapusan ini. Build masih memberi peringatan deprecasi middleware.
+- Panduan `REFACTOR_PLAN.md` dan `AGENT_REFACTOR_RULES.md` ikut disimpan ke Git untuk perangkat lain.
+- Fase 1a selesai untuk lingkup penghapusan demo. Berikutnya fase 1c (arsip lapisan data lama);
+  fase 2–7 belum dikerjakan, refactor keseluruhan belum selesai.
