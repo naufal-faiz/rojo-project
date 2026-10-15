@@ -349,3 +349,4 @@ akhir. Hasil pengujian sesi sebelumnya tidak dianggap sebagai pengujian baseline
 - Panduan `REFACTOR_PLAN.md` dan `AGENT_REFACTOR_RULES.md` ikut disimpan ke Git untuk perangkat lain.
 - Fase 1a selesai untuk lingkup penghapusan demo. Berikutnya fase 1c (arsip lapisan data lama);
   fase 2–7 belum dikerjakan, refactor keseluruhan belum selesai.
+- Commit penghapusan Fase 1a: `7eb69c8` (`chore: hapus kode mati demo template`).
